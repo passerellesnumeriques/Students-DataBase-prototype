@@ -1,6 +1,6 @@
 @echo off
 
-call versions.bat
+call server\versions.bat
 
 set /p deploy_path="Enter the path where you want to deploy [C:\StudentsDataBase]: "
 if "%deploy_path%"=="" set deploy_path=C:\StudentsDataBase
@@ -39,9 +39,10 @@ mkdir %deploy_path%\log
 echo Copying files
 xcopy /E /Q "server" "%deploy_path%"\server
 xcopy /E /Q "server\mysql_%mysql_version%\default_data" "%deploy_path%"\database
-copy start.bat "%deploy_path%"
-copy versions.bat "%deploy_path%"
-copy stop.bat "%deploy_path%"
+copy server\start.bat "%deploy_path%"
+copy server\versions.bat "%deploy_path%"
+copy server\stop.bat "%deploy_path%"
+copy server\start_apache.vbs "%deploy_path%"
 
 echo Configuring server
 REM httpd.conf
@@ -67,6 +68,10 @@ copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 tools\sed "s/%%PHPMYADMIN_PATH%%/%deploy_path_unix%\/server\/phpMyAdmin_%phpmyadmin_version%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 tools\sed "s/%%WEB_PORT%%/%web_port%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
+copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
+REM start_apache.vbs
+set conf_file="%deploy_path%\start_apache.vbs"
+tools\sed "s/%%APACHE_PATH%%/%deploy_path%\/server\/apache_%apache_version%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 
 :end
