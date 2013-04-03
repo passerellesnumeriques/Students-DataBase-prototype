@@ -2,6 +2,13 @@
 
 call server\versions.bat
 
+set repository_path=%CD%\..
+echo %repository_path%> %TEMP%\repository_path
+tools\sed "s|\\\|\\\/|g" %TEMP%\repository_path > %TEMP%\repository_path_unix
+set /p repository_path_unix=<%TEMP%\repository_path_unix
+del %TEMP%\repository_path
+del %TEMP%\repository_path_unix
+
 set /p deploy_path="Enter the path where you want to deploy [C:\StudentsDataBase]: "
 if "%deploy_path%"=="" set deploy_path=C:\StudentsDataBase
 
@@ -33,16 +40,15 @@ mkdir %deploy_path%\php_uploads
 mkdir %deploy_path%\php_sessions
 mkdir %deploy_path%\server
 mkdir %deploy_path%\database
-mkdir %deploy_path%\www
 mkdir %deploy_path%\log
 
 echo Copying files
 xcopy /E /Q "server" "%deploy_path%"\server
 xcopy /E /Q "server\mysql_%mysql_version%\default_data" "%deploy_path%"\database
-copy server\start.bat "%deploy_path%"
-copy server\versions.bat "%deploy_path%"
-copy server\stop.bat "%deploy_path%"
-copy server\start_apache.vbs "%deploy_path%"
+move "%deploy_path%"\server\start.bat "%deploy_path%"
+move "%deploy_path%"\server\versions.bat "%deploy_path%"
+move "%deploy_path%"\server\stop.bat "%deploy_path%"
+move "%deploy_path%"\server\start_apache.vbs "%deploy_path%"
 
 echo Configuring server
 REM httpd.conf
@@ -56,6 +62,8 @@ copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 tools\sed "s/%%PHPMYADMIN_PATH%%/%deploy_path_unix%\/server\/phpMyAdmin_%phpmyadmin_version%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 tools\sed "s/%%WEB_PORT%%/%web_port%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
+copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
+tools\sed "s/%%WWW_PATH%%/%repository_path_unix%\/www/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 REM php.ini
 set conf_file="%deploy_path%\server\php_%php_version%\php.ini"
@@ -71,7 +79,7 @@ tools\sed "s/%%WEB_PORT%%/%web_port%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 REM start_apache.vbs
 set conf_file="%deploy_path%\start_apache.vbs"
-tools\sed "s/%%APACHE_PATH%%/%deploy_path%\/server\/apache_%apache_version%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
+tools\sed "s/%%APACHE_PATH%%/%deploy_path_unix%\/server\/apache_%apache_version%/g" %conf_file% > "%TEMP%\pn_deploy_conf"
 copy /Y "%TEMP%\pn_deploy_conf" %conf_file%
 
 :end
