@@ -2,7 +2,14 @@
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
 
-if ($path == "") $path = "dynamic/application/page/enter";
+if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
+
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
+
+if ($path == "") {
+	header("Location: /dynamic/application/page/enter");
+	die();
+}
 
 // get type of resource
 $i = strpos($path, "/");
@@ -42,13 +49,14 @@ case "dynamic":
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 
-	require_once("component/Application.inc");
+	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
 	
 	global $app;
 	if (!isset($_SESSION["app"])) {
-		$app = new Application();
+		$app = new PNApplication();
+		$app->init();
 		$_SESSION["app"] = &$app;
 	} else
 		$app = &$_SESSION["app"];
@@ -61,5 +69,7 @@ case "dynamic":
 		$app->components[$component_name]->service($path);
 		break;
 	}
+	die();
+default: die("Invalid request");
 }
 ?>
