@@ -14,20 +14,64 @@ function list_components() {
 }
 $components_names = list_components();
 
+$app_model = null;
+
 class PNApplication {
 
+	public static $errors = array();
 	public $components = array();
+	
+	public static function error($message) {
+		array_push(PNApplication::$errors, htmlentities($message));
+	}
+	public static function error_html($html_message) {
+		array_push(PNApplication::$errors, $html_message);
+	}
+	
+	public static function print_errors() {
+		foreach (PNApplication::$errors as $e)
+			echo "<div style='color:#C00000'><img src='/static/application/error.png' style='vertical-align:bottom'/> ".$e."</div>";
+	}
 	
 	public function init() {
 		global $components_names;
 		foreach ($components_names as $name) $this->init_component($name);
+		DataBase::update_model($this->data_model());
+		if (count($errors) > 0) {
+			PNApplication::print_errors();
+			die();
+		}
 	}
 	private function init_component($name) {
-		$c = new $name($name);
+		$c = new $name($this, $name);
 		$this->components[$name] = &$c;
 		$this->{$name} = &$c;
 	}
-
+	
+	public function &data_model() {
+		global $app_model;
+		if ($app_model == null) {
+			require_once("common/Model.inc");
+			$app_model = new data\Model();
+			$done = array();
+			foreach ($this->components as $name=>&$c)
+				$this->populate_model($app_model, $c, $done);
+		}
+		return $app_model;
+	}
+	private function populate_model(&$model, &$c, &$done) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep) {
+			if (!isset($this->components[$dep])) die("Missing component '".$dep."' which is a dependency of component '".$c->name."'");
+			$this->populate_model($model, $this->components[$dep], $done);
+		}
+		$prev = Locale::$current_component;
+		Locale::$current_component = $c->name;
+		$c->populate_model($model);
+		Locale::$current_component = $prev;
+	}
+	
 }
 
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
