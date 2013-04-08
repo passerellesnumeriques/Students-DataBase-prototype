@@ -1,0 +1,7 @@
+# StarUML Temp File
+*.~ml
+# Office Temp Files
+~$*
+# OS junk files
+[Tt]humbs.db
+*.DS_Store
