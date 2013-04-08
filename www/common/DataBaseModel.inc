@@ -1,5 +1,10 @@
 <?php 
 
+/** This class provides the methods to update the DataBase, based on the current data model.
+ * This will be used mainly during development, so each time a change is made in the data model,
+ * the change are reflected automatically in the DataBase.
+ * For instance, a column is added, or the type of a data changed... 
+ */
 class DataBaseModel {
 	
 	public static function update_model(&$model) {

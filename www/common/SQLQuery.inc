@@ -1,4 +1,5 @@
-<?php 
+<?php
+/** Helper to build and execute a SQL query */ 
 class SQLQuery {
 
 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
@@ -14,9 +15,18 @@ class SQLQuery {
 	private $field_id_counter = 0;
 	private $table_id_counter = 0;
 	
+	/** Generates a unique field alias name (useful when building a big list) */
 	public function field_id() { return "f".($this->field_id_counter++); }
+	/** Generates a unique table alias name (useful when building a big list) */
 	public function table_id() { return "t".($this->table_id_counter++); }
 	
+	/** Prepares a select in the given tables.
+	 * Usage:
+	 *  - 1 parameter as string: the name of the table in which the select will be performed
+	 *  - 1 parameter as array: array containing the list of table_name=>table_alias
+	 *  - more than 1 parameter: list of table names (no aliases)
+	 * @return SQLQuery
+	 */
 	public function &select() {
 		$nb = func_num_args();
 		if ($nb > 1) {
@@ -35,7 +45,13 @@ class SQLQuery {
 		return $this;
 	}
 	
-	/** if name is null, it means only one table is selected, and the parameter table is used as the name of the field */
+	/** 
+	 * Indicates a field should be returned by the quer.
+	 * Usage:
+	 *  (field_name): in case only one table was indicated in the select() method, this table will be used together with the given field
+	 *  (table_name, field_name)
+	 *  (table_name, field_name, field_alias)
+	 */
 	public function &field($table,$name=null,$alias=null) {
 		if ($name == null)
 			foreach ($this->tables as $t=>$a)

@@ -1,18 +1,31 @@
 <?php 
 namespace data {
 
+/** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class Model {
 	
 	public $tables = array();
 	public $data_per_category = array();
 	public $data_per_table = array();
 	
+	/** Add a table to the model, and returns it
+	 * 
+	 * @param string $name name of the table to ad
+	 * @return \data\Table
+	 */
 	public function &addTable($name) {
 		$table = new Table($this, $name);
 		$this->tables[$name] = &$table;
 		return $table;
 	}
 	
+	/** Indicates that a particular column is a displayable data (not internal).
+	 * 
+	 * @param string $category name of the category in which this data will be displayed. This string is supposed to be used with Locale in order to obtain a localized name of the category.
+	 * @param string $name name of the data to display. This string is supposed to be used with Locale, in order to display a localized name.
+	 * @param string $table table containing the data.
+	 * @param string $field column corresponding to the data
+	 */
 	public function addData($category, $name, $table, $field) {
 		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
 		if (strpos($name, "::") === FALSE) $name = \Locale::$current_component."::".$name;
@@ -24,12 +37,14 @@ class Model {
 		$this->data_per_table[$table][$field] = array($category, $name);
 	}
 	
+	/** Returns the localized name of the given data */
 	public function getDataName($table, $field) {
 		$data = @$this->data_per_table[$table][$field];
 		if ($data == null) return null;
 		$i = strpos($data[1], "::");
 		return \Locale::get_string(substr($data[1], 0, $i), substr($data[1], $i+2));
 	}
+	/** Returns the localized category and name of the given data */
 	public function getDataCategoryAndName($table, $field) {
 		$data = @$this->data_per_table[$table][$field];
 		if ($data == null) return "?field ".$field." in table ".$table."?";
@@ -57,6 +72,7 @@ class Table {
 		$this->name = $name;
 	}
 	
+	/** Add a primary key (integer ID) */
 	public function addPrimaryKey($name, $size=32) {
 		$c = new PrimaryKey($this, $name, $size);
 		array_push($this->columns, $c);
@@ -64,24 +80,31 @@ class Table {
 		return $this;
 	}
 	
+	/** Add a foreign key to the given table */
 	public function addForeignKey($name, $table) {
 		$c = new ForeignKey($this, $name, $table);
 		array_push($this->columns, $c);
 		return $this;
 	}
 	
+	/** Add an integer column. Size is in bits */
 	public function addInteger($name, $size=32) {
 		$c = new ColumnInteger($this, $name, $size);
 		array_push($this->columns, $c);
 		return $this;
 	}
 	
+	/** Add a string column */
 	public function addString($name, $max_length=255) {
 		$c = new ColumnString($this, $name, $max_length);
 		array_push($this->columns, $c);
 		return $this;
 	}
 	
+	/** Indicate one or several columns should be indexed for faster access.
+	 * As parameters, this method expects the list of columns to be indexed together.
+	 * @return \data\Table
+	 */
 	public function addIndex() {
 		$nb = func_num_args();
 		if ($nb == 1)
@@ -95,6 +118,7 @@ class Table {
 		return $this;
 	}
 	
+	/** Indicate a link to another table, not using a foreign key. */
 	public function &addLink($table_name, $fields_matching, $unique) {
 		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
 		return $this;
@@ -169,7 +193,7 @@ class ColumnString extends Column {
 		$this->max_length = $max_length;
 	}
 
-	public function get_sql_type() { return "VARCHAR(".$this->max_length.")"; }
+	public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")"; }
 }
 
 class PrimaryKey extends ColumnInteger {
