@@ -8,6 +8,13 @@ if (isset($_GET["set_language"])) {
 	setcookie("lang",$_GET["set_language"],time()+2*365*24*60*60,"/dynamic/");
 	die();
 }
+// check last time the user came, it was the same version, in order to refresh its cache in case this is not the case
+$version = include("version.inc");
+if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
+	setcookie("pnversion",$version,time()+365*24*60*60,"/");
+	header("Location: ?");
+	die();
+}
 
 if (!isset($_SERVER["PATH_INFO"]) || strlen($_SERVER["PATH_INFO"]) == 0) $_SERVER["PATH_INFO"] = "/";
 $path = substr($_SERVER["PATH_INFO"],1);
@@ -42,7 +49,7 @@ case "static":
 	header('Pragma: public', true);
 	$date = date("D, d M Y H:i:s",time());
 	header('Date: '.$date, true);
-	$expires = time()+24*60*60;
+	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
 	$i = strrpos($path, ".");
 	if ($i === FALSE) die("Invalid resource type");
@@ -66,7 +73,7 @@ case "dynamic":
 
 	require_once("common/DataBase.inc");
 	require_once("component/PNApplication.inc");
-	session_set_cookie_params(24*60*60, "/dynamic/");
+	session_set_cookie_params(ini_get("session.gc_maxlifetime"), "/dynamic/");
 	session_start();
 	require_once("common/Locale.inc");
 	
