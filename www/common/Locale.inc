@@ -1,5 +1,6 @@
 <?php 
 /**
+ * Prints a localized string. 
  * Usages:
  *  locale("key");
  *  locale("key", array("param1"=>value1,...));
@@ -20,6 +21,7 @@ function locale() {
 			echo Locale::get_string(func_get_arg(0), func_get_arg(1));
 	}
 }
+/** Returns a localized string, instead of printing it. */
 function get_locale() {
 	$nb = func_num_args();
 	if ($nb == 1)
@@ -37,7 +39,9 @@ function get_locale() {
 
 class Locale {
 	
+	/** @var string default namespace, used if no namespace is specified */
 	public static $current_component = "";
+	/** @var string current language of the user */
 	public static $language = null;
 	
 	public static function get_string($component, $key) {

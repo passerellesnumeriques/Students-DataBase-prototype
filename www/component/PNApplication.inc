@@ -16,6 +16,12 @@ $components_names = list_components();
 
 $app_model = null;
 
+/**
+ * PNApplication is the root point, used to:
+ *   - access to any component
+ *   - access to the global data model
+ *   - indicate errors along the process, that may be then display to the user 
+ */
 class PNApplication {
 
 	public static $errors = array();

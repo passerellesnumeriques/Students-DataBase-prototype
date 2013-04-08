@@ -1,5 +1,6 @@
 <?php 
 require_once("DataBaseSystem.inc");
+/** Implementation of DataBaseSystem, using MySQL */
 class DataBaseSystem_MySQL extends DataBaseSystem {
 	
 	public function connect($server, $username, $password, $db_name) {
