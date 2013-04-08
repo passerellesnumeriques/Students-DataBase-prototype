@@ -1,15 +1,10 @@
 <?php 
 class authentication extends Component {
-	
-	/** 
-	 * @return true if the user is successfully authenticated on the given domain 
-	 * @param String $domain
-	 * @param String $username
-	 * @param String $password
-	 */
-	public function authenticate($domain, $username, $password) {
+
+	public function get_authentication_system($domain) {
 		// TODO
-		return true;
+		require_once("FakeAuthenticationSystem.inc");
+		return new FakeAuthenticationSystem();
 	}
 	
 }

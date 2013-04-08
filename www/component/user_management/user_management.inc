@@ -1,22 +1,35 @@
 <?php 
+require_once("common/Event.inc");
 class user_management extends Component {
 	
+	/** @var string domain of the user logged in */
 	public $domain = null;
+	/** @var string username of the user logged in */
 	public $username = null;
+	
+	/** @var Event raised when a user logged in */
+	public $logged_in;
+	/** @var Event raised when the user logout */
+	public $logged_out;
+	
+	function init() {
+		$this->logged_in = new Event();
+		$this->logged_out = new Event();
+	}
 	
 	public function login($domain, $username, $password) {
 		if ($this->username <> null) return false;
-		if (!$this->app->authentication->authenticate($domain, $username, $password)) return false;
+		$auth = $this->app->authentication->get_authentication_system($domain);
+		if ($auth == null) return false;
+		if (!$auth->authenticate($username, $password)) return false;
 		$this->domain = $domain;
 		$this->username = $username;
-		require_once("common/SQLQuery.inc");
-		$people = SQLQuery::create()->select("Users")->field("people")->where("domain",$domain)->where("username",$username)->execute_single_value();
-		if ($people <> null)
-			$this->app->people->logged($people);
+		$this->logged_in->fire();
 		return true;
 	}
 	
 	public function logout() {
+		$this->logged_out->fire();
 		session_destroy();
 	}
 	
@@ -57,7 +70,6 @@ class user_management extends Component {
 		$model->addTable("Users")
 			->addString("domain")
 			->addString("username")
-			->addForeignKey("people", "People")
 			->addIndex("domain","username");
 		$model->addData("User","Domain","Users", "domain");
 		$model->addData("User","Username","Users", "username");
@@ -84,7 +96,6 @@ class user_management extends Component {
 			->addString("value")
 			->addIndex("role_id");
 	}
-	public function dependencies() { return array("people"); }
 	
 	protected function is_page_allowed($path) {
 		// TODO

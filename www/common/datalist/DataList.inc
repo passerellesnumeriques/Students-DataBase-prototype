@@ -198,10 +198,14 @@ class DataList {
 		echo "</form>";
 		
 		// count total number of entries
-		$count = DataBase::query("SELECT COUNT(*) FROM `".$this->starting_table."`");
+		$count = DataBase::$conn->execute("SELECT COUNT(*) FROM `".$this->starting_table."`");
 		// TODO reduce in case of filters
-		$count = DataBase::fetch_array($count);
-		$count = $count[0];
+		if ($count === false)
+			$count = 0;
+		else {
+			$count = DataBase::$conn->next_row($count);
+			$count = $count[0];
+		}
 		// process request
 		$context = new DataContext($this);
 		$sql = new SQLQuery();
@@ -362,9 +366,9 @@ class DataPathField extends DataPath {
 		if ($search !== null) {
 			$col = $ctx->list->model->tables[$this->table]->getColumn($this->field);
 			if ($col instanceof \data\ColumnString)
-				$sql->where("LOWER(`".$this->sql_table."`.`".$this->field."`) LIKE LOWER('%".mysql_real_escape_string($search)."%')");
+				$sql->where("LOWER(`".$this->sql_table."`.`".$this->field."`) LIKE LOWER('%".DataBase::$conn->escape_string($search)."%')");
 			else
-				$sql->where("`".$this->sql_table."`.`".$this->field."` = '".mysql_real_escape_string($search)."'");
+				$sql->where("`".$this->sql_table."`.`".$this->field."` = '".DataBase::$conn->escape_string($search)."'");
 		}
 	}
 	public function is_unique() { return $this->path->is_unique(); }

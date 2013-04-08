@@ -1,8 +1,9 @@
-<?php 
+<?php
+/** Helper to build and execute a SQL query */ 
 class SQLQuery {
 
 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
-	public static function &create() { return new SQLQuery(); }
+	public static function &create() { $q = new SQLQuery(); return $q; }
 	
 	public $tables = array();
 	public $fields = array();
@@ -14,9 +15,18 @@ class SQLQuery {
 	private $field_id_counter = 0;
 	private $table_id_counter = 0;
 	
+	/** Generates a unique field alias name (useful when building a big list) */
 	public function field_id() { return "f".($this->field_id_counter++); }
+	/** Generates a unique table alias name (useful when building a big list) */
 	public function table_id() { return "t".($this->table_id_counter++); }
 	
+	/** Prepares a select in the given tables.
+	 * Usage:
+	 *  - 1 parameter as string: the name of the table in which the select will be performed
+	 *  - 1 parameter as array: array containing the list of table_name=>table_alias
+	 *  - more than 1 parameter: list of table names (no aliases)
+	 * @return SQLQuery
+	 */
 	public function &select() {
 		$nb = func_num_args();
 		if ($nb > 1) {
@@ -35,7 +45,13 @@ class SQLQuery {
 		return $this;
 	}
 	
-	/** if name is null, it means only one table is selected, and the parameter table is used as the name of the field */
+	/** 
+	 * Indicates a field should be returned by the quer.
+	 * Usage:
+	 *  (field_name): in case only one table was indicated in the select() method, this table will be used together with the given field
+	 *  (table_name, field_name)
+	 *  (table_name, field_name, field_alias)
+	 */
 	public function &field($table,$name=null,$alias=null) {
 		if ($name == null)
 			foreach ($this->tables as $t=>$a)
@@ -73,13 +89,14 @@ class SQLQuery {
 				else
 					array_push($this->where, "`".$field."` IS NOT NULL");
 			} else
-				array_push($this->where, "`".$field."`='".mysql_real_escape_string($value)."'");
+				array_push($this->where, "`".$field."`='".DataBase::$conn->escape_string($value)."'");
 		}
 		return $this;
 	}
 	
-	public function join($table_from, $table_to, $fields_matching, $alias) {
+	public function &join($table_from, $table_to, $fields_matching, $alias = null) {
 		array_push($this->joins, array($table_from, $table_to, $fields_matching, $alias));
+		return $this;
 	}
 	public function get_join_alias($table_from, $table_to, $fields_matching) {
 		foreach ($this->joins as $join) {
@@ -95,7 +112,7 @@ class SQLQuery {
 			if (!$ok) continue;
 			foreach ($remaining as $f=>$v) if ($v !== null) { $ok = false; break; }
 			if (!$ok) continue;
-			return $join[3];
+			return $join[3] <> null ? $join[3] : $table_to;
 		}
 		return null;
 	}
@@ -150,10 +167,10 @@ class SQLQuery {
 	
 	public function execute() {
 		$sql = $this->generate();
-		$res = DataBase::query($sql);
+		$res = DataBase::$conn->execute($sql);
 		if ($res === FALSE) return null;
 		$a = array();
-		while (($r = DataBase::fetch_array($res)) !== FALSE)
+		while (($r = DataBase::$conn->next_row($res)) !== FALSE)
 			array_push($a, $r);
 		return $a;
 	}
@@ -174,9 +191,9 @@ class SQLQuery {
 	
 	public function execute_single_row() {
 		$sql = $this->generate();
-		$res = DataBase::query($sql);
+		$res = DataBase::$conn->execute($sql);
 		if ($res === FALSE) return null;
-		$r = DataBase::fetch_array($res);
+		$r = DataBase::$conn->next_row($res);
 		if ($r === FALSE) return null;
 		return $r;
 	}

@@ -16,6 +16,12 @@ $components_names = list_components();
 
 $app_model = null;
 
+/**
+ * PNApplication is the root point, used to:
+ *   - access to any component
+ *   - access to the global data model
+ *   - indicate errors along the process, that may be then display to the user 
+ */
 class PNApplication {
 
 	public static $errors = array();
@@ -35,17 +41,29 @@ class PNApplication {
 	
 	public function init() {
 		global $components_names;
-		foreach ($components_names as $name) $this->init_component($name);
-		DataBase::update_model($this->data_model());
+		foreach ($components_names as $name) $this->create_component($name);
+		$done = array();
+		foreach ($this->components as $c) $this->init_component($c, $done);
+		require_once("common/DataBaseModel.inc");
+		DataBaseModel::update_model($this->data_model());
 		if (count($errors) > 0) {
 			PNApplication::print_errors();
 			die();
 		}
 	}
-	private function init_component($name) {
+	private function create_component($name) {
 		$c = new $name($this, $name);
 		$this->components[$name] = &$c;
 		$this->{$name} = &$c;
+	}
+	private function init_component($c, &$done) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep) {
+			if (!isset($this->components[$dep])) die("Missing component '".$dep."' which is a dependency of component '".$c->name."'");
+			$this->init_component($this->components[$dep], $done);				
+		}
+		$c->init();
 	}
 	
 	public function &data_model() {

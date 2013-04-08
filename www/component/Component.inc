@@ -1,13 +1,15 @@
 <?php
 abstract class Component {
 	
-	public function __construct(&$app, $name) {
+	public final function __construct(&$app, $name) {
 		$this->app = &$app;
 		$this->name = $name;
 	}
+	function init() {}
 	
 	public $app;
 	public $name;
+	
 	protected function is_page_allowed($path) { return false; }
 	protected function is_service_allowed($path) { return false; }
 	
