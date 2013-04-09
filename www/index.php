@@ -33,13 +33,13 @@ if ($path == "") {
 
 // get type of resource
 $i = strpos($path, "/");
-if ($i === FALSE) die("Invalid request");
+if ($i === FALSE) die("Invalid request: no type of resource");
 $type = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 // get the component name
 $i = strpos($path, "/");
-if ($i === FALSE) die("Invalid request");
+if ($i === FALSE) die("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
@@ -60,14 +60,17 @@ case "static":
 	case "jpg": case "jpeg": header("Content-Type: image/jpeg"); break;
 	case "css": header("Content-Type: text/css"); break;
 	case "js": header("Content-Type: text/javascript"); break;
-	default: die("Invalid resource type");
+	default: die("Invalid static resource type");
 	}
-	readfile("component/".$component_name."/static/".$path);
+	if ($component_name == "common")
+		readfile("common/".$path);
+	else
+		readfile("component/".$component_name."/static/".$path);
 	die();
 case "dynamic":
 	// get the type of request
 	$i = strpos($path, "/");
-	if ($i === FALSE) die("Invalid request");
+	if ($i === FALSE) die("Invalid request: no dynamic type");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 
@@ -86,7 +89,7 @@ case "dynamic":
 		$app = &$_SESSION["app"];
 	PNApplication::$instance = &$app;
 	
-	if (!isset($app->components[$component_name])) die("Invalid request");
+	if (!isset($app->components[$component_name])) die("Invalid request: unknown component ".$component_name);
 
 	switch ($request_type) {
 	case "page":
@@ -98,9 +101,9 @@ case "dynamic":
 	case "service":
 		$app->components[$component_name]->service($path);
 		break;
-	default: die("Invalid request");
+	default: die("Invalid request: unknown request type ".$request_type);
 	}
 	die();
-default: die("Invalid request");
+default: die("Invalid request: unknown resource type ".$type);
 }
 ?>
