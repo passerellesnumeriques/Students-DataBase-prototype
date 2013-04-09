@@ -84,7 +84,7 @@ html, body {
 .popup_page tr:first-of-type td+td {
 	width: 20px;
 	cursor: pointer;
-	background-image: url("/static/application/close.png");
+	background-image: url("/static/common/images/close.png");
 	background-position: 0px;
 	background-repeat: no-repeat;
 }
