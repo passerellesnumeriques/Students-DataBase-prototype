@@ -16,8 +16,15 @@ abstract class Component {
 	public function page($path, $embedded = false) {
 		Locale::$current_component = $this->name;
 		if ($this->app->user_management->username == null || !$this->is_page_allowed($path)) {
-			header("Location: /?page=/dynamic/".$this->name."/page/".$path);
-			die("Access denied.");
+			if (!$embedded) {
+				header("Location: /?page=/dynamic/".$this->name."/page/".$path);
+				die("Access denied.");
+			} else {
+				echo "<script type='text/javascript'>";
+				echo "window.top.location = \"/?page=\"+window.top.location.pathname;";
+				echo "</script>";
+				die();
+			}
 		}
 		global $page_embedded;
 		$page_embedded = $embedded;

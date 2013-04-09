@@ -8,7 +8,7 @@ if (isset($_GET["set_language"])) {
 	setcookie("lang",$_GET["set_language"],time()+2*365*24*60*60,"/dynamic/");
 	die();
 }
-// check last time the user came, it was the same version, in order to refresh its cache in case this is not the case
+// check last time the user came, it was the same version, in order to refresh its cache if the version changed
 $version = include("version.inc");
 if (!isset($_COOKIE["pnversion"]) || $_COOKIE["pnversion"] <> $version) {
 	setcookie("pnversion",$version,time()+365*24*60*60,"/");
@@ -73,7 +73,7 @@ case "dynamic":
 
 	require_once("common/DataBase.inc");
 	require_once("component/PNApplication.inc");
-	session_set_cookie_params(ini_get("session.gc_maxlifetime"), "/dynamic/");
+	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
 	require_once("common/Locale.inc");
 	
@@ -84,6 +84,9 @@ case "dynamic":
 		$_SESSION["app"] = &$app;
 	} else
 		$app = &$_SESSION["app"];
+	PNApplication::$instance = &$app;
+	
+	if (!isset($app->components[$component_name])) die("Invalid request");
 
 	switch ($request_type) {
 	case "page":

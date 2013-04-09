@@ -11,6 +11,7 @@ class SQLQuery {
 	public $joins = array();
 	public $limit_from = 0;
 	public $limit_number = -1;
+	public $group_by = array();
 	
 	private $field_id_counter = 0;
 	private $table_id_counter = 0;
@@ -122,6 +123,15 @@ class SQLQuery {
 		$this->limit_number = $number;
 	}
 	
+	/** If only one parameter, it means that only one table is selected, and we will use this table */
+	public function group_by($table, $field=null) {
+		if ($field == null) {
+			$field = $table;
+			foreach ($this->tables as $t=>$a) $table = $t;
+		}
+		array_push($this->group_by, array($table, $field));
+	}
+	
 	public function generate() {
 		$sql = "SELECT ";
 		if (count($this->fields) == 0)
@@ -157,6 +167,14 @@ class SQLQuery {
 			foreach ($this->where as $w) {
 				if ($first) $first = false; else $sql .= " AND ";
 				$sql .= $w;
+			}
+		}
+		if (count($this->group_by) > 0) {
+			$sql .= " GROUP BY ";
+			$first = true;
+			foreach ($this->group_by as $g) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "`".$g[0]."`.`".$g[1]."`";
 			}
 		}
 		if ($this->limit_number > 0) {

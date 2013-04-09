@@ -16,7 +16,7 @@ class people extends Component {
 			->join("UserPeople", "People", array("people"=>"id"))
 			->field("People", "first_name")
 			->field("People", "last_name")
-			->execute_single_value();
+			->execute_single_row();
 		if ($people <> null) {
 			$this->first_name = $people["first_name"];
 			$this->last_name = $people["last_name"];
@@ -36,7 +36,8 @@ class people extends Component {
 			->addString("domain")
 			->addString("username")
 			->addForeignKey("people", "People")
-			->addIndex("domain","username");
+			->addIndex("domain","username")
+			->addLink("Users",array("domain"=>"domain","username"=>"username"),true);
 	}
 	
 	protected function is_page_allowed($path) {

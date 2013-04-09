@@ -21,11 +21,13 @@ echo $app->people->first_name." ".$app->people->last_name." ";
 ?>
 <img src='/static/application/settings.png' style='vertical-align:bottom'/>
 <a href="/dynamic/application/page/logout" style='text-decoration:none;color:black'><img src='/static/application/logout.gif' style='border:0px;vertical-align:bottom'/><?php locale("application","Logout")?></a>
-<?php if (Locale::$language <> "en") {?>
-<a href="?set_language=en"><img src="/static/application/lang/en.gif" style="border:0px;vertical-align:bottom"/></a>
-<?php } if (Locale::$language <> "fr") {?>
-<a href="?set_language=fr"><img src="/static/application/lang/fr.jpg" style="border:0px;vertical-align:bottom"/></a>
-<?php }?>
+<span style='border-left:1px solid #808080;padding-left:3px'>
+<?php
+foreach (Locale::$known as $lang)
+	if (Locale::$language <> $lang)
+		echo "<a href='?set_language=".$lang."'><img src='/static/application/lang/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
+?>
+</span>
 </div>
 </td></tr>
 <?php }?>

@@ -38,10 +38,13 @@ class DataList {
 	}
 	
 	public function add($field, $editable) {
+		//echo "Build field ".$field."<br/>";
 		$i = strpos($field, ".");
 		$table = substr($field, 0, $i);
 		$field = substr($field, $i+1);
-		array_push($this->columns, $this->build_column(new DataPathRoot($this->starting_table), $table, $field));
+		$col = $this->build_column(new DataPathRoot($this->starting_table), $table, $field);
+		if ($col <> null)
+			array_push($this->columns, $col);
 	}
 	private function build_column($current_path, $table, $field) {
 		$i = strpos($field, ">");
@@ -50,7 +53,15 @@ class DataList {
 			$indirection = substr($field, $i+1);
 			$field = substr($field, 0, $i);
 		}
-		$col = $this->build_simple_column($current_path, $table, $field);
+		$visited_tables = array();
+		$col = $this->build_simple_column($current_path, $table, $field, $visited_tables);
+		if ($col == null) {
+			echo "ERROR: unable to build simple column:<br/>";
+			echo " current table: ".$current_path->table."<br/>";
+			echo " to table: ".$table."<br/>";
+			echo " field: ".$field."<br/>";
+			return null;
+		}
 		while ($indirection !== null) {
 			$col_model = $this->model->tables[$col->table]->getColumn($col->field);
 			$i = strpos($indirection, ">");
@@ -70,7 +81,10 @@ class DataList {
 		};
 		return $col;
 	}
-	private function build_simple_column($current_path, $table, $field) {
+	private function build_simple_column($current_path, $table, $field, &$visited_tables) {
+		if (in_array($current_path->table, $visited_tables)) return null;
+		array_push($visited_tables, $current_path->table);
+		
 		// check if this is a field on the current table
 		if ($table == $current_path->table)
 			return new DataPathField($current_path, $field);
@@ -78,18 +92,31 @@ class DataList {
 		foreach ($this->model->tables[$current_path->table]->columns as $col)
 			if ($col instanceof \data\ForeignKey && $col->foreign_table == $table)
 				return new DataPathField(new DataPathForeign($current_path, $col), $field);
-		// search for a link from the given table, to the current table
+		// search for a link from the current table, to the given table
+		foreach ($this->model->tables[$current_path->table]->links as $link) {
+			if ($link->table == $table) {
+				// link found
+				return new DataPathField(new DataPathLink($current_path, $link), $field);
+			}
+		}
+		// search for a foreign key in the given table, to the current table
+		foreach ($this->model->tables[$table]->columns as $col) {
+			if (!($col instanceof \data\ForeignKey)) continue;
+			if ($col->foreign_table == $current_path->table)
+				return new DataPathField(new DataPathJoin($current_path, $col), $field);
+		}
+		// search for a link from the given table, to the current table (reverse link)
 		foreach ($this->model->tables[$table]->links as $link) {
 			if ($link->table == $current_path->table) {
 				// link found
-				return new DataPathField(new DataPathLink($current_path, $table, $link), $field);
+				return new DataPathField(new DataPathLinkReverse($current_path, $table, $link), $field);
 			}
 		}
 		// try with different foreign keys we have in the current table
 		foreach ($this->model->tables[$current_path->table]->columns as $col)
 			if ($col instanceof \data\ForeignKey) {
 				$temp_path = new DataPathForeign($current_path, $col);
-				$res = $this->build_simple_column($temp_path, $table, $field);
+				$res = $this->build_simple_column($temp_path, $table, $field, $visited_tables);
 				if ($res <> null) return $res;
 			}
 		// try with different links we have to our current table
@@ -97,8 +124,20 @@ class DataList {
 			foreach ($t->links as $link) {
 				if ($link->table == $current_path->table) {
 					// link found
-					$temp_path = new DataPathField(new DataPathLink($current_path, $table, $link), $field);
-					$res = $this->build_simple_column($temp_path, $table, $field);
+					$temp_path = new DataPathField(new DataPathLinkReverse($current_path, $table, $link), $field);
+					$res = $this->build_simple_column($temp_path, $table, $field, $visited_tables);
+					if ($res <> null) return $res;
+				}
+			}
+		}
+		// try with tables containing a foreign key to our current table
+		foreach ($this->model->tables as $t) {
+			foreach ($t->columns as $col) {
+				if (!($col instanceof \data\ForeignKey)) continue;
+				if ($col->foreign_table == $current_path->table) {
+					// foreign key found
+					$temp_path = new DataPathField(new DataPathJoin($current_path, $col), $field);
+					$res = $this->build_simple_column($temp_path, $table, $field, $visited_tables);
 					if ($res <> null) return $res;
 				}
 			}
@@ -128,13 +167,17 @@ class DataList {
 				array_push($paths, new DataPathField($current_path, $field->name));
 			}
 		}
+		// search links in current table
+		foreach ($this->model->tables[$current_path->table]->links as $link) {
+			$p = new DataPathLink($current_path, $link);
+			$this->find_possible_paths($p, $paths, $visited_tables);
+		}
 		// search foreign keys from other tables to current table
 		foreach ($this->model->tables as $table) {
 			foreach ($table->columns as $field) {
 				if ($field instanceof \data\ForeignKey && $field->foreign_table == $current_path->table) {
-					// TODO
-					//$p = new DataPathJoin($field);
-					//$this->find_possible_paths($p, $paths, $visited_tables);
+					$p = new DataPathJoin($current_path, $field);
+					$this->find_possible_paths($p, $paths, $visited_tables);
 				}
 			}
 		}
@@ -142,7 +185,7 @@ class DataList {
 		foreach ($this->model->tables as $table) {
 			foreach ($table->links as $link) {
 				if ($link->table <> $current_path->table) continue;
-				$p = new DataPathLink($current_path, $table->name, $link);
+				$p = new DataPathLinkReverse($current_path, $table->name, $link);
 				$this->find_possible_paths($p, $paths, $visited_tables);
 			}
 		}
@@ -210,8 +253,7 @@ class DataList {
 		$context = new DataContext($this);
 		$sql = new SQLQuery();
 		foreach ($this->columns as $col) {
-			if ($col->is_unique())
-				$col->generate_sql($sql, $context);
+			$col->generate_sql($sql, $context, $col);
 		}
 		$sql->limit($this->start_entry, $this->max_entries);
 		$list = $sql->execute();
@@ -283,6 +325,7 @@ class DataList {
 					echo $r[$col->sql_field];
 				else {
 					$sub_ctx = new DataContext($this);
+					$sub_ctx->is_sub_request = true;
 					foreach ($sql->fields as $f)
 						$sub_ctx->restrict_value($f[0], $f[1], $r[$f[2]]);
 					//foreach ($this->columns as $c) {
@@ -290,13 +333,17 @@ class DataList {
 					//	$sub_ctx->restrict_value($c->table, $c->field, $r[$c->sql_field]);
 					//}
 					$sub_sql = new SQLQuery();
-					$col->generate_sql($sub_sql, $sub_ctx);
+					$col->generate_sql($sub_sql, $sub_ctx, $col);
 					//echo $sub_sql->generate();
 					//echo "<br/>";
-					$first = true;
-					foreach ($sub_sql->execute() as $sr) {
-						if ($first) $first = false; else echo ", ";
-						echo $sr[$col->sql_field];
+					//var_dump($col);
+					$result = $sub_sql->execute();
+					if ($result !== FALSE) {
+						$first = true;
+						foreach ($result as $sr) {
+							if ($first) $first = false; else echo ", ";
+							echo $sr[$col->sql_field];
+						}
 					}
 				}
 				echo "</td>";
@@ -319,6 +366,7 @@ class DataList {
 class DataContext {
 	public $list;
 	public $restrict_values = array();
+	public $is_sub_request = false;
 	public function __construct(&$list) {
 		$this->list = &$list;
 	}
@@ -336,13 +384,14 @@ abstract class DataPath {
 		$this->table = $table;
 	}
 	public abstract function is_unique();
-	public abstract function generate_sql(&$sql, &$ctx); 
+	public abstract function generate_sql(&$sql, &$ctx, &$top_path);
 	public abstract function get_path();
 }
 class DataPathRoot extends DataPath {
-	public function generate_sql(&$sql, &$ctx) {
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
 		$sql->select($this->table);
 		$this->sql_table = $this->table;
+		return true;
 	}
 	public function is_unique() { return true; }
 	public function debug() { return "Table ".$this->table." AS ".$this->sql_table; }
@@ -357,8 +406,8 @@ class DataPathField extends DataPath {
 		$this->path = $path;
 		$this->field = $field;
 	}
-	public function generate_sql(&$sql, &$ctx) {
-		$this->path->generate_sql($sql, $ctx);
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
+		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
 		$this->sql_field = $sql->field_id();
 		$sql->field($this->path->sql_table, $this->field, $this->sql_field);
 		$this->sql_table = $this->path->sql_table;
@@ -370,6 +419,7 @@ class DataPathField extends DataPath {
 			else
 				$sql->where("`".$this->sql_table."`.`".$this->field."` = '".DataBase::$conn->escape_string($search)."'");
 		}
+		return true;
 	}
 	public function is_unique() { return $this->path->is_unique(); }
 	public function get_path() { return $this->path->get_path().$this->field; }
@@ -383,13 +433,14 @@ class DataPathForeign extends DataPath {
 		$this->path = $path;
 		$this->foreign_key = $foreign_key;
 	}
-	public function generate_sql(&$sql, &$ctx) {
-		$this->path->generate_sql($sql, $ctx);
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
+		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
 		$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->foreign_key->foreign_table, array($this->foreign_key->name => $ctx->list->model->tables[$this->foreign_key->foreign_table]->getPrimaryKey()->name));
 		if ($this->sql_table == null) {
 			$this->sql_table = $sql->table_id();
 			$sql->join($this->path->sql_table, $this->foreign_key->foreign_table, array($this->foreign_key->name => $ctx->list->model->tables[$this->foreign_key->foreign_table]->getPrimaryKey()->name), $this->sql_table);
 		}
+		return true;
 	}
 	public function is_unique() { return $this->path->is_unique(); }
 	public function get_path() {
@@ -402,7 +453,7 @@ class DataPathForeign extends DataPath {
 	}
 	public function debug() { return $this->path->debug()." => Foreign key link on ".$this->foreign_key->name." To table ".$this->foreign_key->foreign_table; }
 }
-class DataPathLink extends DataPath {
+class DataPathLinkReverse extends DataPath {
 	public $path;
 	public $link;
 	public function __construct($path, $table, $link) {
@@ -411,25 +462,38 @@ class DataPathLink extends DataPath {
 		$this->link = $link;
 	}
 	public function is_unique() { return $this->path->is_unique() && $this->link->unique; }
-	public function generate_sql(&$sql, &$ctx) {
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
 		if ($this->link->unique) {
-			$this->path->generate_sql($sql, $ctx);
+			if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
 			$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->link->table_from->name, $this->link->fields_matching);
 			if ($this->sql_table == null) {
 				$this->sql_table = $sql->table_id();
 				$sql->join($this->path->sql_table, $this->link->table_from->name, $this->link->fields_matching, $this->sql_table);
 			}
-		} else {
+			return true;
+		}
+		if ($ctx->is_sub_request) {
 			$sql->select($this->link->table_from->name);
 			$this->sql_table = $this->link->table_from->name;
 			foreach ($this->link->fields_matching as $src=>$dst)
 				$sql->where("`".$this->link->table_from->name."`.`".$src."`='".$ctx->restrict_values[$this->path->table][$dst]."'");
+			return true;
 		}
+		$search = @$ctx->list->search[$top_path->get_path()];
+		if ($search !== null) {
+			$join_alias = $sql->table_id();
+			$sql->join($this->link->table, $this->link->table_from->name, $this->link->fields_matching, $join_alias);
+			$this->sql_table = $join_alias;
+			foreach ($this->link->fields_matching as $f1=>$f2)
+				$sql->group_by($this->link->table, $f1);
+			return true;
+		}
+		return false;
 	}
 	public function get_path() { return $this->link->table_from->name."."; }
 	public function debug() { 
 		$s = $this->path->debug();
-		$s .= " => LINK ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
+		$s .= " => LINK BACKWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
 		$s .= " (Table ".$this->link->table_from->name." to table ".$this->link->table;
 		$s .= " ON ";
 		foreach ($this->link->fields_matching as $f1=>$f2)
@@ -437,5 +501,68 @@ class DataPathLink extends DataPath {
 		$s .= ")";
 		return $s;
 	}
+}
+class DataPathLink extends DataPath {
+	public $path;
+	public $link;
+	public function __construct($path, $link) {
+		parent::__construct($link->table);
+		$this->path = $path;
+		$this->link = $link;
+	}
+	public function is_unique() { return $this->path->is_unique() && $this->link->unique; }
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
+		if ($this->link->unique) {
+			if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
+			$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->link->table, $this->link->fields_matching);
+			if ($this->sql_table == null) {
+				$this->sql_table = $sql->table_id();
+				$sql->join($this->path->sql_table, $this->link->table, $this->link->fields_matching, $this->sql_table);
+			}
+			return true;
+		}
+		// TODO
+		return false;
+	}
+	public function get_path() { return $this->link->table."."; }
+	public function debug() { 
+		$s = $this->path->debug();
+		$s .= " => LINK FORWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
+		$s .= " (Table ".$this->link->table." to table ".$this->link->table_from->name;
+		$s .= " ON ";
+		foreach ($this->link->fields_matching as $f1=>$f2)
+			$s .= $f1."=".$f2.", ";
+		$s .= ")";
+		return $s;
+	}
+}
+class DataPathJoin extends DataPath {
+	public $path;
+	public $foreign_key;
+	public function __construct($path, $foreign_key) {
+		parent::__construct($foreign_key->table->name);
+		$this->path = $path;
+		$this->foreign_key = $foreign_key;
+	}
+	public function generate_sql(&$sql, &$ctx, &$top_path) {
+		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
+		$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->foreign_key->table->name, array($ctx->list->model->tables[$this->path->table]->getPrimaryKey()->name=>$this->foreign_key->name));
+		if ($this->sql_table == null) {
+			$this->sql_table = $sql->table_id();
+			$sql->join($this->path->sql_table, $this->foreign_key->table->name, array($ctx->list->model->tables[$this->path->table]->getPrimaryKey()->name=>$this->foreign_key->name), $this->sql_table);
+		}
+		return true;
+	}
+	public function is_unique() { return $this->path->is_unique(); }
+	public function get_path() {
+		// TODO
+		if ($this->path instanceof DataPathField)
+			$s = $this->path->path->get_path(); // skip the field, which is the same
+		else
+			$s = $this->path->get_path();
+		$s .= $this->foreign_key->name.">";
+		return $s;
+	}
+	public function debug() { return $this->path->debug()." => Join foreign key from ".$this->foreign_key->table->name." on ".$this->foreign_key->name; }
 }
 ?>

@@ -10,24 +10,30 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 <!DOCTYPE html>
 <html>
 <head>
+	<title>PN Students DataBase</title>
+	<link rel="stylesheet" href="/static/application/style.css"/>
 </head>
 <body>
-<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>">
-<table>
+<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%">
+<table style="width:100%;height:100%"><tr><td valign=middle align=center>
+<table style='border:1px solid #22bbea'>
+	<tr><td rowspan=6 style='padding: 5px'>
+		<img src='/static/application/logo.png'/>
+	</td></tr>
 	<tr>
 		<td><?php locale("user_management","Domain")?></td>
 		<td>
 			<select name="domain">
-				<option value="PNC">PNC</option>
-				<option value="PNF">PNF</option>
-				<option value="PNP">PNP</option>
-				<option value="PNV">PNV</option>
+				<option value="PNC"<?php if (@$_COOKIE["domain"]=="PNC") echo " selected"?>>PNC</option>
+				<option value="PNF"<?php if (@$_COOKIE["domain"]=="PNF") echo " selected"?>>PNF</option>
+				<option value="PNP"<?php if (@$_COOKIE["domain"]=="PNP") echo " selected"?>>PNP</option>
+				<option value="PNV"<?php if (@$_COOKIE["domain"]=="PNV") echo " selected"?>>PNV</option>
 			</select>
 		</td>
 	</tr>
 	<tr>
 		<td><?php locale("user_management","Username")?></td>
-		<td><input type="text" size=30 maxlength=100 name="username"/></td>
+		<td><input type="text" size=30 maxlength=100 name="username" value='<?php if (isset($_COOKIE["username"])) echo $_COOKIE["username"];?>'/></td>
 	</tr>
 	<tr>
 		<td><?php locale("user_management","Password")?></td>
@@ -38,9 +44,21 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 			<button type="submit"><?php locale("user_management","Login")?></button>
 		</td>
 	</tr>
+	<tr>
+		<td colspan=2 align=center>
+			<?php
+			foreach (Locale::$known as $lang)
+				echo "<a href='?set_language=".$lang."en'><img src='/static/application/lang/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
+			?>
+		</td>
+	</tr>
+	<tr>
+		<td colspan=3 align=center>
+			<a href="/dynamic/development/page/tools">Development tools</a>
+		</td>
+	</tr>
 </table>
+</td></tr></table>
 </form>
-<a href="?set_language=en"><img src="/static/application/lang/en.gif" style="border:0px;"/></a>
-<a href="?set_language=fr"><img src="/static/application/lang/fr.jpg" style="border:0px;"/></a>
 </body>
 </html>
