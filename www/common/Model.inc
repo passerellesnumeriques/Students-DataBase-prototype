@@ -101,6 +101,13 @@ class Table {
 		return $this;
 	}
 	
+	/** Add an enum column, with the given possible values */
+	public function addEnum($name, $values) {
+		$c = new ColumnEnum($this, $name, $values);
+		array_push($this->columns, $c);
+		return $this;
+	}
+	
 	/** Indicate one or several columns should be indexed for faster access.
 	 * As parameters, this method expects the list of columns to be indexed together.
 	 * @return \data\Table
@@ -194,6 +201,27 @@ class ColumnString extends Column {
 	}
 
 	public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")"; }
+}
+
+class ColumnEnum extends Column {
+
+	public $values;
+
+	public function __construct(&$table, $name, $values) {
+		parent::__construct($table, $name);
+		$this->values = $values;
+	}
+
+	public function get_sql_type() {
+		$sql = "ENUM(";
+		$first = true;
+		foreach ($this->values as $v) {
+			if ($first) $first = false; else $sql.=",";
+			$sql .= "'".\DataBase::$conn->escape_string($v)."'";
+		}
+		$sql .= ")";
+		return $sql;
+	}
 }
 
 class PrimaryKey extends ColumnInteger {

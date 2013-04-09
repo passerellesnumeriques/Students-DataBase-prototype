@@ -17,10 +17,10 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 <form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%">
 <table style="width:100%;height:100%"><tr><td valign=middle align=center>
 <table style='border:1px solid #22bbea'>
-	<tr><td rowspan=6 style='padding: 5px'>
-		<img src='/static/application/logo.png'/>
+	<tr align=left><td rowspan=6 style='padding: 5px'>
+		<img src='/static/common/images/logo.png'/>
 	</td></tr>
-	<tr>
+	<tr align=left>
 		<td><?php locale("user_management","Domain")?></td>
 		<td>
 			<select name="domain">
@@ -31,28 +31,28 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 			</select>
 		</td>
 	</tr>
-	<tr>
+	<tr align=left>
 		<td><?php locale("user_management","Username")?></td>
 		<td><input type="text" size=30 maxlength=100 name="username" value='<?php if (isset($_COOKIE["username"])) echo $_COOKIE["username"];?>'/></td>
 	</tr>
-	<tr>
+	<tr align=left>
 		<td><?php locale("user_management","Password")?></td>
 		<td><input type="password" size=30 maxlength=100 name="password"/></td>
 	</tr>
-	<tr>
+	<tr align=left>
 		<td colspan=2 align=center>
 			<button type="submit"><?php locale("user_management","Login")?></button>
 		</td>
 	</tr>
-	<tr>
+	<tr align=left>
 		<td colspan=2 align=center>
 			<?php
 			foreach (Locale::$known as $lang)
-				echo "<a href='?set_language=".$lang."en'><img src='/static/application/lang/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
+				echo "<a href='?set_language=".$lang."en'><img src='/static/common/flags/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
 			?>
 		</td>
 	</tr>
-	<tr>
+	<tr align=left>
 		<td colspan=3 align=center>
 			<a href="/dynamic/development/page/tools">Development tools</a>
 		</td>

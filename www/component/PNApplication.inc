@@ -38,7 +38,7 @@ class PNApplication {
 	
 	public static function print_errors() {
 		foreach (PNApplication::$errors as $e)
-			echo "<div style='color:#C00000'><img src='/static/application/error.png' style='vertical-align:bottom'/> ".$e."</div>";
+			echo "<div style='color:#C00000'><img src='/static/common/images/error.png' style='vertical-align:bottom'/> ".$e."</div>";
 	}
 	
 	public function init() {
