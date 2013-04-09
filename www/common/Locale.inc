@@ -43,6 +43,7 @@ class Locale {
 	public static $current_component = "";
 	/** @var string current language of the user */
 	public static $language = null;
+	public static $known = array("en","fr","kh","vn","ph");
 	
 	public static function get_string($component, $key) {
 		if (!in_array($component, Locale::$loaded))
@@ -109,7 +110,6 @@ if (isset($_SESSION["lang"]))
 else if (isset($_COOKIE["lang"]))
 	Locale::$language = $_SESSION["lang"] = $_COOKIE["lang"];
 else {
-	$known = array("en","fr");
 	if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
 		$s = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 		$i = strpos($s, ';');
@@ -120,7 +120,7 @@ else {
 		$count = count($values);
 		for ($i = 0; $i < $count; $i++) {
 			$s = strtolower($values[$i]);
-			if (strlen($s) == 2 && in_array($s,$known)) {
+			if (strlen($s) == 2 && in_array($s,Locale::$known)) {
 				Locale::$language = $s;
 				break;
 			}

@@ -24,6 +24,8 @@ $app_model = null;
  */
 class PNApplication {
 
+	public static $instance;
+	
 	public static $errors = array();
 	public $components = array();
 	
@@ -46,7 +48,7 @@ class PNApplication {
 		foreach ($this->components as $c) $this->init_component($c, $done);
 		require_once("common/DataBaseModel.inc");
 		DataBaseModel::update_model($this->data_model());
-		if (count($errors) > 0) {
+		if (count(PNApplication::$errors) > 0) {
 			PNApplication::print_errors();
 			die();
 		}

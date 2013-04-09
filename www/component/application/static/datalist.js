@@ -231,6 +231,11 @@ function _datalist_add_search_input(td, field) {
 			datalist_enable_refresh();
 		form.elements["search_"+_datalist_encode_field(field)].value = this.value;
 	};
+	var prev = input.onkeydown;
+	input.onkeydown = function(ev) {
+		if (prev) if (!prev(ev)) return false;
+		datalist_enable_refresh();
+	}
 	td.appendChild(input);
 	input.focus();
 }

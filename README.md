@@ -12,7 +12,7 @@ Tips to use GitHub:
    - if since the time you make the fork some modifications have been done in the PN repository, you need to update your own copy
    - For this:
      - On you local copy, in your computer, ADD A REMOTE STREAM:
-        - name: upstream
+	      - name: upstream
 	      - URL: https://github.com/passerellesnumeriques/Students-DataBase.git
 	 - Each time you want to get the latest version:
 	      - PULL from remote repository UPSTREAM => this will take the latest version, into your local computer

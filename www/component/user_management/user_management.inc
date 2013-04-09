@@ -25,11 +25,14 @@ class user_management extends Component {
 		$this->domain = $domain;
 		$this->username = $username;
 		$this->logged_in->fire();
+		setcookie("domain",$this->domain,time()+30*24*60*60,"/dynamic/application/page/login");
+		setcookie("username",$this->username,time()+30*24*60*60,"/dynamic/application/page/login");
 		return true;
 	}
 	
 	public function logout() {
 		$this->logged_out->fire();
+		setcookie(session_name(), "", time()-10000, "/dynamic/");
 		session_destroy();
 	}
 	
