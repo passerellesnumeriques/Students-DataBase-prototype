@@ -1,18 +1,21 @@
 <script type='text/javascript'>
 load_css('/data_list/datalist.css');
-load_css('/common/dhtmlx/dhtmlx.css');
+load_css('/common/dhtmlx/dhtmlxgrid.css');
+load_css('/common/dhtmlx/skins/dhtmlxgrid_dhx_skyblue.css');
 var datalist_loaded = 0;
-load_js('/data_list/datalist.js',function() {
-	datalist_init_fields();
+function datalist_part_loaded() {
 	datalist_loaded++;
 	if (datalist_loaded == 2)
 		datalist_refresh();
-});
-load_js('/common/dhtmlx/dhtmlx.js',function() {
-	load_js('/common/dhtmlx/dhtmlxgrid_mcol.js');
-	datalist_loaded++;
-	if (datalist_loaded == 2)
-		datalist_refresh();
+}
+load_js('/data_list/datalist.js', function() { datalist_init_fields(); datalist_part_loaded(); });
+load_js('/common/dhtmlx/dhtmlxcommon.js',function() {
+	load_js('/common/dhtmlx/dhtmlxgrid.js',function() {
+		load_js('/common/dhtmlx/dhtmlxgridcell.js',function() {
+			datalist_part_loaded();
+		});
+		load_js('/common/dhtmlx/dhtmlxgrid_mcol.js');
+	});
 });
 </script><table style='width:100%;height:100%' cellspacing=0 cellpadding=0 id='datalist_container'>
 <tr id='datalist_header'>

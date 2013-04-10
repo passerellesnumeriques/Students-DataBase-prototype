@@ -6,6 +6,8 @@ class user_management extends Component {
 	public $domain = null;
 	/** @var string username of the user logged in */
 	public $username = null;
+	/** @var string authentication token returned by the authentication system */
+	public $auth_token = null;
 	
 	/** @var Event raised when a user logged in */
 	public $logged_in;
@@ -21,12 +23,11 @@ class user_management extends Component {
 		if ($this->username <> null) return false;
 		$auth = $this->app->authentication->get_authentication_system($domain);
 		if ($auth == null) return false;
-		if (!$auth->authenticate($username, $password)) return false;
+		$this->auth_token = $auth->authenticate($username, $password);
+		if ($this->auth_token === null) return false;
 		$this->domain = $domain;
 		$this->username = $username;
 		$this->logged_in->fire();
-		setcookie("domain",$this->domain,time()+30*24*60*60,"/dynamic/application/page/login");
-		setcookie("username",$this->username,time()+30*24*60*60,"/dynamic/application/page/login");
 		return true;
 	}
 	
@@ -36,9 +37,9 @@ class user_management extends Component {
 		session_destroy();
 	}
 	
-	private $rights = null;
+	private $rights = array();
 	public function has_right($right_name, $value = true) {
-		if ($rights == null) {
+		if (!isset($this->rights[PNApplication::$instance->current_domain])) {
 			require_once("common/SQLQuery.inc");
 			$q = new SQLQuery();
 			$roles = $q->select("UserRole")->field("role_id")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
@@ -53,10 +54,10 @@ class user_management extends Component {
 				else
 					$rights[$r["rights"]] = $this->get_higher_right($rights[$r["rights"]], $this->get_right_value($r["value"]));
 			}
-			$this->rights = $rights;
+			$this->rights[PNApplication::$instance->current_domain] = $rights;
 		}
-		if (!isset($this->rights[$right_name])) return false;
-		return $this->rights[$right_name] === $value;
+		if (!isset($this->rights[PNApplication::$instance->current_domain][$right_name])) return false;
+		return $this->rights[PNApplication::$instance->current_domain][$right_name] === $value;
 	}
 	private function get_right_value($s) {
 		if ($s == "true") return true;

@@ -74,20 +74,25 @@ case "dynamic":
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 
-	require_once("common/DataBase.inc");
 	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
 	require_once("common/Locale.inc");
+	require_once("common/DataBase.inc");
 	
 	global $app;
 	if (!isset($_SESSION["app"])) {
 		$app = new PNApplication();
+		$app->current_domain = file_get_contents("local_domain");
 		$app->init();
 		$_SESSION["app"] = &$app;
 	} else
 		$app = &$_SESSION["app"];
 	PNApplication::$instance = &$app;
+	// TODO DataBase connection according to configuration
+	require_once("common/DataBaseSystem_MySQL.inc");
+	DataBase::$conn = new DataBaseSystem_MySQL();
+	DataBase::$conn->connect("localhost", "root", "", "students_".$app->current_domain);
 	
 	if (!isset($app->components[$component_name])) die("Invalid request: unknown component ".$component_name);
 

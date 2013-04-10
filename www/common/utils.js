@@ -32,11 +32,22 @@ function load_css(path) {
 	document.getElementsByTagName("HEAD")[0].appendChild(link);
 }
 function load_js(path,onload) {
-	var s = document.createElement("SCRIPT");
-	s.type = "text/javascript";
-	s.src = "/static"+path;
-	s.onload = function() { setTimeout(onload,1) };
-	document.getElementsByTagName("HEAD")[0].appendChild(s);
+	if (typeof path == "string") {
+		var s = document.createElement("SCRIPT");
+		s.type = "text/javascript";
+		s.src = "/static"+path;
+		s.onload = function() { setTimeout(onload,1) };
+		document.getElementsByTagName("HEAD")[0].appendChild(s);
+	} else {
+		var waiting = path.length;
+		for (var i = 0; i < path.length; ++i) {
+			var s = document.createElement("SCRIPT");
+			s.type = "text/javascript";
+			s.src = "/static"+path[i];
+			s.onload = function() { waiting--; if (waiting == 0) setTimeout(onload,1); };
+			document.getElementsByTagName("HEAD")[0].appendChild(s);
+		}
+	}
 }
 
 function popup_page(title,icon,component,page) {
