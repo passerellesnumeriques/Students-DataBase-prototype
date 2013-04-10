@@ -3,6 +3,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	global $app;
 	if ($app->user_management->login($_POST["domain"], $_POST["username"], $_POST["password"])) {
 		header("Location: enter".(isset($_GET["page"])?"?page=".$_GET["page"]:""));
+		setcookie("domain",$app->user_management->domain,time()+30*24*60*60,"/dynamic/application/page/login");
+		setcookie("username",$app->user_management->username,time()+30*24*60*60,"/dynamic/application/page/login");
 		die();
 	}
 }

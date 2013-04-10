@@ -1,21 +1,28 @@
 <?php 
-echo "Removing all tables from DataBase:<br/>";
-flush();
-$res = DataBase::$conn->execute("SHOW TABLES");
-if ($res !== FALSE) {
-	while (($table = DataBase::$conn->next_row($res)) !== FALSE) {
-		echo " + Table ".$table[0]."<br/>";
-		DataBase::$conn->execute("DROP TABLE `".$table[0]."`");
-		flush();
-	}
-} else
-	echo "Failed to get the list of tables<br/>";
-flush();
-echo "Create tables according to data model<br/>";
-$model = PNApplication::$instance->data_model();
 require_once("common/DataBaseModel.inc");
-DataBaseModel::update_model($model);
-echo "Insert test data<br/>";
+$model = PNApplication::$instance->data_model();
+
+$domains = preg_split("/,/", file_get_contents("domains",true));
+foreach ($domains as $domain) {
+	echo "Initialize DataBase for domain ".$domain."<br/>";
+	$res = DataBase::$conn->execute("CREATE DATABASE IF NOT EXISTS students_".$domain);
+	$res = DataBase::$conn->execute("USE students_".$domain);
+	$res = DataBase::$conn->execute("SHOW TABLES");
+	if ($res !== FALSE) {
+		while (($table = DataBase::$conn->next_row($res)) !== FALSE) {
+			echo " + Table ".$table[0]."<br/>";
+			DataBase::$conn->execute("DROP TABLE `".$table[0]."`");
+			flush();
+		}
+		DataBaseModel::update_model($model);
+	} else
+		echo "Failed to get the list of tables<br/>";
+	flush();
+}
+
+$local_domain = file_get_contents("local_domain", true);
+$res = DataBase::$conn->execute("USE students_".$local_domain);
+echo "Insert test data for local domain ".$local_domain."<br/>";
 
 $roles = array(
 	"Staff",
@@ -59,10 +66,10 @@ foreach ($users as $user) {
 	DataBase::$conn->execute("INSERT INTO People (first_name,last_name,sex) VALUES ('".$user[0]."','".$user[1]."','".$user[2]."')");
 	$people_id = DataBase::$conn->get_insert_id();
 	$username = str_replace(" ","-", strtolower($user[0]).".".strtolower($user[1]));
-	DataBase::$conn->execute("INSERT INTO Users (domain,username) VALUES ('PNP','".$username."')");
-	DataBase::$conn->execute("INSERT INTO UserPeople (domain,username,people) VALUES ('PNP','".$username."',".$people_id.")");
+	DataBase::$conn->execute("INSERT INTO Users (domain,username) VALUES ('".$local_domain."','".$username."')");
+	DataBase::$conn->execute("INSERT INTO UserPeople (domain,username,people) VALUES ('".$local_domain."','".$username."',".$people_id.")");
 	foreach ($user[3] as $role) {
-		DataBase::$conn->execute("INSERT INTO UserRole (domain,username,role_id) VALUES ('PNP','".$username."',".$roles_id[$role].")");
+		DataBase::$conn->execute("INSERT INTO UserRole (domain,username,role_id) VALUES ('".$local_domain."','".$username."',".$roles_id[$role].")");
 	}
 }
 echo "<a href='/'>Back to application</a>";

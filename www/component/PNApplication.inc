@@ -27,6 +27,7 @@ class PNApplication {
 	public static $instance;
 	
 	public static $errors = array();
+	public $current_domain;
 	public $components = array();
 	
 	public static function error($message) {
@@ -46,12 +47,6 @@ class PNApplication {
 		foreach ($components_names as $name) $this->create_component($name);
 		$done = array();
 		foreach ($this->components as $c) $this->init_component($c, $done);
-		require_once("common/DataBaseModel.inc");
-		DataBaseModel::update_model($this->data_model());
-		if (count(PNApplication::$errors) > 0) {
-			PNApplication::print_errors();
-			die();
-		}
 	}
 	private function create_component($name) {
 		$c = new $name($this, $name);
