@@ -87,6 +87,7 @@ function datalist_init_grid() {
 	datalist_grid.setHeader(header);
 	datalist_grid.setColTypes(types);
 	datalist_grid.setImagePath("/static/common/dhtmlx/imgs/");
+	datalist_grid.setSkin("dhx_skyblue");
 	datalist_grid.init();
 }
 function datalist_remove_field(icon,field) {

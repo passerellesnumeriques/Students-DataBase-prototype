@@ -7,7 +7,7 @@ html, body {
 	margin: 0px;
 }
 .header {
-	height: 25px;
+	height: 40px;
 	/* background-color: #A0A0F0; */
 	background: #c0c0f0; /* Old browsers */
 	background: -moz-linear-gradient(top,  #c0c0f0 50%, #9898c8 85%, #686898 100%); /* FF3.6+ */
