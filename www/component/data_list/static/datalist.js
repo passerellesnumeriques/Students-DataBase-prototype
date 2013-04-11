@@ -16,32 +16,37 @@ function datalist_section_collapse_expand(img) {
 		img.src = "/static/common/images/collapse.gif";
 	}
 }
+var datalist_data = null;
 function datalist_refresh() {
 	datalist_init_grid();
-	var form = document.forms["datalist"];
-	var data = "";
-	for (var i = 0; i < form.elements.length; ++i) {
-		var e = form.elements[i];
-		if (i > 0) data += "&";
-		data += encodeURIComponent(e.name) + "=" + encodeURIComponent(e.value);
-	}
+	var data = "starting_table="+encodeURIComponent(datalist_table);
+	for (var i = 0; i < datalist_primary_keys.length; ++i)
+		data += "&"+encodeURIComponent("pk"+i)+"="+encodeURIComponent(datalist_primary_keys[i]);
+	for (var i = 0; i < datalist_visible_fields.length; ++i)
+		data += "&"+encodeURIComponent("field_"+i)+"="+encodeURIComponent(datalist_visible_fields[i]);
+	for (var field in datalist_search)
+		data += "&"+encodeURIComponent("search_"+field)+"="+encodeURIComponent(datalist_search[field]);
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", "/dynamic/data_list/service/get_data", true);
 	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 	xhr.onreadystatechange = function() {
         if (this.readyState === 4 && this.status === 200) {
             //alert(this.responseText);
-        	datalist_grid.parse(eval(this.responseText), "jsarray");
-        	var nb = datalist_grid.getColumnsNum();
-        	for (var i = 0; i < nb; ++i) {
-        		datalist_grid.adjustColumnSize(i);
-        		//if (grid.getColWidth(i)
-        	}
+        	datalist_data = eval(this.responseText);
+        	_datalist_reset_data();
         }
     };
     xhr.send(data);
 	var button = document.getElementById("datalist_refresh");
 	button.disabled = "disabled";
+}
+function _datalist_reset_data() {
+	datalist_grid.parse(datalist_data, "jsarray");
+	var nb = datalist_grid.getColumnsNum();
+	for (var i = 0; i < nb; ++i) {
+		datalist_grid.adjustColumnSize(i);
+	//	//if (grid.getColWidth(i)
+	}
 }
 function datalist_enable_refresh() {
 	var button = document.getElementById("datalist_refresh");
@@ -51,38 +56,23 @@ function datalist_enable_refresh() {
 		button.disabled = "";
 }
 function datalist_init_fields() {
-	var form = document.forms["datalist"];
-	var visible = [];
-	var i = 0;
-	while (form.elements["field_"+i]) {
-		var input = form.elements["field_"+i];
-		_datalist_add_visible_field(input.value);
-		visible.push(input.value);
-		i++;
-	}
-	form = document.forms["datalist_names"];
-	i = 0;
-	while (form.elements["field_"+i]) {
-		var field = form.elements["field_"+i].value;
-		if (!visible.contains(field))
-			_datalist_add_available_field(field);
-		i++;
+	for (var i = 0; i < datalist_visible_fields.length; ++i)
+		_datalist_add_visible_field(datalist_visible_fields[i]);
+	for (var i = 0; i < datalist_fields.length; ++i) {
+		if (!datalist_visible_fields.contains(datalist_fields[i].path))
+			_datalist_add_available_field(datalist_fields[i]);
 	}
 }
 var datalist_grid = null;
 function datalist_init_grid() {
 	datalist_grid = new dhtmlXGridObject('datalist_data');
-	var form = document.forms["datalist"];
 	var header = "";
 	var types = "";
-	var i = 0;
-	while (form.elements["field_"+i]) {
-		var input = form.elements["field_"+i];
-		var info = _datalist_get_field_info(input.value);
+	for (var i = 0; i < datalist_visible_fields.length; ++i) {
+		var field = _datalist_get_field(datalist_visible_fields[i]);
 		if (header.length>0) { header+=","; types += ","; }
-		header += info[1];
+		header += field.name;
 		types += "ro";
-		i++;
 	}
 	datalist_grid.setHeader(header);
 	datalist_grid.setColTypes(types);
@@ -90,45 +80,16 @@ function datalist_init_grid() {
 	datalist_grid.setSkin("dhx_skyblue");
 	datalist_grid.init();
 }
-function datalist_remove_field(icon,field) {
-	// remove the field from the form, update indexes
-	var form = document.forms["datalist"];
-	var i = 0;
-	while (form.elements["field_"+i]) {
-		var input = document.forms["datalist"].elements["field_"+i];
-		if (input.value == field) {
-			// found in the list of fields
-			input.parentNode.removeChild(input);
-			var row = icon.parentNode.parentNode;
-			row.parentNode.removeChild(row);
-			datalist_enable_refresh();
-			// update following indexes
-			i++;
-			while (form.elements["field_"+i]) {
-				form.elements["field_"+i].name = "field_"+(i-1);
-				i++;
-			}
-			// create the row in the list of available fields
-			_datalist_add_available_field(field);
-			return;
-		}
-		i++;
-	}
-	// not found
-	alert('Error: field not found: '+field);
+function datalist_remove_field(icon,field_path) {
+	datalist_visible_fields.remove(field_path);
+	var row = icon.parentNode.parentNode;
+	row.parentNode.removeChild(row);
+	_datalist_add_available_field(_datalist_get_field(field_path));
+	datalist_enable_refresh();
 }
-function datalist_add_field(icon,field) {
-	// create the field in the form
-	var form = document.forms["datalist"];
-	var i = 0;
-	while (form.elements["field_"+i]) i++;
-	var input = document.createElement("INPUT");
-	input.type = "hidden";
-	input.name = "field_"+i;
-	input.value = field;
-	form.appendChild(input);
-	// create the field in the list of visible fields
-	_datalist_add_visible_field(field);
+function datalist_add_field(icon,field_path) {
+	datalist_visible_fields.push(field_path);
+	_datalist_add_visible_field(field_path);
 	// remove the field from the list of available fields
 	table = document.getElementById("datalist_avail_fields");
 	row = icon.parentNode.parentNode;
@@ -143,22 +104,15 @@ function datalist_add_field(icon,field) {
 	table.removeChild(row);
 	datalist_enable_refresh();
 }
-function datalist_field_up(icon, field) {
-	// update order in datalist form
-	var form = document.forms["datalist"];
-	var i = 0;
+function datalist_field_up(icon, field_path) {
 	var oldInd;
-	while (form.elements["field_"+i]) {
-		var input = form.elements["field_"+i];
-		if (input.value == field) {
-			input.name = "_datalist_temp";
-			form.elements["field_"+(i-1)].name = "field_"+i;
-			input.name = "field_"+(i-1);
+	for (var i = 0; i < datalist_visible_fields.length; ++i)
+		if (datalist_visible_fields[i] == field_path) {
 			oldInd = i;
 			break;
 		}
-		i++;
-	}
+	datalist_visible_fields.splice(oldInd, 1);
+	datalist_visible_fields.splice(oldInd-1, 0, field_path);
 	// update order in the displayed list
 	var row = icon.parentNode.parentNode;
 	row.parentNode.insertBefore(row, row.previousSibling);
@@ -188,7 +142,7 @@ function datalist_field_up(icon, field) {
 			img.src = "/static/common/images/down.png";
 			img.style.cursor = "pointer";
 			img.className = "_icon_down";
-			img.onclick = function() { datalist_field_down(this, field); };
+			img.onclick = function() { datalist_field_down(this, field_path); };
 			icon.parentNode.insertBefore(img, c);
 			break;
 		}
@@ -196,25 +150,25 @@ function datalist_field_up(icon, field) {
 	// remove the up icon if we are at first position
 	if (row.previousSibling == null)
 		icon.parentNode.removeChild(icon);
-	// move in the grid
-	datalist_grid.moveColumn(oldInd,oldInd-1);
+	// reset grid
+	datalist_init_grid();
+	// update data
+	for (var i = 0; i < datalist_data.length; ++i) {
+		var tmp = datalist_data[i][oldInd]; 
+		datalist_data[i].splice(oldInd, 1);
+		datalist_data[i].splice(oldInd-1, 0, tmp);
+	}
+	_datalist_reset_data();
 }
-function datalist_field_down(icon, field) {
-	// update order in datalist form
-	var form = document.forms["datalist"];
-	var i = 0;
+function datalist_field_down(icon, field_path) {
 	var oldInd;
-	while (form.elements["field_"+i]) {
-		var input = form.elements["field_"+i];
-		if (input.value == field) {
-			input.name = "_datalist_temp";
-			form.elements["field_"+(i+1)].name = "field_"+i;
-			input.name = "field_"+(i+1);
+	for (var i = 0; i < datalist_visible_fields.length; ++i)
+		if (datalist_visible_fields[i] == field_path) {
 			oldInd = i;
 			break;
 		}
-		i++;
-	}
+	datalist_visible_fields.splice(oldInd, 1);
+	datalist_visible_fields.splice(oldInd+1, 0, field_path);
 	// update order in the displayed list
 	var row = icon.parentNode.parentNode;
 	row.parentNode.insertBefore(row.nextSibling, row);
@@ -244,7 +198,7 @@ function datalist_field_down(icon, field) {
 			img.src = "/static/common/images/up.png";
 			img.style.cursor = "pointer";
 			img.className = "_icon_up";
-			img.onclick = function() { datalist_field_up(this, field); };
+			img.onclick = function() { datalist_field_up(this, field_path); };
 			icon.parentNode.insertBefore(img, c);
 			break;
 		}
@@ -252,30 +206,28 @@ function datalist_field_down(icon, field) {
 	// remove the down icon if we are at last position
 	if (row.nextSibling == null)
 		icon.parentNode.removeChild(icon);
-	// move in the grid
-	datalist_grid.moveColumn(oldInd+1,oldInd);
+	// reset grid
+	datalist_init_grid();
+	// update data
+	for (var i = 0; i < datalist_data.length; ++i) {
+		var tmp = datalist_data[i][oldInd]; 
+		datalist_data[i].splice(oldInd, 1);
+		datalist_data[i].splice(oldInd+1, 0, tmp);
+	}
+	_datalist_reset_data();
 }
-function datalist_add_search(icon, field) {
+function datalist_add_search(icon, field_path) {
 	var td = icon.parentNode;
 	icon.onclick = null;
-	_datalist_add_search_input(td, field);
+	_datalist_add_search_input(td, field_path);
 	//datalist_enable_refresh();
 }
-function _datalist_add_search_input(td, field) {
-	var info = _datalist_get_field_info(field);
-	var form = document.forms["datalist"];
-	var i = form.elements["search_"+_datalist_encode_field(field)];
-	var input = _datalist_create_input(info[2], i ? i.value : null);
+function _datalist_add_search_input(td, field_path) {
+	var field = _datalist_get_field(field_path);
+	var input = _datalist_create_input(field.type, datalist_search[_datalist_encode_field(field_path)]);
 	var update = function() {
-		var form = document.forms["datalist"];
-		if (!form.elements["search_"+_datalist_encode_field(field)]) {
-			var i = document.createElement("INPUT");
-			i.type = 'hidden';
-			i.name = 'search_'+_datalist_encode_field(field);
-			form.appendChild(i);
-		}
-		if (form.elements["search_"+_datalist_encode_field(field)].value != input.value) {
-			form.elements["search_"+_datalist_encode_field(field)].value = input.value;
+		if (datalist_search[_datalist_encode_field(field_path)] != input.value) {
+			datalist_search[_datalist_encode_field(field_path)] = input.value;
 			datalist_enable_refresh();
 		}
 	};
@@ -319,51 +271,37 @@ function _datalist_create_input(type, value) {
 	}
 	return input;
 }
-function _datalist_encode_field(field) {
-	return field.replace(".","__dot__").replace(">","__ind__");
+function _datalist_encode_field(field_path) {
+	return field_path.replace(".","__dot__").replace(">","__ind__");
 }
-function _datalist_get_field_info(field) {
-	// search category name and field name
-	var f = document.forms["datalist_names"];
-	i = 0;
-	var cat_name = "";
-	var field_name = "";
-	var type = "";
-	while (f.elements["field_"+i]) {
-		if (f.elements["field_"+i].value == field) {
-			cat_name = f.elements["field_"+i+"_category"].value;
-			field_name = f.elements["field_"+i+"_name"].value;
-			type = f.elements["field_"+i+"_type"].value;
-			break;
-		}
-		i++;
-	}
-	return [cat_name,field_name,type];
+function _datalist_get_field(field_path) {
+	for (var i = 0; i < datalist_fields.length; ++i)
+		if (datalist_fields[i].path == field_path)
+			return datalist_fields[i];
+	return null;
 }
-function _datalist_add_visible_field(field) {
-	var a = _datalist_get_field_info(field);
-	var cat_name = a[0];
-	var field_name = a[1];
+function _datalist_add_visible_field(field_path) {
+	var field = _datalist_get_field(field_path);
 	var table = document.getElementById("datalist_visible_fields");
 	var row = document.createElement("TR");
-	row.data = field;
+	row.data = field_path;
 	var td = document.createElement("TD");
 	td.noWrap = "nowrap";
-	var code = cat_name+" / "+field_name;
+	var code = field.category+" / "+field.name;
 	code += " <img src='/static/common/images/search.png' style='cursor:pointer;vertical-align:bottom;padding-right:2px'";
-	var search = document.forms["datalist"].elements["search_"+_datalist_encode_field(field)];
+	var search = datalist_search[_datalist_encode_field(field_path)];
 	if (!search)
-		code += " onclick=\"datalist_add_search(this,'"+field+"')\"";
+		code += " onclick=\"datalist_add_search(this,'"+field_path+"')\"";
 	code += "/>";
 	td.innerHTML = code;
-	if (search) _datalist_add_search_input(td, field);
+	if (search) _datalist_add_search_input(td, field_path);
 	row.appendChild(td);
 	td = document.createElement("TD");
 	td.noWrap = "nowrap";
 	var code = "";
 	if (table.childNodes.length > 0)
-		code += "<img src='/static/common/images/up.png' style='cursor:pointer' onclick='datalist_field_up(this,\""+field+"\")' class='_icon_up'/>";
-	code += "<img src='/static/common/images/invisible.png' style='cursor:pointer' onclick='datalist_remove_field(this,\""+field+"\")' class='_icon_invisible'/>";
+		code += "<img src='/static/common/images/up.png' style='cursor:pointer' onclick='datalist_field_up(this,\""+field_path+"\")' class='_icon_up'/>";
+	code += "<img src='/static/common/images/invisible.png' style='cursor:pointer' onclick='datalist_remove_field(this,\""+field_path+"\")' class='_icon_invisible'/>";
 	td.innerHTML = code;
 	td.align = "right";
 	row.appendChild(td);
@@ -388,7 +326,7 @@ function _datalist_add_visible_field(field) {
 				img.src = "/static/common/images/down.png";
 				img.style.cursor = "pointer";
 				img.className = "_icon_down";
-				img.onclick = function() { datalist_field_down(this, field); };
+				img.onclick = function() { datalist_field_down(this, field_path); };
 				td.insertBefore(img, td.childNodes[i]);
 				break;
 			}
@@ -396,16 +334,13 @@ function _datalist_add_visible_field(field) {
 	}
 }
 function _datalist_add_available_field(field) {
-	var a = _datalist_get_field_info(field);
-	var cat_name = a[0];
-	var field_name = a[1];
 	// search category
 	var table = document.getElementById("datalist_avail_fields");
 	var cat_row = null;
 	for (i = 0; i < table.childNodes.length; ++i) {
 		var tr = table.childNodes[i];
 		if (tr.className != "datalist_fields_category") continue;
-		if (tr.childNodes[0].innerHTML != cat_name) continue;
+		if (tr.childNodes[0].innerHTML != field.category) continue;
 		cat_row = tr;
 		break;
 	}
@@ -414,7 +349,7 @@ function _datalist_add_available_field(field) {
 		var td = document.createElement("TD");
 		td.colSpan = 2;
 		td.noWrap = "nowrap";
-		td.innerHTML = cat_name;
+		td.innerHTML = field.category;
 		cat_row.appendChild(td);
 		cat_row.className = "datalist_fields_category";
 		table.appendChild(cat_row);
@@ -423,12 +358,12 @@ function _datalist_add_available_field(field) {
 	var td = document.createElement("TD");
 	td.noWrap = "nowrap";
 	td.style.paddingLeft = "10px";
-	td.innerHTML = field_name;
+	td.innerHTML = field.name;
 	tr.appendChild(td);
 	td = document.createElement("TD");
 	td.noWrap = "nowrap";
 	td.align = "right";
-	td.innerHTML = "<img src='/static/common/images/visible.png' style='cursor:pointer' onclick='datalist_add_field(this,\""+field+"\",\""+cat_name+"\",\""+field_name+"\");'/>";
+	td.innerHTML = "<img src='/static/common/images/visible.png' style='cursor:pointer' onclick='datalist_add_field(this,\""+field.path+"\");'/>";
 	tr.appendChild(td);
 	if (cat_row.nextSibling)
 		table.insertBefore(tr, cat_row.nextSibling);

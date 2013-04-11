@@ -10,7 +10,12 @@ abstract class AuthenticationSystem {
 	
 	/**
 	 * @param string $token from the authenticate method
-	 * @return array of array(username,is_staff), or NULL if this functionality is not available
+	 */
+	public function close_session($token) {}
+	
+	/**
+	 * @param string $token from the authenticate method
+	 * @return array of string corresponding to the usernames, or NULL if this functionality is not available
 	 */
 	public function get_user_list($token) { return null; }
 	

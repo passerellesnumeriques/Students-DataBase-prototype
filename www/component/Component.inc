@@ -26,16 +26,10 @@ abstract class Component {
 				die();
 			}
 		}
-		global $page_embedded;
-		$page_embedded = $embedded;
-		include "common/page_header.inc";
 		$file = "component/".$this->name."/page/".$path.".php";
-		if (file_exists($file))
-			include $file;
-		else
-			PNApplication::error_html("Page <i>".$path."</i> does not exist in component <i>".$this->name."</i>");
-		PNApplication::print_errors();
-		include "common/page_footer.inc";
+		require_once("Page.inc");
+		$page = new Page();
+		$page->generate($file, $embedded);
 	}
 	
 	public function service($path) {

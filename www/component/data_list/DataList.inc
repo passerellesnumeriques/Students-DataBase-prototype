@@ -209,50 +209,8 @@ class DataList {
 		return str_replace(".","__dot__",str_replace(">","__ind__",$s));
 	}
 	
-	public function build($header = null) {
+	public function build($page, $header = null) {
 		include "layout.inc";
-		// get all possible fields
-		$all_fields = $this->find_all_possible_paths();
-		
-		// form of fields
-		echo "<form name='datalist_names' onsubmit='return false'>";
-		$i = 0;
-		foreach ($all_fields as $path) {
-			$f = $this->model->getDataCategoryAndName($path->table, $path->field);
-			echo "<input type='hidden' name='field_".$i."' value='".$path->get_path()."'/>";
-			echo "<input type='hidden' name='field_".$i."_category' value='".$f[0]."'/>";
-			echo "<input type='hidden' name='field_".$i."_name' value='".$f[1]."'/>";
-			$type = 'unknown';
-			$col = $this->model->tables[$path->table]->getColumn($path->field);
-			if ($col instanceof \data\ColumnString) $type = 'string:'.$col->max_length;
-			else if ($col instanceof \data\ColumnInteger) $type = 'integer';
-			else if ($col instanceof \data\ColumnEnum) {
-				$type = 'enum[';
-				$first = true;
-				foreach ($col->values as $v) {
-					if ($first) $first = false; else $type .= ",";
-					$type .= json_encode($v);
-				}
-				$type .= "]";
-			}
-			echo "<input type='hidden' name='field_".$i."_type' value='".$type."'/>";
-			$i++;
-		}
-		echo "</form>";
-		echo "<form name='datalist' method='post'>";
-		echo "<input type='hidden' name='from_refresh' value='yes'/>";
-		echo "<input type='hidden' name='starting_table' value=".json_encode($this->starting_table)."/>";
-		for ($i = 0; $i < count($this->primary_key); $i++)
-			echo "<input type='hidden' name='pk".$i."' value=".json_encode($this->primary_key[$i])."/>";
-		$i = 0;
-		foreach ($this->columns as $col) {
-			echo "<input type='hidden' name='field_".$i."' value='".$col->get_path()."'/>";
-			$i++;
-		}
-		foreach ($this->search as $field=>$value) {
-			echo "<input type='hidden' name='search_".$this->encode_field($field)."' value='".$value."'/>";
-		}
-		echo "</form>";
 	}
 	
 	public function process() {
