@@ -15,14 +15,15 @@ class Page {
 	}
 	public function onload($script) { $this->onload = $script; }
 	
-	public function generate($path, $embedded) {
-		if (!file_exists($path)) {
-			PNApplication::error_html("Page <i>".$path."</i> does not exist in component <i>".$this->name."</i>");
+	public function generate($component, $path, $embedded) {
+		$file = "component/".$component->name."/page/".$path.".php";
+		if (!file_exists($file)) {
+			PNApplication::error_html("Page <i>".$path."</i> does not exist in component <i>".$component->name."</i>");
 			PNApplication::print_errors();
 			return;
 		}
 		ob_start();
-		include $path;
+		include $file;
 		$content = ob_get_clean();
 		$this->start_page();
 		if (!$embedded) $this->layout_header();
@@ -98,7 +99,7 @@ echo $app->people->first_name." ".$app->people->last_name." ";
 	private function layout_footer() {
 ?>
 <tr class='footer'><td align=center>
-Copyright (c) Passerelles numériques
+Copyright (c) Passerelles numÃ©riques
 -
 <a href="https://github.com/passerellesnumeriques/Students-DataBase/issues/new" target="_blank">Report a bug or request for new feature</a>
 </td></tr>

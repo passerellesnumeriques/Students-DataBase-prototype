@@ -69,6 +69,13 @@ function popup_page(title,icon,component,page) {
 	make_height_of_td_compatible();
 }
 
+function listenEvent(elem, type, handler) {
+	if (elem.addEventListener)
+	     elem.addEventListener(type,handler,false);
+	 else if (elem.attachEvent)
+	     elem.attachEvent('on'+type,handler); 
+}
+
 function make_height_of_td_compatible() {
 	var list = document.getElementsByClassName("set_height");
 	for (var i = 0; i < list.length; ++i)
@@ -77,4 +84,4 @@ function make_height_of_td_compatible() {
 		list[i].style.height = list[i].scrollHeight+"px";
 }
 window.onload = make_height_of_td_compatible;
-window.onresize = make_height_of_td_compatible;
+listenEvent(window, 'resize', make_height_of_td_compatible);

@@ -1,9 +1,12 @@
 <?php 
 $page->add_stylesheet("/static/data_list/datalist.css");
+$page->add_stylesheet("/static/common/dhtmlx/skins/dhtmlxaccordion_dhx_skyblue.css");
 $page->add_stylesheet("/static/common/dhtmlx/dhtmlxgrid.css");
 $page->add_stylesheet("/static/common/dhtmlx/skins/dhtmlxgrid_dhx_skyblue.css");
 $page->add_javascript("/static/data_list/datalist.js");
 $page->add_javascript("/static/common/dhtmlx/dhtmlxcommon.js");
+$page->add_javascript("/static/common/dhtmlx/dhtmlxcontainer.js");
+$page->add_javascript("/static/common/dhtmlx/dhtmlxaccordion.js");
 $page->add_javascript("/static/common/dhtmlx/dhtmlxgrid.js");
 $page->add_javascript("/static/common/dhtmlx/dhtmlxgridcell.js");
 $page->onload("datalist_init_fields();datalist_refresh();");
@@ -23,32 +26,17 @@ $page->onload("datalist_init_fields();datalist_refresh();");
 <tr>
 	<td valign=top width=25% id='datalist_fields_area'>
 		<div style='width:100%;height:100%;overflow:auto' id='datalist_fields_area_div'>
-			<div class='datalist_fields_section'>
-				<div class='datalist_fields_section_title'>
-					<img src='/static/common/images/collapse.gif' style='border:0px;cursor:pointer' onclick='datalist_section_collapse_expand(this);'/>
-					<?php locale("data_list", "Visible Fields");?>
-				</div>
-				<div class='datalist_fields_section_content' style='visibility:visible'>
-					<table width=100% cellspacing=0 cellpadding=0>
-						<tbody id='datalist_visible_fields'></tbody>
-					</table>
-				</div>
-			</div>
-			<div class='datalist_fields_section'>
-				<div class='datalist_fields_section_title'>
-					<img src='/static/common/images/collapse.gif' style='border:0px;cursor:pointer' onclick='datalist_section_collapse_expand(this);'/>
-					<?php locale("data_list", "Available Fields");?>
-				</div>
-				<div class='datalist_fields_section_content' style='visibility:visible'>
-					<table width='100%' cellspacing=0 cellpadding=0>
-						<tbody id='datalist_avail_fields'></tbody>
-					</table>
-				</div>
-			</div>
+			<div id='datalist_fields_accordion' style='width:100%;'></div>
+			<table width=100% cellspacing=0 cellpadding=0 id='datalist_table_visible' title="<?php locale("data_list", "Visible Fields");?>">
+				<tbody id='datalist_visible_fields'></tbody>
+			</table>
+			<table width='100%' cellspacing=0 cellpadding=0 id='datalist_table_available' title="<?php locale("data_list", "Available Fields");?>">
+				<tbody id='datalist_avail_fields'></tbody>
+			</table>
 		</div>
 	</td>
-	<td class='datalist_separator' onmousedown='datalist_start_resize(event);return false;'></td>
-	<td class='set_height' valign=top align=left style='padding-left:2px;padding-right:2px' id='datalist_data_area'>
+	<td class='datalist_separator' onmousedown='datalist_start_resize(event);return false;'>&nbsp;</td>
+	<td class='set_height' valign=top align=left id='datalist_data_area'>
 			<div style='width:100%;height:100%' id='datalist_data'>
 				<img src='/static/common/images/loading.gif'/>
 			</div>

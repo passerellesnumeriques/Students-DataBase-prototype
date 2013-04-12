@@ -26,10 +26,9 @@ abstract class Component {
 				die();
 			}
 		}
-		$file = "component/".$this->name."/page/".$path.".php";
 		require_once("Page.inc");
 		$page = new Page();
-		$page->generate($file, $embedded);
+		$page->generate($this, $path, $embedded);
 	}
 	
 	public function service($path) {

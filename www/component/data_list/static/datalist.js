@@ -1,21 +1,3 @@
-function datalist_section_collapse_expand(img) {
-	var div = img.parentNode.parentNode;
-	for (var i = 0; i < div.childNodes.length; ++i) {
-		if (div.childNodes[i].nodeName == "DIV" && div.childNodes[i].className == "datalist_fields_section_content") {
-			div = div.childNodes[i];
-			break;
-		}
-	}
-	if (div.style.visibility == "visible") {
-		div.style.visibility = "hidden";
-		div.style.position = "absolute";
-		img.src = "/static/common/images/expand.gif";
-	} else {
-		div.style.visibility = "visible";
-		div.style.position = "static";
-		img.src = "/static/common/images/collapse.gif";
-	}
-}
 var datalist_data = null;
 function datalist_refresh() {
 	datalist_init_grid();
@@ -47,6 +29,7 @@ function _datalist_reset_data() {
 		datalist_grid.adjustColumnSize(i);
 	//	//if (grid.getColWidth(i)
 	}
+	document.getElementById("datalist_data").style.width = "100%";
 }
 function datalist_enable_refresh() {
 	var button = document.getElementById("datalist_refresh");
@@ -55,13 +38,39 @@ function datalist_enable_refresh() {
 	else
 		button.disabled = "";
 }
+var datalist_accordion = null;
 function datalist_init_fields() {
+	datalist_accordion = new dhtmlXAccordion("datalist_fields_accordion");
+	datalist_accordion.setIconsPath("/static/common/dhtmlx/imgs/");
+	datalist_accordion.multiMode = 1;
+	var table = document.getElementById("datalist_table_visible");
+	datalist_accordion.addItem("visible",table.title); table.title = "";
+	table = document.getElementById("datalist_table_available");
+	datalist_accordion.addItem("avail",table.title); table.title = "";
+	datalist_accordion.cells("visible").attachObject("datalist_table_visible");
+	datalist_accordion.cells("avail").attachObject("datalist_table_available");
 	for (var i = 0; i < datalist_visible_fields.length; ++i)
 		_datalist_add_visible_field(datalist_visible_fields[i]);
 	for (var i = 0; i < datalist_fields.length; ++i) {
 		if (!datalist_visible_fields.contains(datalist_fields[i].path))
 			_datalist_add_available_field(datalist_fields[i]);
 	}
+	_datalist_reset_accordion_size();
+	datalist_accordion.attachEvent("onActive", _datalist_reset_accordion_size);
+}
+function _datalist_reset_accordion_size() {
+	if (!datalist_accordion) return;
+	datalist_accordion.setSizes();
+	var table = document.getElementById("datalist_table_visible");
+	table.parentNode.style.height = "";
+	table.parentNode.parentNode.style.height = "";
+	var item = table.parentNode.parentNode.parentNode; 
+	item.style.height = (item.childNodes[0].scrollHeight+item.childNodes[1].scrollHeight)+"px";
+	table = document.getElementById("datalist_table_available");
+	table.parentNode.style.height = "";
+	table.parentNode.parentNode.style.height = "";
+	var item = table.parentNode.parentNode.parentNode; 
+	item.style.height = (item.childNodes[0].scrollHeight+item.childNodes[1].scrollHeight+1)+"px";
 }
 var datalist_grid = null;
 function datalist_init_grid() {
@@ -79,12 +88,15 @@ function datalist_init_grid() {
 	datalist_grid.setImagePath("/static/common/dhtmlx/imgs/");
 	datalist_grid.setSkin("dhx_skyblue");
 	datalist_grid.init();
+	document.getElementById("datalist_data").style.width = "100%";
 }
 function datalist_remove_field(icon,field_path) {
 	datalist_visible_fields.remove(field_path);
 	var row = icon.parentNode.parentNode;
 	row.parentNode.removeChild(row);
 	_datalist_add_available_field(_datalist_get_field(field_path));
+	_datalist_refresh_up_down();
+	_datalist_reset_accordion_size();
 	datalist_enable_refresh();
 }
 function datalist_add_field(icon,field_path) {
@@ -102,6 +114,7 @@ function datalist_add_field(icon,field_path) {
 		}
 	}
 	table.removeChild(row);
+	_datalist_reset_accordion_size();
 	datalist_enable_refresh();
 }
 function datalist_field_up(icon, field_path) {
@@ -116,40 +129,8 @@ function datalist_field_up(icon, field_path) {
 	// update order in the displayed list
 	var row = icon.parentNode.parentNode;
 	row.parentNode.insertBefore(row, row.previousSibling);
-	// add the up icon to the previous, if needed
-	if (row.previousSibling == null) {
-		var td = row.nextSibling.childNodes[1];
-		for (i = 0; i < td.childNodes.length; ++i) {
-			var c = td.childNodes[i];
-			if (c.className == "_icon_up") break;
-			if (c.className == "_icon_down" || c.className == "_icon_invisible") {
-				var img = document.createElement("IMG");
-				img.src = "/static/common/images/up.png";
-				img.style.cursor = "pointer";
-				img.className = "_icon_up";
-				img.onclick = function() { datalist_field_up(this, this.parentNode.parentNode.data); };
-				td.insertBefore(img, c);
-				break;
-			}
-		}
-	}
-	// add the down icon if needed
-	for (i = 0; i < icon.parentNode.childNodes.length; ++i) {
-		var c = icon.parentNode.childNodes[i];
-		if (c.className == "_icon_down") break;
-		if (c.className == "_icon_invisible") {
-			var img = document.createElement("IMG");
-			img.src = "/static/common/images/down.png";
-			img.style.cursor = "pointer";
-			img.className = "_icon_down";
-			img.onclick = function() { datalist_field_down(this, field_path); };
-			icon.parentNode.insertBefore(img, c);
-			break;
-		}
-	}
-	// remove the up icon if we are at first position
-	if (row.previousSibling == null)
-		icon.parentNode.removeChild(icon);
+	// update icons
+	_datalist_refresh_up_down();
 	// reset grid
 	datalist_init_grid();
 	// update data
@@ -172,40 +153,8 @@ function datalist_field_down(icon, field_path) {
 	// update order in the displayed list
 	var row = icon.parentNode.parentNode;
 	row.parentNode.insertBefore(row.nextSibling, row);
-	// add the down icon to the next, if needed
-	if (row.nextSibling == null) {
-		var td = row.previousSibling.childNodes[1];
-		for (i = 0; i < td.childNodes.length; ++i) {
-			var c = td.childNodes[i];
-			if (c.className == "_icon_down") break;
-			if (c.className == "_icon_invisible") {
-				var img = document.createElement("IMG");
-				img.src = "/static/common/images/down.png";
-				img.style.cursor = "pointer";
-				img.className = "_icon_down";
-				img.onclick = function() { datalist_field_down(this, this.parentNode.parentNode.data); };
-				td.insertBefore(img, c);
-				break;
-			}
-		}
-	}
-	// add the up icon if needed
-	for (i = 0; i < icon.parentNode.childNodes.length; ++i) {
-		var c = icon.parentNode.childNodes[i];
-		if (c.className == "_icon_up") break;
-		if (c.className == "_icon_down" || c.className == "_icon_invisible") {
-			var img = document.createElement("IMG");
-			img.src = "/static/common/images/up.png";
-			img.style.cursor = "pointer";
-			img.className = "_icon_up";
-			img.onclick = function() { datalist_field_up(this, field_path); };
-			icon.parentNode.insertBefore(img, c);
-			break;
-		}
-	}
-	// remove the down icon if we are at last position
-	if (row.nextSibling == null)
-		icon.parentNode.removeChild(icon);
+	// update icons
+	_datalist_refresh_up_down();
 	// reset grid
 	datalist_init_grid();
 	// update data
@@ -284,6 +233,7 @@ function _datalist_add_visible_field(field_path) {
 	var field = _datalist_get_field(field_path);
 	var table = document.getElementById("datalist_visible_fields");
 	var row = document.createElement("TR");
+	row.style.height = "20px";
 	row.data = field_path;
 	var td = document.createElement("TD");
 	td.noWrap = "nowrap";
@@ -301,7 +251,16 @@ function _datalist_add_visible_field(field_path) {
 	var code = "";
 	if (table.childNodes.length > 0)
 		code += "<img src='/static/common/images/up.png' style='cursor:pointer' onclick='datalist_field_up(this,\""+field_path+"\")' class='_icon_up'/>";
-	code += "<img src='/static/common/images/invisible.png' style='cursor:pointer' onclick='datalist_remove_field(this,\""+field_path+"\")' class='_icon_invisible'/>";
+	else
+		code += "<img src='/static/common/images/transparent_16.png' class='_icon_up'/>";
+	code += "<img src='/static/common/images/transparent_16.png' class='_icon_down'/>";
+	var is_primary = false;
+	for (var i = 0; i < datalist_primary_keys.length; ++i)
+		if (datalist_primary_keys[i] == field_path) { is_primary = true; break; }
+	if (!is_primary)
+		code += "<img src='/static/common/images/invisible.png' style='cursor:pointer' onclick='datalist_remove_field(this,\""+field_path+"\")' class='_icon_invisible'/>";
+	else
+		code += "<img src='/static/common/images/transparent_16.png' class='_icon_invisible'/>";
 	td.innerHTML = code;
 	td.align = "right";
 	row.appendChild(td);
@@ -316,19 +275,35 @@ function _datalist_add_visible_field(field_path) {
 			row.className = "datalist_fields_0";
 		table.appendChild(row);
 	}
-	while (row.previousSibling) {
-		row = row.previousSibling;
-		td = row.childNodes[1];
+	_datalist_refresh_up_down();
+}
+function _datalist_refresh_up_down() {
+	var table = document.getElementById("datalist_visible_fields");
+	for (var ir = 0; ir < table.childNodes.length; ++ir) {
+		var row = table.childNodes[ir];
+		var td = row.childNodes[1];
 		for (var i = 0; i < td.childNodes.length; ++i) {
-			if (td.childNodes[i].className == "_icon_down") break;
-			if (td.childNodes[i].className == "_icon_invisible") {
-				var img = document.createElement("IMG");
-				img.src = "/static/common/images/down.png";
-				img.style.cursor = "pointer";
-				img.className = "_icon_down";
-				img.onclick = function() { datalist_field_down(this, field_path); };
-				td.insertBefore(img, td.childNodes[i]);
-				break;
+			var img = td.childNodes[i];
+			if (img.className == "_icon_up") {
+				if (ir == 0 && img.style.cursor == "pointer") {
+					img.src = "/static/common/images/transparent_16.png";
+					img.style.cursor = null;
+					img.onclick = null;
+				} else if (ir > 0 && img.style.cursor != "pointer") {
+					img.src = "/static/common/images/up.png";
+					img.style.cursor = "pointer";
+					img.onclick = function() { datalist_field_up(this, this.parentNode.parentNode.data); };
+				}
+			} else if (img.className == "_icon_down") {
+				if (ir == table.childNodes.length-1 && img.style.cursor == "pointer") {
+					img.src = "/static/common/images/transparent_16.png";
+					img.style.cursor = null;
+					img.onclick = null;
+				} else if (ir < table.childNodes.length-1 && img.style.cursor != "pointer") {
+					img.src = "/static/common/images/down.png";
+					img.style.cursor = "pointer";
+					img.onclick = function() { datalist_field_down(this, this.parentNode.parentNode.data); };
+				}
 			}
 		}
 	}
@@ -346,6 +321,7 @@ function _datalist_add_available_field(field) {
 	}
 	if (cat_row == null) {
 		cat_row = document.createElement("TR");
+		cat_row.style.height = "20px";
 		var td = document.createElement("TD");
 		td.colSpan = 2;
 		td.noWrap = "nowrap";
@@ -355,6 +331,7 @@ function _datalist_add_available_field(field) {
 		table.appendChild(cat_row);
 	}
 	var tr = document.createElement("TR");
+	tr.style.height = "20px";
 	var td = document.createElement("TD");
 	td.noWrap = "nowrap";
 	td.style.paddingLeft = "10px";
@@ -396,5 +373,18 @@ function datalist_start_resize(event) {
 		td.style.width = w+"px";
 		div.width = w+"px";
 		div.style.width = w+"px";
+		document.getElementById("datalist_data").style.width = "100%";
+		_datalist_reset_accordion_size();
 	}
 }
+listenEvent(window, 'resize', function() {
+	var td = document.getElementById("datalist_fields_area");
+	var div = document.getElementById("datalist_fields_area_div");
+	var w = td.scrollWidth;
+	td.width = w+"px";
+	td.style.width = w+"px";
+	div.width = w+"px";
+	div.style.width = w+"px";
+	document.getElementById("datalist_data").style.width = "100%";
+	_datalist_reset_accordion_size();
+});
