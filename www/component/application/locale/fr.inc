@@ -1,6 +1,6 @@
 <?php 
 return array(
-	"database" => "base de données",
+	"database" => "base de donnÃ©es",
 	"logout" => "quitter",
 );
 ?>

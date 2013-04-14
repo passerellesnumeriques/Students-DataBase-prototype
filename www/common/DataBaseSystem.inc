@@ -25,6 +25,7 @@ abstract class DataBaseSystem {
 	protected abstract function execute_sql($query);
 	public abstract function next_row($query_result);
 	public abstract function get_insert_id();
+	public abstract function affected_rows();
 	public abstract function get_last_error_number();
 	public abstract function get_last_error_message();
 	

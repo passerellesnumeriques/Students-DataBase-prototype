@@ -80,7 +80,10 @@ class Locale {
 	private static $strings = array(""=>array());
 	
 	private static function load($component) {
-		Locale::load_file($component, "component/".$component."/locale/");
+		if ($component == "common")
+			Locale::load_file("common", "common/locale/");
+		else
+			Locale::load_file($component, "component/".$component."/locale/");
 	}
 	
 	public static function load_file($namespace, $path) {

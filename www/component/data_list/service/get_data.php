@@ -1,5 +1,6 @@
 <?php
-require_once("DataList.inc");
+header("Content-Type: text/json;charset=UTF-8");
+require_once("component/data_list/DataList.inc");
 // initialize DataList
 $list = new DataList($_POST["starting_table"]);
 $list->update_from_request();
@@ -8,6 +9,9 @@ $list->update_from_request();
 $table = $list->process();
 echo "[";
 $first_row = true;
+if (!$table)
+	PNApplication::print_errors();
+else
 foreach ($table as $row) {
 	if ($first_row) $first_row = false; else echo ",";
 	echo "[";
