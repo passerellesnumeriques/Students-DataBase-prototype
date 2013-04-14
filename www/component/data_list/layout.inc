@@ -20,7 +20,7 @@ $page->onload("datalist_init_fields();datalist_refresh();");
 	<td></td>
 	<td>
 		<span style='border-right:1px solid #C0C0C0;padding-right:3px' id='datalist_numbers'></span>
-		<span id='datalist_header'><?php if ($header<>null) echo $header;?></span>
+		<span id='datalist_header'><?php foreach ($this->headers as $header) echo $header;?></span>
 	</td>
 </tr>
 <tr>
@@ -37,13 +37,46 @@ $page->onload("datalist_init_fields();datalist_refresh();");
 	</td>
 	<td class='datalist_separator' onmousedown='datalist_start_resize(event);return false;'>&nbsp;</td>
 	<td class='set_height' valign=top align=left id='datalist_data_area'>
-			<div style='width:100%;height:100%' id='datalist_data'>
+		<div id='datalist_data' style='position:absolute;visibility:hidden;top:-10000px'>
+		</div>
+		<div id='datalist_data_loading_back' style='position:absolute;visibility:hidden;top:-10000px;width:100%;height:100%;background-color:white;opacity:0.3;-moz-opacity:0.3;-khtml-opacity:0.3;filter: alpha(opacity=30);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=30)"'>
+		</div>
+		<div id='datalist_data_loading' style='width:100%;height:100%;'>
+			<table width=100% height=100%><tr><td align=center valign=center>
 				<img src='/static/common/images/loading.gif'/>
-			</div>
+			</td></tr></table>
+		</div>
 	</td>
 </tr>
 </table>
 <script type='text/javascript'>
+function datalist_init_loading_area() {
+	var icon = document.getElementById("datalist_data_loading");
+	var back = document.getElementById("datalist_data_loading_back");
+	var list = document.getElementById("datalist_data");
+	var w = icon.offsetWidth;
+	var h = icon.offsetHeight;
+	var x = absoluteLeft(icon);
+	var y = absoluteTop(icon);
+	icon.style.position = "absolute";
+	icon.style.left = x+"px";
+	icon.style.top = y+"px";
+	icon.style.width = w+"px";
+	icon.style.height = h+"px";
+	back.style.position = "absolute";
+	back.style.left = x+"px";
+	back.style.top = y+"px";
+	back.style.width = w+"px";
+	back.style.height = h+"px";
+	back.style.visibility = "visible";
+	list.style.position = "static";
+	list.style.visibility = "visible";
+	list.style.width = "100%";
+	list.style.height = "100%";
+	list.style.top = "0px";
+}
+datalist_init_loading_area();
+
 function DataList_FieldName(path, category, name, type) {
 	this.path = path;
 	this.category = category;
@@ -56,9 +89,9 @@ var datalist_fields = [
 $all_fields = $this->find_all_possible_paths();
 $first = true;
 foreach ($all_fields as $path) {
-	$name = $this->model->getDataCategoryAndName($path->table, $path->field);
+	$name = $this->model->getTable($path->table)->getDisplayableDataCategoryAndName($path->field);
 	$type = 'unknown';
-	$col = $this->model->tables[$path->table]->getColumn($path->field);
+	$col = $this->model->getTable($path->table)->getColumn($path->field);
 	if ($col instanceof \data\ColumnString) $type = 'string:'.$col->max_length;
 	else if ($col instanceof \data\ColumnInteger) $type = 'integer';
 	else if ($col instanceof \data\ColumnEnum) {
@@ -102,4 +135,10 @@ var datalist_search = {};
 foreach ($this->search as $field=>$value)
 	echo "datalist_search[".$this->encode_field($field)."] = ".json_encode($value).";\n";
 ?>
+var datalist_item_actions = [
+<?php 
+foreach ($this->item_actions as $action)
+	echo "\t{icon:".json_encode($action[0]).",text:".json_encode($action[1]).",url:".json_encode($action[2])."},\n";
+?>
+];
 </script>

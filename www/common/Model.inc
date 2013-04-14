@@ -4,9 +4,7 @@ namespace data {
 /** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
 class Model {
 	
-	public $tables = array();
-	public $data_per_category = array();
-	public $data_per_table = array();
+	private $tables = array();
 	
 	/** Add a table to the model, and returns it
 	 * 
@@ -19,53 +17,37 @@ class Model {
 		return $table;
 	}
 	
-	/** Indicates that a particular column is a displayable data (not internal).
-	 * 
-	 * @param string $category name of the category in which this data will be displayed. This string is supposed to be used with Locale in order to obtain a localized name of the category.
-	 * @param string $name name of the data to display. This string is supposed to be used with Locale, in order to display a localized name.
-	 * @param string $table table containing the data.
-	 * @param string $field column corresponding to the data
-	 */
-	public function addData($category, $name, $table, $field) {
-		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
-		if (strpos($name, "::") === FALSE) $name = \Locale::$current_component."::".$name;
-		if (!isset($this->data_per_category[$category]))
-			$this->data_per_category[$category] = array();
-		$this->data_per_category[$category][$name] = array($table, $field);
-		if (!isset($this->data_per_table[$table]))
-			$this->data_per_table[$table] = array();
-		$this->data_per_table[$table][$field] = array($category, $name);
+	public function &getTable($name) {
+		if (!isset($this->tables[$name])) throw new \Exception("Unknown table ".$name);
+		if ($this->tables[$name]->canAccess()) return $this->tables[$name];
+		throw new \Exception("Access denied: table ".$name);
 	}
 	
-	/** Returns the localized name of the given data */
-	public function getDataName($table, $field) {
-		$data = @$this->data_per_table[$table][$field];
-		if ($data == null) return null;
-		$i = strpos($data[1], "::");
-		return \Locale::get_string(substr($data[1], 0, $i), substr($data[1], $i+2));
+	/** should be used only in very specific places, while ensuring that this will not give privileges to the user */ 
+	public function &internalGetTable($name) {
+		return $this->tables[$name];
 	}
-	/** Returns the localized category and name of the given data */
-	public function getDataCategoryAndName($table, $field) {
-		$data = @$this->data_per_table[$table][$field];
-		if ($data == null) return "?field ".$field." in table ".$table."?";
-		$cat = $data[0];
-		$name = $data[1];
-		$i = strpos($cat, "::");
-		$cat = \Locale::get_string(substr($cat, 0, $i), substr($cat, $i+2));
-		$i = strpos($name, "::");
-		$name = \Locale::get_string(substr($name, 0, $i), substr($name, $i+2));
-		return array($cat,$name);
+	
+	public function &getTables() {
+		$a = array();
+		foreach ($this->tables as $name=>&$table)
+			if ($table->canAccess())
+				$a[$name] = &$table;
+		return $a;
 	}
 	
 }
 
 class Table {
 	
-	public $model;
-	public $name;
-	public $columns = array();
-	public $indexes = array();
-	public $links = array();
+	private $model;
+	private $name;
+	private $columns = array();
+	private $indexes = array();
+	private $links = array();
+	private $table_read_access = array();
+	private $fields_read_access = array();
+	private $displayable_data = array();
 	
 	public function __construct(&$model, $name) {
 		$this->model = &$model;
@@ -131,17 +113,93 @@ class Table {
 		return $this;
 	}
 	
+	public function &restrictReadAccess($right_name, $right_value) {
+		$this->table_read_access[$right_name] = $right_value;
+		return $this;
+	}
+	public function &restrictFieldReadAccess($field, $right_name, $right_value) {
+		if (!isset($this->fields_read_access[$field]))
+			$this->fields_read_access[$field] = array();
+		$this->fields_read_access[$field][$right_name] = $right_value;
+		return $this;
+	}
+	
+	public function canAccess() {
+		foreach ($this->table_read_access as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+				return false;
+		return true;
+	}
+	public function canAccessField($field) {
+		if (!isset($this->fields_read_access[$field])) return true;
+		foreach ($this->fields_read_access[$field] as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+			return false;
+		return true;
+	}
+	
+	/** Indicates that a particular column is a displayable data (not internal).
+	 *
+	 * @param string $category name of the category in which this data will be displayed. This string is supposed to be used with Locale in order to obtain a localized name of the category.
+	 * @param string $name name of the data to display. This string is supposed to be used with Locale, in order to display a localized name.
+	 * @param string $field column corresponding to the data
+	 */
+	public function &addDisplayableData($field, $category, $name) {
+		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
+		if (strpos($name, "::") === FALSE) $name = \Locale::$current_component."::".$name;
+		$this->displayable_data[$field] = array($category, $name);
+		return $this;
+	}
+	
+	/** Returns the localized name of the given data */
+	public function getDisplayableDataName($field) {
+		$data = @$this->displayable_data[$field];
+		if ($data == null) return null;
+		$i = strpos($data[1], "::");
+		return \Locale::get_string(substr($data[1], 0, $i), substr($data[1], $i+2));
+	}
+	/** Returns the localized category and name of the given data */
+	public function getDisplayableDataCategoryAndName($field) {
+		$data = @$this->displayable_data[$field];
+		if ($data == null) return "?field ".$field." in table ".$this->name."?";
+		$cat = $data[0];
+		$name = $data[1];
+		$i = strpos($cat, "::");
+		$cat = \Locale::get_string(substr($cat, 0, $i), substr($cat, $i+2));
+		$i = strpos($name, "::");
+		$name = \Locale::get_string(substr($name, 0, $i), substr($name, $i+2));
+		return array($cat,$name);
+	}
+	
+	public function &getModel() { return $this->model; }
+	public function getName() { return $this->name; }
+	
 	public function getPrimaryKey() {
 		foreach ($this->columns as $c)
-			if ($c instanceof PrimaryKey)
+			if ($c instanceof PrimaryKey) {
+				if (!$this->canAccessField($c->name)) throw new Exception("Access denied");
 				return $c;
+			}
 		return null;
 	}
 	public function getColumn($name) {
 		foreach ($this->columns as $c)
-			if ($c->name == $name)
+			if ($c->name == $name) {
+				if (!$this->canAccessField($c->name)) throw new Exception("Access denied");
 				return $c;
+			}
 		return null;
+	}
+	public function getColumns() {
+		$cols = array();
+		foreach ($this->columns as $c)
+			if ($this->canAccessField($c->name))
+				array_push($cols, $c);
+		return $cols;
+	}
+	
+	public function getLinks() {
+		return $this->links;
 	}
 	
 }
@@ -239,11 +297,11 @@ class ForeignKey extends ColumnInteger {
 	
 	public function __construct(&$table, $name, $foreign_table) {
 		$this->foreign_table = $foreign_table;
-		$size = $table->model->tables[$foreign_table]->getPrimaryKey()->size;
+		$size = $table->getModel()->internalGetTable($foreign_table)->getPrimaryKey()->size;
 		parent::__construct($table, $name, $size);
 	}
 
-	public function get_sql_type() { return "INT(".$this->table->model->tables[$this->foreign_table]->getPrimaryKey()->size.")"; }
+	public function get_sql_type() { return "INT(".$this->table->getModel()->internalGetTable($this->foreign_table)->getPrimaryKey()->size.")"; }
 }
 
 } // namespace data

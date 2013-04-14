@@ -1,12 +1,17 @@
 eclipse.preferences.version=1
+encoding//common/locale/fr.inc=UTF-8
 encoding//component/Page.inc=UTF-8
+encoding//component/academic/locale/fr.inc=UTF-8
 encoding//component/application/locale/fr.inc=UTF-8
+encoding//component/application/page/layout.inc=UTF-8
 encoding//component/data_list/locale/fr.inc=UTF-8
 encoding//component/people/locale/en.inc=UTF-8
 encoding//component/people/locale/fr.inc=UTF-8
 encoding//component/people/locale/kh.inc=UTF-8
 encoding//component/people/locale/ph.inc=UTF-8
 encoding//component/people/locale/vn.inc=UTF-8
+encoding//component/selection/locale/fr.inc=UTF-8
+encoding//component/students_life/locale/fr.inc=UTF-8
 encoding//component/user_management/locale/en.inc=UTF-8
 encoding//component/user_management/locale/fr.inc=UTF-8
 encoding//component/user_management/locale/kh.inc=UTF-8

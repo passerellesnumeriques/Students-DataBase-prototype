@@ -1,24 +1,40 @@
 var datalist_data = null;
 function datalist_refresh() {
-	datalist_init_grid();
-	var data = "starting_table="+encodeURIComponent(datalist_table);
-	for (var i = 0; i < datalist_primary_keys.length; ++i)
-		data += "&"+encodeURIComponent("pk"+i)+"="+encodeURIComponent(datalist_primary_keys[i]);
-	for (var i = 0; i < datalist_visible_fields.length; ++i)
-		data += "&"+encodeURIComponent("field_"+i)+"="+encodeURIComponent(datalist_visible_fields[i]);
-	for (var field in datalist_search)
-		data += "&"+encodeURIComponent("search_"+field)+"="+encodeURIComponent(datalist_search[field]);
-	var xhr = new XMLHttpRequest();
-	xhr.open("POST", "/dynamic/data_list/service/get_data", true);
-	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-	xhr.onreadystatechange = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            //alert(this.responseText);
-        	datalist_data = eval(this.responseText);
-        	_datalist_reset_data();
-        }
-    };
-    xhr.send(data);
+	datalist_start_loading();
+	setTimeout(function() {
+		datalist_init_grid();
+		var data = "starting_table="+encodeURIComponent(datalist_table);
+		for (var i = 0; i < datalist_primary_keys.length; ++i)
+			data += "&"+encodeURIComponent("pk"+i)+"="+encodeURIComponent(datalist_primary_keys[i]);
+		for (var i = 0; i < datalist_visible_fields.length; ++i)
+			data += "&"+encodeURIComponent("field_"+i)+"="+encodeURIComponent(datalist_visible_fields[i]);
+		for (var field in datalist_search)
+			data += "&"+encodeURIComponent("search_"+field)+"="+encodeURIComponent(datalist_search[field]);
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", "/dynamic/data_list/service/get_data", true);
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.onreadystatechange = function() {
+	        if (this.readyState === 4 && this.status === 200) {
+	            //alert(this.responseText);
+	        	datalist_data = eval(this.responseText);
+	        	if (datalist_item_actions.length > 0) {
+	        		for (var i = 0; i < datalist_data.length; ++i) {
+	        			for (var j = 0; j < datalist_item_actions.length; ++j) {
+	        				var action = datalist_item_actions[j];
+	        				var url = action.url;
+	        				for (var k = 0; k < datalist_visible_fields.length; ++k)
+	        					url = url.replace("%"+datalist_visible_fields[k]+"%", datalist_data[i][k]);
+	        				var s = action.icon+"^"+action.text+"^"+url+"^_self";
+	        				datalist_data[i].push(s);
+	        			}
+	        		}
+	        	}
+	        	_datalist_reset_data();
+	        	setTimeout(datalist_end_loading, 1);
+	        }
+	    };
+	    xhr.send(data);
+	},1);
 	var button = document.getElementById("datalist_refresh");
 	button.disabled = "disabled";
 }
@@ -29,6 +45,7 @@ function _datalist_reset_data() {
 		datalist_grid.adjustColumnSize(i);
 	//	//if (grid.getColWidth(i)
 	}
+	datalist_grid.enableEditEvents(true);
 	document.getElementById("datalist_data").style.width = "100%";
 }
 function datalist_enable_refresh() {
@@ -55,6 +72,13 @@ function datalist_init_fields() {
 		if (!datalist_visible_fields.contains(datalist_fields[i].path))
 			_datalist_add_available_field(datalist_fields[i]);
 	}
+	var td = document.getElementById("datalist_fields_area");
+	var div = document.getElementById("datalist_fields_area_div");
+	var w = td.scrollWidth;
+	td.width = w+"px";
+	td.style.width = w+"px";
+	div.width = w+"px";
+	div.style.width = w+"px";
 	_datalist_reset_accordion_size();
 	datalist_accordion.attachEvent("onActive", _datalist_reset_accordion_size);
 }
@@ -83,12 +107,45 @@ function datalist_init_grid() {
 		header += field.name;
 		types += "ro";
 	}
+	for (var i = 0; i < datalist_item_actions.length; ++i) {
+		header += ",";
+		types += ",img";
+	}
 	datalist_grid.setHeader(header);
 	datalist_grid.setColTypes(types);
 	datalist_grid.setImagePath("/static/common/dhtmlx/imgs/");
 	datalist_grid.setSkin("dhx_skyblue");
 	datalist_grid.init();
 	document.getElementById("datalist_data").style.width = "100%";
+}
+function datalist_start_loading() {
+	var icon = document.getElementById("datalist_data_loading");
+	var back = document.getElementById("datalist_data_loading_back");
+	var list = document.getElementById("datalist_data");
+	var w = list.offsetWidth;
+	var h = list.offsetHeight;
+	var x = absoluteLeft(list);
+	var y = absoluteTop(list);
+	icon.style.visibility = "visible";
+	icon.style.left = x+"px";
+	icon.style.top = y+"px";
+	icon.style.width = w+"px";
+	icon.style.height = h+"px";
+	back.style.visibility = "visible";
+	back.style.left = x+"px";
+	back.style.top = y+"px";
+	back.style.width = w+"px";
+	back.style.height = h+"px";
+}
+function datalist_end_loading() {
+	var icon = document.getElementById("datalist_data_loading");
+	var back = document.getElementById("datalist_data_loading_back");
+	icon.style.position = "absolute";
+	icon.style.visibility = "hidden";
+	icon.style.top = "-10000px";
+	back.style.position = "absolute";
+	back.style.visibility = "hidden";
+	back.style.top = "-10000px";
 }
 function datalist_remove_field(icon,field_path) {
 	datalist_visible_fields.remove(field_path);
@@ -180,7 +237,18 @@ function _datalist_add_search_input(td, field_path) {
 			datalist_enable_refresh();
 		}
 	};
-	input.onblur = update; 
+	input.onblur = function() {
+		update();
+		if (input.value == "") {
+			var p = input.parentNode;
+			p.removeChild(input);
+			for (var i = 0; i < p.childNodes.length; ++i)
+				if (p.childNodes[i].nodeName == "IMG") {
+					p.childNodes[i].onclick = function() { datalist_add_search(this, field_path); };
+					break;
+				}
+		}
+	};
 	var prev = input.onkeyup;
 	input.onkeyup = function(ev) {
 		if (prev) if (!prev(ev)) return false;

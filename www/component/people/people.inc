@@ -30,10 +30,10 @@ class people extends Component {
 			->addPrimaryKey("id")
 			->addString("first_name", 100)
 			->addString("last_name", 100)
-			->addEnum("sex", array("M","F"));
-		$model->addData("Personal Information", "First Name", "People", "first_name");
-		$model->addData("Personal Information", "Last Name", "People", "last_name");
-		$model->addData("Personal Information", "Sex", "People", "sex");
+			->addEnum("sex", array("M","F"))
+			->addDisplayableData("first_name", "Personal Information", "First Name")
+			->addDisplayableData("last_name", "Personal Information", "Last Name")
+			->addDisplayableData("sex", "Personal Information", "Sex");
 		$model->addTable("UserPeople")
 			->addString("domain")
 			->addString("username")

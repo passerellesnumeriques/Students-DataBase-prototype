@@ -28,6 +28,10 @@ class DataBaseSystem_MySQL extends DataBaseSystem {
 		return mysql_insert_id($this->conn);
 	}
 	
+	public function affected_rows() {
+		return mysql_affected_rows($this->conn);
+	}
+	
 	public function get_last_error_number() {
 		return mysql_errno($this->conn);
 	}
