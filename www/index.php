@@ -27,7 +27,7 @@ if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favic
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
 if ($path == "") {
-	header("Location: /dynamic/application/page/enter".(isset($_GET["page"])?"?page=".$_GET["page"]:""));
+	header("Location: /dynamic/application/page/enter");
 	die();
 }
 
@@ -42,6 +42,10 @@ $i = strpos($path, "/");
 if ($i === FALSE) die("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
+
+function __autoload($classname) {
+	require_once("component/".$classname."/".$classname.".inc");
+}
 
 switch ($type) {
 case "static":
@@ -98,12 +102,11 @@ case "dynamic":
 
 	switch ($request_type) {
 	case "page":
-		$app->components[$component_name]->page($path, false);
-		break;
-	case "sub_page":
-		$app->components[$component_name]->page($path, true);
+		header("Content-Type: text/html;charset=UTF-8");
+		$app->components[$component_name]->page($path);
 		break;
 	case "service":
+		header("Content-Type: text/xml;charset=UTF-8");
 		$app->components[$component_name]->service($path);
 		break;
 	default: die("Invalid request: unknown request type ".$request_type);

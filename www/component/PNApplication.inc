@@ -31,7 +31,7 @@ class PNApplication {
 	public $components = array();
 	
 	public static function error($message) {
-		array_push(PNApplication::$errors, htmlentities($message));
+		array_push(PNApplication::$errors, htmlentities($message, ENT_QUOTES, "UTF-8"));
 	}
 	public static function error_html($html_message) {
 		array_push(PNApplication::$errors, $html_message);
@@ -39,7 +39,14 @@ class PNApplication {
 	
 	public static function print_errors() {
 		foreach (PNApplication::$errors as $e)
-			echo "<div style='color:#C00000'><img src='/static/common/images/error.png' style='vertical-align:bottom'/> ".$e."</div>";
+			echo "<div style='color:#C00000;font-familiy:Tahoma;font-size:10pt'><img src='/static/common/images/error.png' style='vertical-align:bottom'/> ".$e."</div>";
+	}
+	public static function print_xml_errors() {
+		if (count(PNApplication::$errors) == 0) return false;
+		echo "<error message=\"";
+		foreach (PNApplication::$errors as $e) echo $e;
+		echo "\"/>";
+		return true;
 	}
 	
 	public function init() {
@@ -87,11 +94,5 @@ class PNApplication {
 		Locale::$current_component = $prev;
 	}
 	
-}
-
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
-foreach ($components_names as $name) {
-	set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__)."/".$name);
-	require_once($name.".inc");
 }
 ?>

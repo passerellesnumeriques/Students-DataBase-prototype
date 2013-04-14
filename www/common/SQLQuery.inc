@@ -95,6 +95,25 @@ class SQLQuery {
 		return $this;
 	}
 	
+	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
+	public function &where_in($table, $field, $values = null) {
+		if ($values === null) {
+			$values = $field;
+			$field = $table;
+			foreach ($this->tables as $name=>$alias)
+				$table = $name;
+		}
+		$w = "`".$table."`.`".$field."` IN (";
+		$first = true;
+		foreach ($values as $value) {
+			if ($first) $first = false; else $w .= ",";
+			$w .= "'".$value."'";
+		}
+		$w .= ")";
+		array_push($this->where, $w);
+		return $this;
+	}
+	
 	public function &join($table_from, $table_to, $fields_matching, $alias = null) {
 		array_push($this->joins, array($table_from, $table_to, $fields_matching, $alias));
 		return $this;
@@ -204,6 +223,7 @@ class SQLQuery {
 	public function execute_single_value() {
 		$a = $this->execute_single_field();
 		if ($a === null) return null;
+		if (count($a) == 0) return null;
 		return $a[0];
 	}
 	
@@ -214,6 +234,53 @@ class SQLQuery {
 		$r = DataBase::$conn->next_row($res);
 		if ($r === FALSE) return null;
 		return $r;
+	}
+	
+	public static function update($table, $fields_values, $where) {
+		$sql = "UPDATE `".$table."` SET ";
+		$first = true;
+		foreach ($fields_values as $field=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`".$field."`=";
+			if ($value === null) $sql .= "NULL";
+			else $sql .= "'".DataBase::$conn->escape_string($value)."'";
+		}
+		if ($where <> null) {
+			$sql .= " WHERE ";
+			if (is_string($where)) $sql .= $where;
+			else {
+				$first = true;
+				foreach ($where as $field=>$value) {
+					if ($first) $first = false; else $sql .= " AND ";
+					$sql .= "`".$field."`";
+					if ($value === null) $sql .= " IS NULL";
+					else $sql .= "='".DataBase::$conn->escape_string($value)."'";
+				}
+			}
+		}
+		DataBase::$conn->execute($sql);
+		if (DataBase::$conn->get_last_error_number() == 0)
+			return DataBase::$conn->affected_rows();
+		return -1;
+	}
+
+	public static function insert($table, $fields_values) {
+		$sql = "INSERT INTO `".$table."` (";
+		$first = true;
+		foreach ($fields_values as $field=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`".$field."`";
+		}
+		$sql .= ") VALUES (";
+		$first = true;
+		foreach ($fields_values as $field=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			if ($value === null) $sql .= "NULL";
+			else $sql .= "'".DataBase::$conn->escape_string($value)."'";
+		}
+		$sql .= ")";
+		DataBase::$conn->execute($sql);
+		return DataBase::$conn->get_last_error_number();
 	}
 }
 ?>

@@ -8,18 +8,28 @@
 class DataBaseModel {
 	
 	public static function update_model(&$model) {
-		foreach ($model->tables as $table)
+		$ref = new ReflectionClass("\data\Model");
+		$p = $ref->getProperty("tables");
+		$p->setAccessible(true);
+		$tables = $p->getValue($model);
+		foreach ($tables as $table)
 			DataBaseModel::update_table($table);
 	}
 	private static function update_table(&$table) {
-		$res = DataBase::$conn->execute("DESCRIBE `".$table->name."`", false);
+		$res = DataBase::$conn->execute("DESCRIBE `".$table->getName()."`", false);
 		if ($res === FALSE) { DataBaseModel::create_table($table); return; }
 		// TODO update if necessary
 	}
 	private static function create_table(&$table) {
-		$sql = "CREATE TABLE `".$table->name."` (";
+		$sql = "CREATE TABLE `".$table->getName()."` (";
+		
+		$ref = new ReflectionClass("\data\Table");
+		$p = $ref->getProperty("columns");
+		$p->setAccessible(true);
+		$columns = $p->getValue($table);
+		
 		$first = true;
-		foreach ($table->columns as $col) {
+		foreach ($columns as $col) {
 			if ($first) $first = false; else $sql .= ", ";
 			$sql .= $col->get_sql();
 		}

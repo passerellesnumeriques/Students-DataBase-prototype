@@ -3,8 +3,10 @@ class application extends Component {
 
 	/** Override page to allow login page without being logged, and a different layout for login page */
 	public function page($path) {
-		if ($path == "login" || $path == "enter") {
-			include "page/".$path.".php";
+		if ($path == "enter") {
+			require_once("component/Page.inc");
+			$page = new Page();
+			$page->generate($this, $path);
 			return;
 		}
 		parent::page($path);
