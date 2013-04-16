@@ -48,6 +48,21 @@ class PNApplication {
 		echo "\"/>";
 		return true;
 	}
+	public static function print_json_result($result) {
+		echo "{";
+		if (count(PNApplication::$errors) > 0) {
+			echo "errors:[";
+			$first = true;
+			foreach (PNApplication::$errors as $e) {
+				if ($first) $first = false; else echo ",";
+				echo json_encode($e);
+			}
+			echo"],";
+		}
+		echo "result:";
+		if ($result === null) echo "null"; else echo $result;
+		echo "}";
+	}
 	
 	public function init() {
 		global $components_names;

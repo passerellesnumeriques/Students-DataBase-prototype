@@ -10,13 +10,9 @@ function datalist_refresh() {
 			data += "&"+encodeURIComponent("field_"+i)+"="+encodeURIComponent(datalist_visible_fields[i]);
 		for (var field in datalist_search)
 			data += "&"+encodeURIComponent("search_"+field)+"="+encodeURIComponent(datalist_search[field]);
-		var xhr = new XMLHttpRequest();
-		xhr.open("POST", "/dynamic/data_list/service/get_data", true);
-		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-		xhr.onreadystatechange = function() {
-	        if (this.readyState === 4 && this.status === 200) {
-	            //alert(this.responseText);
-	        	datalist_data = eval(this.responseText);
+		pn.ajax_service_json("/dynamic/data_list/service/get_data", data, function(result) {
+			if (result != null) {
+	        	datalist_data = result;
 	        	if (datalist_item_actions.length > 0) {
 	        		for (var i = 0; i < datalist_data.length; ++i) {
 	        			for (var j = 0; j < datalist_item_actions.length; ++j) {
@@ -31,9 +27,8 @@ function datalist_refresh() {
 	        	}
 	        	_datalist_reset_data();
 	        	setTimeout(datalist_end_loading, 1);
-	        }
-	    };
-	    xhr.send(data);
+			}
+		});
 	},1);
 	var button = document.getElementById("datalist_refresh");
 	button.disabled = "disabled";

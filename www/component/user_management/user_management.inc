@@ -60,7 +60,7 @@ class user_management extends Component {
 				$rights = array();
 				if ($user_rights)
 				foreach ($user_rights as $r)
-					$rights[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+					$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 				// merge with rights attached to the roles of the user
 				if (count($roles) > 0)
 					$role_rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where_in("role_id", $roles)->execute();
@@ -68,9 +68,9 @@ class user_management extends Component {
 				if ($role_rights)
 				foreach ($role_rights as $r) {
 					if (!isset($rights[$r["right"]]))
-						$rights[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+						$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 					else
-						$rights[$r["right"]] = $all_rights[$r["right"]]->get_higher_right($rights[$r["right"]], user_management::get_right_value($r["value"]));
+						$rights[$r["right"]] = $all_rights[$r["right"]]->get_higher_value($rights[$r["right"]], user_management::parse_value($r["value"]));
 				}
 				// check all rights exist, and compute implications
 				user_management::compute_rights_implications($rights, $all_rights);
@@ -115,7 +115,7 @@ class user_management extends Component {
 					if ($value == $if_value)
 					foreach ($implications as $rname=>$rvalue) {
 						if (isset($rights[$rname])) {
-							$higher = $all_rights[$rname]->get_higher_right($rights[$name], $rvalue);
+							$higher = $all_rights[$rname]->get_higher_value($rights[$name], $rvalue);
 							if ($rights[$rname] !== $higher) {
 								$rights[$rname] = $higher;
 								$changed = true;
@@ -216,15 +216,15 @@ abstract class Right {
 		$this->locale = $locale;
 		$this->implies = $implies;
 	}
-	public abstract function get_right_value($value);
-	public abstract function get_higher_right($v1, $v2);
+	public abstract function parse_value($value);
+	public abstract function get_higher_value($v1, $v2);
 	public abstract function is_highest($value);
 }
 class BooleanRight extends Right {
-	public function get_right_value($value) {
+	public function parse_value($value) {
 		return $value === true || $value === "1" || $value === "true" || $value === "on";
 	}
-	public function get_higher_right($v1, $v2) {
+	public function get_higher_value($v1, $v2) {
 		return $v1 || $v2;
 	}
 	public function is_highest($value) {

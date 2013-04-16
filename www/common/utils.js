@@ -1,3 +1,4 @@
+/* Add some useful functions to basic classes */
 String.prototype.startsWith=function(s){return this.length<s.length?false:this.substring(0,s.length)==s;};
 String.prototype.trim=function() {
 	if (this.length == 0) return "";
@@ -18,12 +19,21 @@ function isLetter(c) {
 Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
+/* Made some function cross-browser compatible */
 if (typeof document.getElementById != "function")
 	document.getElementById = function(id) { return document.all[id]; }
-
+function setOpacity(element, opacity) {
+	element.style.opacity = opacity;
+	element.style.MozOpacity = opacity;
+	element.style.KhtmlOpacity = opacity;
+	opacity = Math.round(opacity*100);
+	element.style.filter = "alpha(opacity="+opacity+");"
+	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
+}
 getWindowHeight = function() { return document.body.clientHeight; };
 getWindowWidth = function() { return document.body.clientWidth; };
 
+/* Some useful functions */
 function absoluteLeft(e) {
 	var left = e.offsetLeft;
 	try { if (e.offsetParent) left += absoluteLeft(e.offsetParent); } catch (ex) {}
@@ -34,13 +44,61 @@ function absoluteTop(e) {
 	try { if (e.offsetParent) top += absoluteTop(e.offsetParent); } catch (ex) {}
 	return top;
 }
-function setOpacity(element, opacity) {
-	element.style.opacity = opacity;
-	element.style.MozOpacity = opacity;
-	element.style.KhtmlOpacity = opacity;
-	opacity = Math.round(opacity*100);
-	element.style.filter = "alpha(opacity="+opacity+");"
-	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
+
+function URL(s) {
+	var i = s.indexOf("://");
+	if (i > 0) {
+		this.protocol = s.substr(0, i).toLowerCase();
+		s = s.substr(i+3);
+		i = s.indexOf("/");
+		this.host = s.substr(0,i);
+		s = s.substr(i);
+		i = this.host.indexOf(":");
+		if (i > 0) {
+			this.port = this.host.substr(i+1);
+			this.host = this.host.substr(0,i);
+		} else
+			this.port = null;
+	} else {
+		this.protocol = "http";
+		this.host = window.location.hostname;
+		this.port = window.location.port;
+	}
+	i = s.indexOf('?');
+	this.params = new Object();
+	if (i > 0) {
+		this.path = s.substr(0,i);
+		s = s.substr(i+1);
+		while (s.length > 0 && (i = s.indexOf('&')) >= 0) {
+			var p = s.substr(0, i);
+			s = s.substr(i+1);
+			i = p.indexOf('=');
+			if (i > 0)
+				this.params[decodeURIComponent(p.substr(0,i))] = decodeURIComponent(p.substr(i+1));
+			else
+				this.params[decodeURIComponent(p)] = "";
+		}
+		if (s.length > 0) {
+			i = s.indexOf('=');
+			if (i > 0)
+				this.params[decodeURIComponent(s.substr(0,i))] = decodeURIComponent(s.substr(i+1));
+			else
+				this.params[decodeURIComponent(s)] = "";
+		}
+	} else
+		this.path = s;
+
+	this.toString = function() {
+		var s = this.protocol+"://"+this.host;
+		if (this.port != null) s += ":"+this.port;
+		s += this.path;
+		var first = true;
+		for (var name in this.params) {
+			if (first) { s += "?"; first = false; } else s += "&";
+			s += encodeURIComponent(name) + "=" + encodeURIComponent(this.params[name]);
+		}
+		return s;
+	};
 }
 
 pn = {
@@ -87,10 +145,6 @@ pn = {
 		var div = document.createElement("DIV");
 		div.id = 'popup_page';
 		div.style.position = "fixed";
-		//div.style.width = Math.round(getWindowWidth()*80/100)+"px";
-		//div.style.height = Math.round(getWindowHeight()*90/100)+"px";
-		//div.style.left = Math.round(getWindowWidth()/10)+"px";
-		//div.style.top = Math.round(getWindowHeight()/20)+"px";
 		div.style.width = "80%";
 		div.style.height = "90%";
 		div.style.top = "5%";
@@ -107,7 +161,9 @@ pn = {
 	
 	ajax_service_xml: function(url, data, handler) {
 		var xhr = new XMLHttpRequest();
-		xhr.open("POST", url, true);
+		var url = new URL(url);
+		url.params.format = "xml";
+		xhr.open("POST", url.toString(), true);
 		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 		xhr.onreadystatechange = function() {
 	        if (this.readyState != 4) return;
@@ -124,6 +180,31 @@ pn = {
 	        } else
 	            alert(this.responseText);
 	        handler(null);
+	    };
+	    xhr.send(data);
+	},
+	ajax_service_json: function(url, data, handler) {
+		var xhr = new XMLHttpRequest();
+		var url = new URL(url);
+		url.params.format = "json";
+		xhr.open("POST", url.toString(), true);
+		xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+		xhr.onreadystatechange = function() {
+	        if (this.readyState != 4) return;
+	        if (this.status != 200) { alert("Error "+this.status); handler(null); return; }
+	        try {
+	        	var output = eval("("+this.responseText+")");
+	        	if (output.errors) {
+	        		alert("Errors:\n"+output.errors);
+	        		handler(null);
+	        	}
+	        	if (!output.result)
+	        		alert("Error: No result from JSON service");
+	        	handler(output.result);
+	        } catch (e) {
+	        	alert("Invalid json output:\n"+this.responseText);
+		        handler(null);
+	        }
 	    };
 	    xhr.send(data);
 	}

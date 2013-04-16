@@ -57,14 +57,14 @@ foreach (PNApplication::$instance->components as $component) {
 $rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("domain",$domain)->where("username",$username)->execute();
 if (!is_array($rights)) $rights = array();
 $user_rights = array();
-foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 // get rights for each role
 $role_rights = array();
 foreach ($roles as $role) {
 	$rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role_id", $role["role_id"])->execute();
 	if (!is_array($rights)) $rights = array();
 	$a = array();
-	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 	array_push($role_rights, $a);
 }
 // compute final for user
@@ -77,7 +77,7 @@ foreach ($role_rights as $rights)
 		if (!isset($final[$name]))
 			$final[$name] = $value;
 		else
-			$final[$name] = $all_rights[$name]->get_higher_right($value, $final[$name]);
+			$final[$name] = $all_rights[$name]->get_higher_value($value, $final[$name]);
 // 3- from implications
 user_management::compute_rights_implications($final, $all_rights);
 

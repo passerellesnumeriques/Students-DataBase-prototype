@@ -106,7 +106,12 @@ case "dynamic":
 		$app->components[$component_name]->page($path);
 		break;
 	case "service":
-		header("Content-Type: text/xml;charset=UTF-8");
+		$format = @$_GET["format"];
+		if ($format == "xml")
+			header("Content-Type: text/xml;charset=UTF-8");
+		else if ($format == "json")
+			header("Content-Type: text/json;charset=UTF-8");
+		else die("Invalid request: unknown service format");
 		$app->components[$component_name]->service($path);
 		break;
 	default: die("Invalid request: unknown request type ".$request_type);

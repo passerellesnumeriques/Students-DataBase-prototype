@@ -23,7 +23,7 @@ $rights = array();
 foreach ($_POST as $name=>$value) {
 	if ($name == "domain" || $name == "username") continue;
 	if (!isset($all_rights[$name])) die("<error message=\"unknown right ".$name."\"/>");
-	$rights[$name] = $all_rights[$name]->get_right_value($value);
+	$rights[$name] = $all_rights[$name]->parse_value($value);
 }
 
 // save in database
