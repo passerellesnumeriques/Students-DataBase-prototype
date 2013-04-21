@@ -48,7 +48,20 @@ class DataList {
 		$i = strpos($field, ".");
 		$table = substr($field, 0, $i);
 		$field = substr($field, $i+1);
-		$col = $this->build_column(new DataPathRoot($this->starting_table), $table, $field);
+		try {
+			$t = $this->model->getTable($table);
+		} catch (Exception $e) {
+			PNApplication::error($e);
+			return false;
+		}
+		if (!$t->canAccessField($field))
+			return false; // access denied
+		$col = null;
+		try { $col = $this->build_column(new DataPathRoot($this->starting_table), $table, $field); }
+		catch (Exception $e) {
+			PNApplication::error($e);
+			return false;
+		}
 		if ($col <> null) {
 			array_push($this->columns, $col);
 			return true;
@@ -83,6 +96,8 @@ class DataList {
 				$indirection = substr($indirection, $i+1);
 			}
 			if ($col_model instanceof data\ForeignKey) {
+				try { $this->model->getTable($col_model->foreign_table); }
+				catch (Exception $e) { return null; }
 				$col = new DataPathField(new DataPathForeign($col, $col_model), $field);
 				continue;
 			}
@@ -254,11 +269,19 @@ class DataList {
 	}
 	
 	public function process() {
+		if (count($this->columns) == 0)
+			return array("count"=>0,"list"=>array());
+		
 		$context = new DataContext($this);
 		$sql = new SQLQuery();
 		foreach ($this->columns as $col) {
 			$col->generate_sql($sql, $context, $col);
 		}
+		$sql_count = new SQLQuery($sql);
+		$sql_count->reset_fields();
+		$sql_count->count();
+		$count = $sql_count->execute_single_value();
+		
 		$sql->limit($this->start_entry, $this->max_entries);
 		//echo $sql->generate();
 		$list = $sql->execute();
@@ -281,11 +304,9 @@ class DataList {
 					//echo "<br/><br/><br/>";
 					if ($result !== FALSE) {
 						$first = true;
-						$s = "";
-						foreach ($result as $sr) {
-							if ($first) $first = false; else $s .= ", ";
-							$s .= $sr[$col->sql_field];
-						}
+						$s = array();
+						foreach ($result as $sr)
+							array_push($s, $sr[$col->sql_field]);
 						if ($col->final_name == null)
 							$col->final_name = $sql->field_id();
 						$r[$col->final_name] = $s;
@@ -294,7 +315,7 @@ class DataList {
 			}
 		}
 		
-		return $list;
+		return array("count"=>$count,"list"=>$list);
 	}
 	
 }
@@ -428,10 +449,10 @@ class DataPathLinkReverse extends DataPath {
 		$search = @$ctx->list->search[$top_path->get_path()];
 		if ($search !== null) {
 			$join_alias = $sql->table_id();
-			$sql->join($this->link->table, $this->link->table_from->getName(), $this->link->fields_matching, $join_alias);
+			$sql->join($this->path->sql_table, $this->link->table_from->getName(), $this->link->fields_matching, $join_alias);
 			$this->sql_table = $join_alias;
 			foreach ($this->link->fields_matching as $f1=>$f2)
-				$sql->group_by($this->link->table, $f1);
+				$sql->group_by($this->path->sql_table, $f1);
 			return true;
 		}
 		return false;

@@ -3,7 +3,7 @@ class application extends Component {
 
 	/** Override page to allow login page without being logged, and a different layout for login page */
 	public function page($path) {
-		if ($path == "enter") {
+		if ($path == "enter" || $path == "load") {
 			require_once("component/Page.inc");
 			$page = new Page();
 			$page->generate($this, $path);

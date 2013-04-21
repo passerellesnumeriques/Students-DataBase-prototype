@@ -25,6 +25,17 @@ class people extends Component {
 	
 	public function dependencies() { return array("user_management"); }
 	
+	public function get_readable_rights() {
+		return array();
+	}
+	public function get_writable_rights() {
+		return array(
+			new AccessRightCategory("people","Personal Information",array(
+				new BooleanRight("edit_people_details","Edit Personal Information"),
+			)),
+		);
+	}
+	
 	public function populate_model(&$model) {
 		$model->addTable("People")
 			->addPrimaryKey("id")
@@ -33,13 +44,16 @@ class people extends Component {
 			->addEnum("sex", array("M","F"))
 			->addDisplayableData("first_name", "Personal Information", "First Name")
 			->addDisplayableData("last_name", "Personal Information", "Last Name")
-			->addDisplayableData("sex", "Personal Information", "Sex");
+			->addDisplayableData("sex", "Personal Information", "Sex")
+			->allowReadAccess()
+			->restrictWriteAccess("edit_people_details",true);
 		$model->addTable("UserPeople")
 			->addString("domain")
 			->addString("username")
 			->addForeignKey("people", "People")
 			->addIndex("domain","username")
-			->addLink("Users",array("domain"=>"domain","username"=>"username"),true);
+			->addLink("Users",array("domain"=>"domain","username"=>"username"),true)
+			->allowReadAccess();
 	}
 	
 	protected function is_page_allowed($path) {
