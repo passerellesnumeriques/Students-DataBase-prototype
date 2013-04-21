@@ -38,7 +38,9 @@ class Page {
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
 	<title>PN Students DataBase</title>
 	<link rel="stylesheet" href="/static/application/style.css"/>
-	<script type="text/javascript" src="/static/common/utils.js"></script>
+	<script type="text/javascript" src="/static/common/js/utils.js"></script>
+	<script type="text/javascript" src="/static/common/js/pn.js"></script>
+	<script type="text/javascript" src="/static/common/js/databaselock.js"></script>
 	<?php
 	foreach ($this->javascripts as $js) echo "<script type='text/javascript' src='".$js[0]."'>".$js[1]."</script>";
 	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";

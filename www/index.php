@@ -49,6 +49,7 @@ function __autoload($classname) {
 
 switch ($type) {
 case "static":
+	//usleep(rand(0,3000000));
 	header('Cache-Control: public', true);
 	header('Pragma: public', true);
 	$date = date("D, d M Y H:i:s",time());
@@ -64,6 +65,13 @@ case "static":
 	case "jpg": case "jpeg": header("Content-Type: image/jpeg"); break;
 	case "css": header("Content-Type: text/css"); break;
 	case "js": header("Content-Type: text/javascript"); break;
+	case "html": header("Content-Type: text/html"); break;
+	case "php":
+		if ($component_name == "common")
+			include "common/".$path;
+		else
+			include "component/".$component_name."/static/".$path;
+		die();
 	default: die("Invalid static resource type");
 	}
 	if ($component_name == "common")
@@ -106,7 +114,12 @@ case "dynamic":
 		$app->components[$component_name]->page($path);
 		break;
 	case "service":
-		header("Content-Type: text/xml;charset=UTF-8");
+		$format = @$_GET["format"];
+		if ($format == "xml")
+			header("Content-Type: text/xml;charset=UTF-8");
+		else if ($format == "json")
+			header("Content-Type: text/json;charset=UTF-8");
+		else die("Invalid request: unknown service format");
 		$app->components[$component_name]->service($path);
 		break;
 	default: die("Invalid request: unknown request type ".$request_type);

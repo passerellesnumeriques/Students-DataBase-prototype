@@ -6,5 +6,8 @@ return array(
 	"remove" => "remove",
 	"save" => "save",
 	"saving" => "saving",
+		
+	"this data is already locked by" => "this data is already locked by", 
+	"this page is already locked by" => "this page is already locked by", 
 );
 ?>

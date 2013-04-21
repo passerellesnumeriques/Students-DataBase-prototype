@@ -5,6 +5,18 @@ class SQLQuery {
 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
 	public static function &create() { $q = new SQLQuery(); return $q; }
 	
+	public function __construct($copy = null) {
+		if ($copy) {
+			$this->tables = $copy->tables;
+			$this->fields = $copy->fields;
+			$this->where = $copy->where;
+			$this->joins = $copy->joins;
+			$this->limit_from = $copy->limit_from;
+			$this->limit_number = $copy->limit_number;
+			$this->group_by = $copy->group_by;
+		}
+	}
+	
 	public $tables = array();
 	public $fields = array();
 	public $where = array();
@@ -60,6 +72,24 @@ class SQLQuery {
 		else
 			array_push($this->fields, array($table,$name,$alias));
 		return $this;
+	}
+	
+	public function reset_fields() {
+		$this->fields = array();
+	}
+	public function count($fields = null) {
+		if ($fields == null)
+			array_push($this->fields, "COUNT(*)");
+		else {
+			$s = "COUNT(";
+			$first = true;
+			foreach ($fields as $f) {
+				if ($first) $first = false; else $s .= ",";
+				$s .= "`".$f[0]."`.`".$f[1]."`";
+			}
+			$s .= ")";
+			array_push($this->fields, $s);
+		}
 	}
 	
 	/**
@@ -159,8 +189,12 @@ class SQLQuery {
 			$first = true;
 			foreach ($this->fields as $f) {
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= "`".$f[0]."`.`".$f[1]."`";
-				if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
+				if (is_string($f))
+					$sql .= $f;
+				else {
+					$sql .= "`".$f[0]."`.`".$f[1]."`";
+					if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
+				}
 			}
 		}
 		$sql .= " FROM ";

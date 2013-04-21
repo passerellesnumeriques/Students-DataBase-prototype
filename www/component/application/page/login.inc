@@ -60,6 +60,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		</td>
 	</tr>
 </table>
+<br/>
+<span id='application_loading'><?php locale("application","Loading application")?> <iframe style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=100'></iframe></span>
 </td></tr></table>
 </form>
 </body>

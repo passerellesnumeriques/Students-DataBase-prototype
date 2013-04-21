@@ -46,7 +46,10 @@ class Table {
 	private $indexes = array();
 	private $links = array();
 	private $table_read_access = array();
+	private $table_add_access = array();
+	private $table_remove_access = array();
 	private $fields_read_access = array();
+	private $fields_write_access = array();
 	private $displayable_data = array();
 	
 	public function __construct(&$model, $name) {
@@ -72,6 +75,13 @@ class Table {
 	/** Add an integer column. Size is in bits */
 	public function addInteger($name, $size=32) {
 		$c = new ColumnInteger($this, $name, $size);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
+	/** Add a boolean column */
+	public function addBoolean($name) {
+		$c = new ColumnBoolean($this, $name);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -113,8 +123,20 @@ class Table {
 		return $this;
 	}
 	
+	public function &allowReadAccess() {
+		$this->table_read_access = null;
+		return $this;
+	}
 	public function &restrictReadAccess($right_name, $right_value) {
 		$this->table_read_access[$right_name] = $right_value;
+		return $this;
+	}
+	public function &restrictAddAccess($right_name, $right_value) {
+		$this->table_add_access[$right_name] = $right_value;
+		return $this;
+	}
+	public function &restrictRemoveAccess($right_name, $right_value) {
+		$this->table_remove_access[$right_name] = $right_value;
 		return $this;
 	}
 	public function &restrictFieldReadAccess($field, $right_name, $right_value) {
@@ -123,8 +145,24 @@ class Table {
 		$this->fields_read_access[$field][$right_name] = $right_value;
 		return $this;
 	}
+	public function &restrictFieldWriteAccess($field, $right_name, $right_value) {
+		if (!isset($this->fields_write_access[$field]))
+			$this->fields_write_access[$field] = array();
+		$this->fields_write_access[$field][$right_name] = $right_value;
+		return $this;
+	}
+	public function &restrictWriteAccess($right_name, $right_value) {
+		foreach ($this->columns as $col)
+			$this->restrictFieldWriteAccess($col->name, $right_name, $right_value);
+		return $this;
+	}
+	public function &preventWriteAccess($field) {
+		$this->fields_write_access[$field] = false;
+	}
 	
 	public function canAccess() {
+		if ($this->table_read_access === null) return true;
+		if (count($this->table_read_access) == 0) return false;
 		foreach ($this->table_read_access as $right_name=>$right_value)
 			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
 				return false;
@@ -133,6 +171,16 @@ class Table {
 	public function canAccessField($field) {
 		if (!isset($this->fields_read_access[$field])) return true;
 		foreach ($this->fields_read_access[$field] as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+			return false;
+		return true;
+	}
+	public function canModifyField($field) {
+		if (!isset($this->fields_write_access[$field])) return false;
+		$val = $this->fields_write_access[$field];
+		if ($val === true) return true;
+		if ($val === false) return false;
+		foreach ($val as $right_name=>$right_value)
 			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
 			return false;
 		return true;
@@ -246,6 +294,14 @@ class ColumnInteger extends Column {
 	}
 	
 	public function get_sql_type() { return "INT(".$this->size.")"; }
+
+}
+
+class ColumnBoolean extends ColumnInteger {
+
+	public function __construct(&$table, $name) {
+		parent::__construct($table, $name, 1);
+	}
 
 }
 

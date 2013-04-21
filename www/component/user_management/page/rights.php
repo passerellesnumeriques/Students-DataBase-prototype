@@ -1,8 +1,20 @@
 <?php 
+// get the user we need to display
 $domain = $_GET["domain"];
 $username = $_GET["username"];
 
+// check the current user has the right to edit
 $can_edit = PNApplication::$instance->user_management->has_right("edit_user_rights");
+
+// if the user can edit, we need to lock the data, so another user will not modify the data at the same time
+$locked = null;
+if ($can_edit) {
+	require_once("common/DataBaseLock.inc");
+	$lock_id = DataBaseLock::lock("UserRights", array("domain"=>$domain,"username"=>$username), $locked);
+	if ($locked <> null)
+		$can_edit = false;
+}
+
 require_once("common/SQLQuery.inc");
 // get roles of the user
 $roles = SQLQuery::create()->select("UserRole")->field("UserRole","role_id")->join("UserRole","Role",array("role_id"=>"id"))->field("Role","name")->where("domain",$domain)->where("username",$username)->execute();
@@ -21,6 +33,11 @@ echo "<img src='/static/user_management/access_list_32.png' style='vertical-alig
 echo get_locale("User").": ".get_locale("Domain")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$domain."</span>, ".get_locale("Username")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$username."</span>";
 if (!$is_admin && $can_edit)
 	echo "<span style='border-left:1px solid #4040A0;padding-left:5px;margin-left:5px;height:100%'><button onclick='um_rights_save()'><img src='/static/common/images/save.png'/> ".get_locale("common","Save")."</button></span>";
+if ($locked <> null) {
+	echo "<img src='/static/common/images/lock.png'/> ";
+	locale("common","This page is already locked by");
+	echo " ".$locked;
+}
 echo "</div>";
 
 if ($is_admin) {
@@ -28,6 +45,7 @@ if ($is_admin) {
 	return;
 }
 
+// retrieve all existing rights, and categories
 $all_rights = array();
 $categories = array();
 foreach (PNApplication::$instance->components as $component) {
@@ -57,14 +75,14 @@ foreach (PNApplication::$instance->components as $component) {
 $rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("domain",$domain)->where("username",$username)->execute();
 if (!is_array($rights)) $rights = array();
 $user_rights = array();
-foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+foreach ($rights as $r) $user_rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 // get rights for each role
 $role_rights = array();
 foreach ($roles as $role) {
 	$rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where("role_id", $role["role_id"])->execute();
 	if (!is_array($rights)) $rights = array();
 	$a = array();
-	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->get_right_value($r["value"]);
+	foreach ($rights as $r) $a[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 	array_push($role_rights, $a);
 }
 // compute final for user
@@ -77,10 +95,11 @@ foreach ($role_rights as $rights)
 		if (!isset($final[$name]))
 			$final[$name] = $value;
 		else
-			$final[$name] = $all_rights[$name]->get_higher_right($value, $final[$name]);
+			$final[$name] = $all_rights[$name]->get_higher_value($value, $final[$name]);
 // 3- from implications
 user_management::compute_rights_implications($final, $all_rights);
 
+/** Generate a field according to the type of the right: for example, a checkbox for a boolean right */
 function generate_right($prefix, $right, $value, $readonly = true, $visible = true) {
 	if ($right instanceof BooleanRight) {
 		echo "<input type='checkbox' name='".$prefix.$right->name."'";
@@ -92,6 +111,7 @@ function generate_right($prefix, $right, $value, $readonly = true, $visible = tr
 		echo "unknown right type";
 }
 
+// print the table of rights
 echo "<form name='um_rights' onsubmit='return false'>";
 echo "<table rules=all cellspacing=0 cellpadding=2>";
 $roles_cols = count($roles);
@@ -160,6 +180,7 @@ img {
 	cursor: pointer;
 }
 </style>
+<?php if ($can_edit) {?>
 <script type='text/javascript'>
 function um_rights_add(name) {
 	var input = document.forms["um_rights"].elements["user_"+name];
@@ -214,7 +235,7 @@ function um_rights_save() {
 			value = e.value;
 		data += "&"+encodeURIComponent(right)+"="+encodeURIComponent(value);
 	}
-	pn.ajax_service_xml("/dynamic/user_management/service/save_user_rights", data, function(xml) {
+	pn.ajax_service_xml("/dynamic/user_management/service/save_user_rights?lock=<?php echo $lock_id?>", data, function(xml) {
 		if (xml != null)
 			location.reload();
 		else {
@@ -223,4 +244,5 @@ function um_rights_save() {
 		}
 	});
 }
+<?php }?>
 </script>

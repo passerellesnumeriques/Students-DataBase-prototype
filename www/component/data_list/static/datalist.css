@@ -1,11 +1,7 @@
-#datalist_header {
+.datalist_header {
 	height: 28px;
 	background-color: #E0E0E0;
-}
-#datalist_header td {
 	border-bottom: 1px solid #A0A0A0;
-}
-#datalist_fields_area {
 }
 #datalist_data_area {
 	/* padding-top: 2px; */
@@ -21,14 +17,4 @@ tr.datalist_fields_0 {
 }
 tr.datalist_fields_1 {
 	background-color: #E8E8FF;
-}
-.datalist_separator {
-	width: 5px;
-	background-color: rgb(227, 239, 255);
-	background-image: url("/static/common/dhtmlx/imgs/dhxlayout_dhx_skyblue/dhxlayout_drag_ver.gif")!important;
-	background-repeat: no-repeat!important;
-	background-position: 50% center!important;
-	cursor: w-resize;
-	border-left: 1px solid rgb(164, 190, 212);
-	border-right: 1px solid rgb(164, 190, 212);
 }
