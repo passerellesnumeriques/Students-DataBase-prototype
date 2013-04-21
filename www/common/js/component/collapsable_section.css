@@ -1,0 +1,10 @@
+.collapsable_section {
+	border: 1px solid black;
+}
+.collapsable_section_header {
+	border-bottom: 1px solid black;
+	background-color: #D0D0FF;
+	cursor: pointer;
+}
+.collapsable_section_content {
+}

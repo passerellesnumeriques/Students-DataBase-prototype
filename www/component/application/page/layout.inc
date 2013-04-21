@@ -42,6 +42,9 @@
 Copyright (c) Passerelles numériques
 -
 <a href="https://github.com/passerellesnumeriques/Students-DataBase/issues/new" target="_blank">Report a bug or request for new feature</a>
+<div style='float:right'>
+<span id='application_loading'><?php locale("application","Loading application")?> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=2000'></iframe></span>
+</div>
 </div>
 <a href="/dynamic/application/page/enter" style='position:fixed;top:-2px;left:2px'>
 	<img src='/static/common/images/logo.png' height=32px border=0 style='vertical-align:top'/>

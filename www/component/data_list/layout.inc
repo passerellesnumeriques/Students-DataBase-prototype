@@ -1,87 +1,72 @@
 <?php 
 $page->add_stylesheet("/static/data_list/datalist.css");
-$page->add_stylesheet("/static/common/dhtmlx/skins/dhtmlxaccordion_dhx_skyblue.css");
-$page->add_stylesheet("/static/common/dhtmlx/dhtmlxgrid.css");
-$page->add_stylesheet("/static/common/dhtmlx/skins/dhtmlxgrid_dhx_skyblue.css");
 $page->add_javascript("/static/data_list/datalist.js");
-$page->add_javascript("/static/common/dhtmlx/dhtmlxcommon.js");
-$page->add_javascript("/static/common/dhtmlx/dhtmlxcontainer.js");
-$page->add_javascript("/static/common/dhtmlx/dhtmlxaccordion.js");
-$page->add_javascript("/static/common/dhtmlx/dhtmlxgrid.js");
-$page->add_javascript("/static/common/dhtmlx/dhtmlxgridcell.js");
-$page->onload("datalist_init_fields();datalist_refresh();");
+$page->add_stylesheet("/static/common/js/component/splitter_vertical.css");
+$page->add_javascript("/static/common/js/component/splitter_vertical.js");
+$page->add_stylesheet("/static/common/js/component/collapsable_section.css");
+$page->add_javascript("/static/common/js/component/collapsable_section.js");
+$page->add_stylesheet("/static/common/js/component/grid.css");
+$page->add_javascript("/static/common/js/component/grid.js");
+$page->add_javascript("/static/common/js/field/field_text.js");
+$page->add_javascript("/static/common/js/field/field_icon_link.js");
+$page->add_javascript("/static/common/js/field/field_editable_text.js");
+$page->onload("new splitter_vertical('datalist_container',0.25);datalist_init_fields();datalist_refresh();");
 ?>
-<table style='width:100%;height:100%' cellspacing=0 cellpadding=0 id='datalist_container'>
-<tr id='datalist_header'>
-	<td>
-		<input type='checkbox' checked='checked' onchange='var e = document.getElementById("datalist_refresh"); if (!this.checked) { e.style.visibility = "visible"; e.style.position = "static"; } else { e.style.visibility = "hidden"; e.style.position = "absolute"; }'/> <?php locale("data_list", "Auto refresh")?>
-		<button id='datalist_refresh' onclick='datalist_refresh();return false;' disabled='disabled' style='position:absolute;visibility:hidden'><img src='/static/common/images/refresh.png' style='vertical-align:bottom'/><?php locale("data_list", "Refresh")?></button>
-	</td>
-	<td></td>
-	<td>
-		<span style='border-right:1px solid #C0C0C0;padding-right:3px' id='datalist_numbers'></span>
-		<span id='datalist_header'><?php foreach ($this->headers as $header) echo $header;?></span>
-	</td>
-</tr>
-<tr>
-	<td valign=top width=25% id='datalist_fields_area'>
-		<div style='width:100%;height:100%;overflow:auto' id='datalist_fields_area_div'>
-			<div id='datalist_fields_accordion' style='width:100%;'></div>
-			<table width=100% cellspacing=0 cellpadding=0 id='datalist_table_visible' title="<?php locale("data_list", "Visible Fields");?>">
-				<tbody id='datalist_visible_fields'></tbody>
-			</table>
-			<table width='100%' cellspacing=0 cellpadding=0 id='datalist_table_available' title="<?php locale("data_list", "Available Fields");?>">
-				<tbody id='datalist_avail_fields'></tbody>
-			</table>
-		</div>
-	</td>
-	<td class='datalist_separator' onmousedown='datalist_start_resize(event);return false;'>&nbsp;</td>
-	<td class='set_height' valign=top align=left id='datalist_data_area'>
-		<div id='datalist_data' style='position:absolute;visibility:hidden;top:-10000px'>
-		</div>
-		<div id='datalist_data_loading_back' style='position:absolute;visibility:hidden;top:-10000px;width:100%;height:100%;background-color:white;opacity:0.3;-moz-opacity:0.3;-khtml-opacity:0.3;filter: alpha(opacity=30);-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=30)"'>
-		</div>
-		<div id='datalist_data_loading' style='width:100%;height:100%;'>
-			<table width=100% height=100%><tr><td align=center valign=center>
-				<img src='/static/common/images/loading.gif'/>
-			</td></tr></table>
-		</div>
-	</td>
-</tr>
-</table>
+<div style='width:100%;height:100%' id='datalist_container'>
+	<div>
+		<table width=100% height=100% cellspacing=0 cellpadding=0>
+			<tr class='datalist_header'><td>
+				<input type='checkbox' checked='checked' onchange='var e = document.getElementById("datalist_refresh"); if (!this.checked) { e.style.visibility = "visible"; e.style.position = "static"; } else { e.style.visibility = "hidden"; e.style.position = "absolute"; }'/> <?php locale("data_list", "Auto refresh")?>
+				<button id='datalist_refresh' onclick='datalist_refresh();return false;' disabled='disabled' style='position:absolute;visibility:hidden'><img src='/static/common/images/refresh.png' style='vertical-align:bottom'/><?php locale("data_list", "Refresh")?></button>
+			</td></tr>
+			<tr><td>
+				<div style='width:100%;height:100%;overflow:auto' id='datalist_fields_area_div'>
+					<div class='collapsable_section' id='datalist_visible_section'>
+						<div class='collapsable_section_header'>
+							<?php locale("data_list", "Visible Fields");?>
+						</div>
+						<table class='collapsable_section_content' width=100% cellspacing=0 cellpadding=0>
+							<tbody id='datalist_visible_fields'></tbody>
+						</table>
+					</div>
+					<div class='collapsable_section' id='datalist_available_section'>
+						<div class='collapsable_section_header'>
+							<?php locale("data_list", "Available Fields");?>
+						</div>
+						<table class='collapsable_section_content' width=100% cellspacing=0 cellpadding=0>
+							<tbody id='datalist_avail_fields'></tbody>
+						</table>
+					</div>
+				</div>
+			</td></tr>
+		</table>
+	</div>
+	<div>
+		<table width=100% height=100% cellspacing=0 cellpadding=0>
+			<tr class='datalist_header'><td>
+				<span style='border-right:1px solid #C0C0C0;padding-right:3px'>
+					<span id='datalist_total_entries'></span> <?php locale("data_list","entries")?>, 
+					<?php locale("data_list","display")?> <span id='datalist_start_entry'></span> - <span id='datalist_end_entry'></span>
+				</span>
+				<span id='datalist_save' style='visitility:hidden;position:absolute;top:-10000px;border-right:1px solid #C0C0C0;padding-right:3px'>
+					<button onclick='datalist_save();'><img src='/static/common/images/save.png' style='vertical-align:bottom'/> <?php locale("common","Save")?></button>
+				</span>
+				<span id='datalist_header'><?php foreach ($this->headers as $header) echo $header;?></span>
+			</td></tr>
+			<tr><td>
+				<div id='datalist_data' style='width:100%;height:100%;overflow:auto'></div>
+			</td></tr>
+		</table>
+	</div>
+</div>
 <script type='text/javascript'>
-function datalist_init_loading_area() {
-	var icon = document.getElementById("datalist_data_loading");
-	var back = document.getElementById("datalist_data_loading_back");
-	var list = document.getElementById("datalist_data");
-	var w = icon.offsetWidth;
-	var h = icon.offsetHeight;
-	var x = absoluteLeft(icon);
-	var y = absoluteTop(icon);
-	icon.style.position = "absolute";
-	icon.style.left = x+"px";
-	icon.style.top = y+"px";
-	icon.style.width = w+"px";
-	icon.style.height = h+"px";
-	back.style.position = "absolute";
-	back.style.left = x+"px";
-	back.style.top = y+"px";
-	back.style.width = w+"px";
-	back.style.height = h+"px";
-	back.style.visibility = "visible";
-	list.style.position = "static";
-	list.style.visibility = "visible";
-	list.style.width = "100%";
-	list.style.height = "100%";
-	list.style.top = "0px";
-}
-datalist_init_loading_area();
-
-function DataList_FieldName(path, category, name, type) {
+function DataList_FieldName(path, category, name, type, editable, edited) {
 	this.path = path;
 	this.category = category;
 	this.name = name;
 	this.type = type;
+	this.editable = editable;
+	this.edited = edited;
 }
 var datalist_fields = [
 <?php 
@@ -108,7 +93,9 @@ foreach ($all_fields as $path) {
 		json_encode($path->get_path()).",".
 		json_encode($name[0]).",".
 		json_encode($name[1]).",".
-		json_encode($type).
+		json_encode($type).",".
+		($path->is_unique() && $col->table->canModifyField($col->name) ? "true" : "false").",".
+		"false".
 	")\n";
 }
 ?>

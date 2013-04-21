@@ -143,23 +143,30 @@ class user_management extends Component {
 			->addString("right", 100)
 			->addString("value")
 			->addIndex("domain","username")
-			->addLink("Users", array("domain"=>"domain","username"=>"username"), false);
+			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
+			->restrictReadAccess("consult_user_rights",true);
 		$model->addTable("Role")
 			->addPrimaryKey("id")
 			->addString("name")
-			->addDisplayableData("name", "User","Role");
+			->addDisplayableData("name", "User","Role")
+			->allowReadAccess()
+			->restrictFieldWriteAccess("name","manage_roles",true);
 		$model->addTable("UserRole")
 			->addString("domain", 100)
 			->addString("username", 100)
 			->addForeignKey("role_id", "Role")
 			->addIndex("domain","username")
 			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
-			->restrictReadAccess("consult_user_roles",true);
+			->restrictReadAccess("consult_user_roles",true)
+			->restrictAddAccess("assign_role",true)
+			->restrictRemoveAccess("assign_role",true);
 		$model->addTable("RoleRights")
 			->addForeignKey("role_id", "Role")
 			->addString("right", 100)
 			->addString("value")
-			->addIndex("role_id");
+			->addIndex("role_id")
+			->restrictAddAccess("manage_roles",true)
+			->restrictRemoveAccess("manage_roles",true);
 	}
 	
 	protected function is_page_allowed($path) {

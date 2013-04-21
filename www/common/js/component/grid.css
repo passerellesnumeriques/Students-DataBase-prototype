@@ -1,0 +1,24 @@
+table.grid {
+	border-collapse: collapse;
+	border-spacing: 0px;
+	border: 1px solid black;
+}
+table.grid, table.grid input {
+	font-size: 11px;
+}
+table.grid td,th {
+	white-space: nowrap;
+}
+table.grid thead tr {
+	background-color: #D0D0FF;
+}
+table.grid thead th {
+	border-right: 1px solid #A0A0FF;
+	border-bottom: 1px solid #A0A0FF;
+}
+table.grid tbody tr:nth-child(even) {
+	background-color: #FFFFFF;
+}
+table.grid tbody tr:nth-child(odd) {
+	background-color: #D8D8FF;
+}

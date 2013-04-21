@@ -44,7 +44,7 @@ class PNApplication {
 	public static function print_xml_errors() {
 		if (count(PNApplication::$errors) == 0) return false;
 		echo "<error message=\"";
-		foreach (PNApplication::$errors as $e) echo $e;
+		foreach (PNApplication::$errors as $e) echo htmlspecialchars($e,ENT_COMPAT,"UTF-8");
 		echo "\"/>";
 		return true;
 	}
@@ -90,6 +90,10 @@ class PNApplication {
 		if ($app_model == null) {
 			require_once("common/Model.inc");
 			$app_model = new data\Model();
+			// init with utilities tables
+			$app_model->addTable("DataLocks")->addPrimaryKey("id")->addInteger("timestamp")->addString("locker_domain")->addString("locker_username")->addString("locked_table", 64)->addBoolean("full_table");
+			$app_model->addTable("DataLocksField")->addForeignKey("lock_id", "DataLocks")->addInteger("timestamp")->addString("field")->addString("value");
+			// populate model from every component
 			$done = array();
 			foreach ($this->components as $name=>&$c)
 				$this->populate_model($app_model, $c, $done);
