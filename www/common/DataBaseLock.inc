@@ -2,20 +2,20 @@
 class DataBaseLock {
 	
 	public static function clean() {
-		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE");
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
 		DataBase::$conn->execute("DELETE FROM DataLocks WHERE timestamp <= ".(time()-5*60));
 		DataBase::$conn->execute("DELETE FROM DataLocksFields WHERE timestamp <= ".(time()-5*60));
 		DataBase::$conn->execute("UNLOCK TABLES");
 	}
 	
-	public static function lock($table, $fields, &$locked_by) {
+	public static function lock($table, $fields, &$locked_by, $generate_script = true) {
 		DataBaseLock::clean();
-		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE");
-		$id = DataBaseLock::_lock($table, $fields, $locked_by);
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
+		$id = DataBaseLock::_lock($table, $fields, $locked_by, $generate_script);
 		DataBase::$conn->execute("UNLOCK TABLES");
 		return $id;
 	}
-	private static function _lock($table, $fields, &$locked_by) {
+	private static function _lock($table, $fields, &$locked_by, $generate_script) {
 		$res = DataBase::$conn->execute("SELECT * FROM DataLocks WHERE locked_table='".DataBase::$conn->escape_string($table)."'");
 		if ($res <> null) {
 			$where = "";
@@ -69,13 +69,14 @@ class DataBaseLock {
 			}
 			DataBase::$conn->execute($sql);
 		}
-		DataBaseLock::generate_script($id);
+		if ($generate_script)
+			DataBaseLock::generate_script($id);
 		return $id;
 	}
 	
 	public static function unlock($id) {
 		$result = null;
-		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE");
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
 		$r = DataBase::$conn->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id=".$id);
 		if ($r) {
 			$row = DataBase::$conn->next_row($r);
@@ -95,7 +96,7 @@ class DataBaseLock {
 	public static function update($id) {
 		$result = null;
 		$ts = time();
-		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE");
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
 		$r = DataBase::$conn->execute("SELECT locker_domain,locker_username FROM DataLocks WHERE id=".$id);
 		if ($r) {
 			$row = DataBase::$conn->next_row($r);
@@ -117,7 +118,7 @@ class DataBaseLock {
 	
 	public static function check($id, $table, $fields) {
 		$ts = time();
-		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE");
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
 		$r = DataBase::$conn->execute("SELECT * FROM DataLocks WHERE id=".$id);
 		// check if it exist
 		if (!$r) { DataBase::$conn->execute("UNLOCK TABLES"); return false; }
@@ -155,10 +156,39 @@ class DataBaseLock {
 		return true;
 	}
 	
+	public static function has_lock($table, $field = null, $value = null) {
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
+		$res = DataBase::$conn->execute(
+			"SELECT * FROM DataLocks WHERE ".
+			"locker_domain='".DataBase::$conn->escape_string(PNApplication::$instance->user_management->domain)."'".
+			" AND locker_username='".DataBase::$conn->escape_string(PNApplication::$instance->user_management->username)."'".
+			" AND locked_table='".DataBase::$conn->escape_string($table)."'");
+		// check if it exist
+		if (!$res) { DataBase::$conn->execute("UNLOCK TABLES"); return false; }
+		while (($r = DataBase::$conn->next_row($res)) <> null) {
+			if (!$r) { DataBase::$conn->execute("UNLOCK TABLES"); return false; }
+			// if all table is locked, this is ok
+			if ($r["full_table"] == 1) { DataBase::$conn->execute("UNLOCK TABLES"); return true; }
+			// else, we need to check the field
+			if ($field == null) break; // we need the full table
+			$lock_id = $r["id"];
+			$res2 = DataBase::$conn->execute("SELECT `value` FROM DataLocksFields WHERE lock_id=".$lock_id." AND field='".DataBase::$conn->escape_string($field)."'");
+			if (!$res2) continue;
+			$res2 = DataBase::$conn->next_row($res2);
+			if ($res2 == null) continue;
+			// field found
+			if ($value !== null && $value <> $res2['value']) continue; // value do not match
+			DataBase::$conn->execute("UNLOCK TABLES");
+			return true;
+		}
+		DataBase::$conn->execute("UNLOCK TABLES");
+		return true;
+	}
+	
 	private static function generate_script($id) {
 ?>
 <script type='text/javascript'>
-window.top.pn_database_locks.add_lock(<?php echo $id?>);
+window.pn_database_locks.add_lock(<?php echo $id?>);
 </script>
 <?php
 	}

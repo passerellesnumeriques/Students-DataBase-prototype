@@ -1,0 +1,27 @@
+.popup_window {
+	position: fixed;
+	z-index: 50;
+	box-shadow: 0 0 10px 3px #A0A0D0;
+	background-color: white;
+	border: 1px solid black;
+	border-spacing: 0px;
+}
+.popup_window_title {
+	background-color: #A0A0D0;
+	height: 20px;
+}
+.popup_window_title td {
+	padding: 2px;
+	color: white;
+	font-weight: bold;
+	text-shadow: black 0.1em 0.1em 0.2em;
+	border-bottom: 1px solid #000080;
+	cursor: move;
+}
+.popup_window_title td+td {
+	width: 20px;
+	cursor: pointer;
+	background-image: url("/static/common/images/close.png");
+	background-position: 0px;
+	background-repeat: no-repeat;
+}

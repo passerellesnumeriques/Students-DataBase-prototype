@@ -10,6 +10,8 @@ $page->add_javascript("/static/common/js/component/grid.js");
 $page->add_javascript("/static/common/js/field/field_text.js");
 $page->add_javascript("/static/common/js/field/field_icon_link.js");
 $page->add_javascript("/static/common/js/field/field_editable_text.js");
+$page->add_javascript("/static/common/js/field/field_enum.js");
+$page->add_javascript("/static/common/js/field/field_date.js");
 $page->onload("new splitter_vertical('datalist_container',0.25);datalist_init_fields();datalist_refresh();");
 ?>
 <div style='width:100%;height:100%' id='datalist_container'>
@@ -19,7 +21,7 @@ $page->onload("new splitter_vertical('datalist_container',0.25);datalist_init_fi
 				<input type='checkbox' checked='checked' onchange='var e = document.getElementById("datalist_refresh"); if (!this.checked) { e.style.visibility = "visible"; e.style.position = "static"; } else { e.style.visibility = "hidden"; e.style.position = "absolute"; }'/> <?php locale("data_list", "Auto refresh")?>
 				<button id='datalist_refresh' onclick='datalist_refresh();return false;' disabled='disabled' style='position:absolute;visibility:hidden'><img src='/static/common/images/refresh.png' style='vertical-align:bottom'/><?php locale("data_list", "Refresh")?></button>
 			</td></tr>
-			<tr><td>
+			<tr><td valign=top>
 				<div style='width:100%;height:100%;overflow:auto' id='datalist_fields_area_div'>
 					<div class='collapsable_section' id='datalist_visible_section'>
 						<div class='collapsable_section_header'>
@@ -53,7 +55,7 @@ $page->onload("new splitter_vertical('datalist_container',0.25);datalist_init_fi
 				</span>
 				<span id='datalist_header'><?php foreach ($this->headers as $header) echo $header;?></span>
 			</td></tr>
-			<tr><td>
+			<tr><td valign=top>
 				<div id='datalist_data' style='width:100%;height:100%;overflow:auto'></div>
 			</td></tr>
 		</table>
@@ -87,7 +89,7 @@ foreach ($all_fields as $path) {
 			$type .= json_encode($v);
 		}
 		$type .= "]";
-	}
+	} else if ($col instanceof \data\ColumnDate) $type = "date";
 	if ($first) { $first = false; echo " "; } else echo ",";
 	echo "new DataList_FieldName(".
 		json_encode($path->get_path()).",".

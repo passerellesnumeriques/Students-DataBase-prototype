@@ -4,10 +4,10 @@
 		<?php locale("Academic")?>
 	</div>
 	<div class='page_header_content'>
-		TODO menu
+		<a href="/dynamic/curriculum/page/curricula" target="academic_content">Curricula</a>
 	</div>
 </div>
-<iframe class='page_content' frameborder=0 src="todo" style='width:100%;margin:0px;padding:0px;border:0px' id='academic_content'></iframe>
+<iframe class='page_content' frameborder=0 src="/dynamic/curriculum/page/curricula" style='width:100%;margin:0px;padding:0px;border:0px' id='academic_content' name='academic_content'></iframe>
 <script type='text/javascript'>
 function academic_resize_frame() {
 	var frame = document.getElementById('academic_content');

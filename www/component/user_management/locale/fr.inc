@@ -21,6 +21,7 @@ return array(
 	"user"=>"utilisateur",
 	"~users ~list" => "~liste des ~utilisateurs",
 	"~user ~management" => "~gestion des ~utilisateurs", 
+	"~user ~rights" => "~droits de l'~utilisateur", 
 	"username"=>"identifiant",
 		
 	"This user is an administrator, it has the right to do everything"=>"Cet utilisateur est un administrateur, il a le droit de faire ce qu'il veut",

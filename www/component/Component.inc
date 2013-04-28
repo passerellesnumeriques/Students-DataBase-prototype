@@ -33,14 +33,26 @@ abstract class Component {
 	
 	public function service($path) {
 		if ($this->app->user_management->username == null || !$this->is_service_allowed($path)) {
+			$format = @$_GET["format"];
+			if ($format == "xml")
+				die("<error message='Access denied'/>");
+			else if ($format == "json")
+				die("{errors:".json_encode("Access denied")."}");
 			die("<error message='Access denied'/>");
 		}
+		Locale::$current_component = $this->name;
 		// TODO check rights
 		$file = "component/".$this->name."/service/".$path.".php";
 		if (file_exists($file))
 			include $file;
-		else
+		else {
+			$format = @$_GET["format"];
+			if ($format == "xml")
+				die("<error message='service does not exist'/>");
+			else if ($format == "json")
+				die("{errors:".json_encode("service does not exist")."}");
 			die("<error message='service does not exist'/>");
+		}
 	}
 	
 	public function populate_model(&$model) {}

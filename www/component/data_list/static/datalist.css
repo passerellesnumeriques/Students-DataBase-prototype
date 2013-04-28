@@ -12,9 +12,12 @@
 tr.datalist_fields_category {
 	background-color: #D0D0FF;
 }
-tr.datalist_fields_0 {
+tr.datalist_fields {
+	font-size: 11px;
+}
+tr.datalist_fields:nth-child(even) {
 	background-color: #FFFFFF;
 }
-tr.datalist_fields_1 {
-	background-color: #E8E8FF;
+tr.datalist_fields:nth-child(odd) {
+	background-color: #D8D8FF;
 }

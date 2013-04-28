@@ -101,6 +101,12 @@ function URL(s) {
 	};
 }
 
+function PNEvent() {
+	this.listeners = [];
+	this.add_listener = function(listener) { this.listeners.push(listener); };
+	this.fire = function() { for (var i = 0; i < this.listeners.length; ++i) this.listeners[i](); };
+} 
+
 function listenEvent(elem, type, handler) {
 	if (elem.addEventListener)
 	     elem.addEventListener(type,handler,false);

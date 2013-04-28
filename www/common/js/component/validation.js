@@ -1,0 +1,18 @@
+function validation_error(input, message) {
+	input.className = 'validation_error';
+	var e = document.getElementById(input.id+'_validation');
+	if (e) {
+		e.innerHTML = "<img src='/static/common/images/error.png'/> "+message;
+		e.style.position = 'static';
+		e.style.visibility = 'visible';
+	}
+}
+function validation_ok(input) {
+	input.className = "";
+	var e = document.getElementById(input.id+'_validation');
+	if (e) {
+		e.innerHTML = "";
+		e.style.position = 'absolute';
+		e.style.visibility = 'hidden';
+	}
+}

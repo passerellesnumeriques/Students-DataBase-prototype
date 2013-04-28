@@ -14,6 +14,8 @@ function grid(element) {
 		if (!field_type) field_type = new field_text();
 		t.columns.push(field_type);
 	}
+	t.getNbColumns = function() { return t.columns.length; };
+	t.getColumnField = function(index) { return t.columns[index]; };
 	
 	t.setData = function(data) {
 		// empty table
@@ -30,6 +32,12 @@ function grid(element) {
 			t.table.appendChild(tr);
 		}
 	}
+	
+	t.getCellContent = function(row,col) {
+		var tr = t.table.childNodes[row];
+		var td = tr.childNodes[col];
+		return td.childNodes[0];
+	};
 	
 	t.reset = function() {
 		// remove data rows

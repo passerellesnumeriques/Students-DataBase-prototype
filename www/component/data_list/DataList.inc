@@ -1,5 +1,6 @@
 <?php
 require_once("common/SQLQuery.inc");
+require_once("DataPath.inc");
 class DataList {
 	
 	/** keep the data model got from components */
@@ -34,9 +35,9 @@ class DataList {
 	}
 	
 	public function primary_key() {
-		$this->primary_key = array();
 		for ($i = 0; $i < func_num_args(); $i++)
-			array_push($this->primary_key, func_get_arg($i));
+			if (!in_array(func_get_arg($i), $this->primary_key))
+				array_push($this->primary_key, func_get_arg($i));
 	}
 	
 	public function search($field, $value) {
@@ -44,7 +45,26 @@ class DataList {
 	}
 	
 	public function add($field, $editable) {
-		//echo "Build field ".$field."<br/>";
+		$col = $this->get_column($field);
+		if ($col <> null) {
+			array_push($this->columns, $col);
+			return true;
+		}
+		return false;
+	}
+	public function get($field) {
+		foreach ($this->columns as $col)
+			if ($col->get_path() == $field)
+				return $col;
+		return null;
+	}
+	public function get_index($field) {
+		for ($i = 0; $i < count($this->columns); $i++)
+			if ($this->columns[$i]->get_path() == $field)
+				return $i;
+		return -1;
+	}
+	private function get_column($field) {
 		$i = strpos($field, ".");
 		$table = substr($field, 0, $i);
 		$field = substr($field, $i+1);
@@ -52,21 +72,17 @@ class DataList {
 			$t = $this->model->getTable($table);
 		} catch (Exception $e) {
 			PNApplication::error($e);
-			return false;
+			return null;
 		}
 		if (!$t->canAccessField($field))
-			return false; // access denied
+			return null; // access denied
 		$col = null;
 		try { $col = $this->build_column(new DataPathRoot($this->starting_table), $table, $field); }
 		catch (Exception $e) {
 			PNApplication::error($e);
-			return false;
+			return null;
 		}
-		if ($col <> null) {
-			array_push($this->columns, $col);
-			return true;
-		}
-		return false;
+		return $col;
 	}
 	private function build_column($current_path, $table, $field) {
 		$i = strpos($field, ">");
@@ -272,17 +288,35 @@ class DataList {
 		if (count($this->columns) == 0)
 			return array("count"=>0,"list"=>array());
 		
+		// generate sql request
 		$context = new DataContext($this);
 		$sql = new SQLQuery();
-		foreach ($this->columns as $col) {
+		foreach ($this->columns as $col)
 			$col->generate_sql($sql, $context, $col);
-		}
+		// use sql request to count total number of entries
 		$sql_count = new SQLQuery($sql);
 		$sql_count->reset_fields();
 		$sql_count->count();
 		$count = $sql_count->execute_single_value();
 		
+		// limit results
 		$sql->limit($this->start_entry, $this->max_entries);
+		
+		// add missing primary keys, and get their aliases
+		$keys = array();
+		for ($i = 0; $i < count($this->primary_key); $i++) {
+			$pk = $this->primary_key[$i];
+			$found = false;
+			foreach ($this->columns as $c)
+				if ($c->get_path() == $pk) { $found = true; array_push($keys, $c->sql_field); break; }
+			if (!$found) {
+				$col = $this->get_column($pk);
+				$col->generate_sql($sql, $context, $col);
+				array_push($keys, $col->sql_field);
+			}
+		}
+		
+		// execute request
 		//echo $sql->generate();
 		$list = $sql->execute();
 		if ($list) {
@@ -298,11 +332,12 @@ class DataList {
 						$sub_ctx->restrict_value($f[0], $f[1], $r[$f[2]]);
 					$sub_sql = new SQLQuery();
 					$col->generate_sql($sub_sql, $sub_ctx, $col);
-					//echo $sub_sql->generate()."<br/>";
+					//echo "Request for field '".$col->get_path()."': ".$sub_sql->generate()."<br/>";
+					//echo "Field path is ".$col->debug()."<br/>";
 					$result = $sub_sql->execute();
 					//var_dump($result);
 					//echo "<br/><br/><br/>";
-					if ($result !== FALSE) {
+					if (is_array($result)) {
 						$first = true;
 						$s = array();
 						foreach ($result as $sr)
@@ -315,221 +350,25 @@ class DataList {
 			}
 		}
 		
-		return array("count"=>$count,"list"=>$list);
+		return array("count"=>$count,"list"=>$list,"primary_keys"=>$keys);
 	}
 	
-}
-
-class DataContext {
-	public $list;
-	public $restrict_values = array();
-	public $is_sub_request = false;
-	public function __construct(&$list) {
-		$this->list = &$list;
-	}
-	public function restrict_value($table, $field, $value) {
-		if (!isset($this->restrict_values[$table]))
-			$this->restrict_values[$table] = array();
-		$this->restrict_values[$table][$field] = $value;
-	}
-}
-
-abstract class DataPath {
-	public $final_name;
-	public $table;
-	public $sql_table;
-	public function __construct($table) {
-		$this->table = $table;
-	}
-	public abstract function is_unique();
-	public abstract function generate_sql(&$sql, &$ctx, &$top_path);
-	public abstract function get_path();
-}
-class DataPathRoot extends DataPath {
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		$sql->select($this->table);
-		$this->sql_table = $this->table;
-		return true;
-	}
-	public function is_unique() { return true; }
-	public function debug() { return "Table ".$this->table." AS ".$this->sql_table; }
-	public function get_path() { return $this->table."."; }
-}
-class DataPathField extends DataPath {
-	public $path;
-	public $field;
-	public $sql_field;
-	public function __construct($path, $field) {
-		parent::__construct($path->table);
-		$this->path = $path;
-		$this->field = $field;
-	}
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-		$this->sql_field = $sql->field_id();
-		$sql->field($this->path->sql_table, $this->field, $this->sql_field);
-		$this->sql_table = $this->path->sql_table;
-		$search = @$ctx->list->search[$this->get_path()];
-		if ($search !== null) {
-			$col = $ctx->list->model->getTable($this->table)->getColumn($this->field);
-			if ($col instanceof \data\ColumnString)
-				$sql->where("LOWER(`".$this->sql_table."`.`".$this->field."`) LIKE LOWER('%".DataBase::$conn->escape_string($search)."%')");
-			else
-				$sql->where("`".$this->sql_table."`.`".$this->field."` = '".DataBase::$conn->escape_string($search)."'");
+	public function update_data($keys, $field_path, $value) {
+		$col = null;
+		foreach ($this->columns as $c)
+			if ($c->get_path() == $field_path) { $col = $c; break; }
+		if ($col == null) {
+			PNApplication::error("Invalid field to update '".$field_path."'");
+			return false;
 		}
-		return true;
-	}
-	public function is_unique() { return $this->path->is_unique(); }
-	public function get_path() { return $this->path->get_path().$this->field; }
-	public function debug() { return $this->path->debug()." [Field ".$this->field." AS ".$this->sql_field."]"; }
-}
-class DataPathForeign extends DataPath {
-	public $path;
-	public $foreign_key;
-	public function __construct($path, $foreign_key) {
-		parent::__construct($foreign_key->foreign_table);
-		$this->path = $path;
-		$this->foreign_key = $foreign_key;
-	}
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-		$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->foreign_key->foreign_table, array($this->foreign_key->name => $ctx->list->model->getTable($this->foreign_key->foreign_table)->getPrimaryKey()->name));
-		if ($this->sql_table == null) {
-			$this->sql_table = $sql->table_id();
-			$sql->join($this->path->sql_table, $this->foreign_key->foreign_table, array($this->foreign_key->name => $ctx->list->model->getTable($this->foreign_key->foreign_table)->getPrimaryKey()->name), $this->sql_table);
+		$ctx = new DataContext($this);
+		foreach ($keys as $key_path=>$key_value) {
+			foreach ($this->columns as $c)
+				if ($c->get_path() == $key_path)
+					$ctx->restrict_value($c->table, $c->field, $key_value);
 		}
-		return true;
+		$col->update_value($ctx, $value, $this->model);
 	}
-	public function is_unique() { return $this->path->is_unique(); }
-	public function get_path() {
-		if ($this->path instanceof DataPathField)
-			$s = $this->path->path->get_path(); // skip the field, which is the same
-		else
-			$s = $this->path->get_path();
-		$s .= $this->foreign_key->name.">";
-		return $s;
-	}
-	public function debug() { return $this->path->debug()." => Foreign key link on ".$this->foreign_key->name." To table ".$this->foreign_key->foreign_table; }
-}
-class DataPathLinkReverse extends DataPath {
-	public $path;
-	public $link;
-	public function __construct($path, $table, $link) {
-		parent::__construct($table);
-		$this->path = $path;
-		$this->link = $link;
-	}
-	public function is_unique() { return $this->path->is_unique() && $this->link->unique; }
-	private $table_for_sub_requests = null;
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		if ($this->link->unique) {
-			if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-			$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->link->table_from->getName(), $this->link->fields_matching);
-			if ($this->sql_table == null) {
-				$this->sql_table = $sql->table_id();
-				$sql->join($this->path->sql_table, $this->link->table_from->getName(), $this->link->fields_matching, $this->sql_table);
-			}
-			return true;
-		}
-		if ($ctx->is_sub_request) {
-			$sql->select($this->link->table_from->getName());
-			$this->sql_table = $this->link->table_from->getName();
-			$table = $this->table_for_sub_requests <> null ? $this->table_for_sub_requests : $this->path->table;
-			foreach ($this->link->fields_matching as $src=>$dst)
-				$sql->where("`".$this->link->table_from->getName()."`.`".$src."`='".$ctx->restrict_values[$table][$dst]."'");
-			return true;
-		}
-		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-		// get the needed fields, to make sub request with restricted values
-		foreach ($this->link->fields_matching as $f1=>$f2) {
-			$alias = $sql->field_id();
-			$sql->field($this->path->sql_table, $f1,$alias);
-		}
-		$this->table_for_sub_requests = $this->path->sql_table;
-		$search = @$ctx->list->search[$top_path->get_path()];
-		if ($search !== null) {
-			$join_alias = $sql->table_id();
-			$sql->join($this->path->sql_table, $this->link->table_from->getName(), $this->link->fields_matching, $join_alias);
-			$this->sql_table = $join_alias;
-			foreach ($this->link->fields_matching as $f1=>$f2)
-				$sql->group_by($this->path->sql_table, $f1);
-			return true;
-		}
-		return false;
-	}
-	public function get_path() { return $this->link->table_from->getName()."."; }
-	public function debug() { 
-		$s = $this->path->debug();
-		$s .= " => LINK BACKWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
-		$s .= " (Table ".$this->link->table_from->getName()." to table ".$this->link->table;
-		$s .= " ON ";
-		foreach ($this->link->fields_matching as $f1=>$f2)
-			$s .= $f1."=".$f2.", ";
-		$s .= ")";
-		return $s;
-	}
-}
-class DataPathLink extends DataPath {
-	public $path;
-	public $link;
-	public function __construct($path, $link) {
-		parent::__construct($link->table);
-		$this->path = $path;
-		$this->link = $link;
-	}
-	public function is_unique() { return $this->path->is_unique() && $this->link->unique; }
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		if ($this->link->unique) {
-			if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-			$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->link->table, $this->link->fields_matching);
-			if ($this->sql_table == null) {
-				$this->sql_table = $sql->table_id();
-				$sql->join($this->path->sql_table, $this->link->table, $this->link->fields_matching, $this->sql_table);
-			}
-			return true;
-		}
-		// TODO
-		return false;
-	}
-	public function get_path() { return $this->link->table."."; }
-	public function debug() { 
-		$s = $this->path->debug();
-		$s .= " => LINK FORWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
-		$s .= " (Table ".$this->link->table." to table ".$this->link->table_from->getName();
-		$s .= " ON ";
-		foreach ($this->link->fields_matching as $f1=>$f2)
-			$s .= $f1."=".$f2.", ";
-		$s .= ")";
-		return $s;
-	}
-}
-class DataPathJoin extends DataPath {
-	public $path;
-	public $foreign_key;
-	public function __construct($path, $foreign_key) {
-		parent::__construct($foreign_key->table->getName());
-		$this->path = $path;
-		$this->foreign_key = $foreign_key;
-	}
-	public function generate_sql(&$sql, &$ctx, &$top_path) {
-		if (!$this->path->generate_sql($sql, $ctx, $top_path)) return false;
-		$this->sql_table = $sql->get_join_alias($this->path->sql_table, $this->foreign_key->table->getName(), array($ctx->list->model->getTable($this->path->table)->getPrimaryKey()->name=>$this->foreign_key->name));
-		if ($this->sql_table == null) {
-			$this->sql_table = $sql->table_id();
-			$sql->join($this->path->sql_table, $this->foreign_key->table->getName(), array($ctx->list->model->getTable($this->path->table)->getPrimaryKey()->name=>$this->foreign_key->name), $this->sql_table);
-		}
-		return true;
-	}
-	public function is_unique() { return $this->path->is_unique(); }
-	public function get_path() {
-		// TODO
-		if ($this->path instanceof DataPathField)
-			$s = $this->path->path->get_path(); // skip the field, which is the same
-		else
-			$s = $this->path->get_path();
-		$s .= $this->foreign_key->name.">";
-		return $s;
-	}
-	public function debug() { return $this->path->debug()." => Join foreign key from ".$this->foreign_key->table->getName()." on ".$this->foreign_key->name; }
+	
 }
 ?>

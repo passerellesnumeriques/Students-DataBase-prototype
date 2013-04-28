@@ -5,6 +5,7 @@ namespace data {
 class Model {
 	
 	private $tables = array();
+	private $data_category_link = array();
 	
 	/** Add a table to the model, and returns it
 	 * 
@@ -35,6 +36,16 @@ class Model {
 				$a[$name] = &$table;
 		return $a;
 	}
+	
+	/** indicates which page to go in order to display information about the given category */ 
+	public function addDataCategoryLink($category, $link) {
+		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
+		$this->data_category_link[$category] = $link;
+	}
+	public function getDataCategoryLink($category) {
+		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
+		return @$this->data_category_link[$category];
+	} 
 	
 }
 
@@ -73,8 +84,8 @@ class Table {
 	}
 	
 	/** Add an integer column. Size is in bits */
-	public function addInteger($name, $size=32) {
-		$c = new ColumnInteger($this, $name, $size);
+	public function addInteger($name, $size=32, $min = null, $max = null) {
+		$c = new ColumnInteger($this, $name, $size, $min, $max);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -87,8 +98,8 @@ class Table {
 	}
 	
 	/** Add a string column */
-	public function addString($name, $max_length=255) {
-		$c = new ColumnString($this, $name, $max_length);
+	public function addString($name, $max_length=255, $min_length = 0, $can_be_null = true) {
+		$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -96,6 +107,13 @@ class Table {
 	/** Add an enum column, with the given possible values */
 	public function addEnum($name, $values) {
 		$c = new ColumnEnum($this, $name, $values);
+		array_push($this->columns, $c);
+		return $this;
+	}
+	
+	/** Add a date column */
+	public function addDate($name, $can_be_null = true) {
+		$c = new ColumnDate($this, $name, $can_be_null);
 		array_push($this->columns, $c);
 		return $this;
 	}
@@ -199,6 +217,11 @@ class Table {
 		return $this;
 	}
 	
+	/** returns the list of displayable data in this table: field=>array(category,name). category and name are localized string prefixed by namespace:: */
+	public function getDisplayableData() {
+		return $this->displayable_data;
+	}
+	
 	/** Returns the localized name of the given data */
 	public function getDisplayableDataName($field) {
 		$data = @$this->displayable_data[$field];
@@ -225,7 +248,7 @@ class Table {
 	public function getPrimaryKey() {
 		foreach ($this->columns as $c)
 			if ($c instanceof PrimaryKey) {
-				if (!$this->canAccessField($c->name)) throw new Exception("Access denied");
+				if (!$this->canAccessField($c->name)) throw new \Exception("Access denied");
 				return $c;
 			}
 		return null;
@@ -233,7 +256,7 @@ class Table {
 	public function getColumn($name) {
 		foreach ($this->columns as $c)
 			if ($c->name == $name) {
-				if (!$this->canAccessField($c->name)) throw new Exception("Access denied");
+				if (!$this->canAccessField($c->name)) throw new \Exception("Access denied");
 				return $c;
 			}
 		return null;
@@ -282,18 +305,30 @@ abstract class Column {
 	}
 	public abstract function get_sql_type();
 	
+	public function validate($value) { return $value; }
+	
 }
 
 class ColumnInteger extends Column {
 
 	public $size;
+	public $min, $max;
 	
-	public function __construct(&$table, $name, $size) {
+	public function __construct(&$table, $name, $size, $min = null, $max = null) {
 		parent::__construct($table, $name);
 		$this->size = $size;
+		$this->min = $min;
+		$this->max = $max;
 	}
 	
 	public function get_sql_type() { return "INT(".$this->size.")"; }
+	
+	public function validate($value) {
+		if (!is_integer($value)) $value = intval($value);
+		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min); // TODO locale
+		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max); // TODO locale
+		return $value;
+	}
 
 }
 
@@ -302,19 +337,41 @@ class ColumnBoolean extends ColumnInteger {
 	public function __construct(&$table, $name) {
 		parent::__construct($table, $name, 1);
 	}
+	
+	public function validate($value) {
+		return $value == true;
+	}
 
 }
 
 class ColumnString extends Column {
 
 	public $max_length;
+	public $min_length;
+	public $can_be_null;
 	
-	public function __construct(&$table, $name, $max_length) {
+	public function __construct(&$table, $name, $max_length, $min_length = 0, $can_be_null = true) {
 		parent::__construct($table, $name);
 		$this->max_length = $max_length;
+		$this->min_length = $min_length;
+		$this->can_be_null = $can_be_null;
 	}
 
 	public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")"; }
+	
+	public function validate($value) {
+		if ($value === null) {
+			if (!$this->can_be_null) throw new \Exception("Cannot be empty"); // TODO locale
+			return null;
+		}
+		if (strlen($value) < $this->min_length) {
+			if (strlen($value) == 0) throw new \Exception("Cannot be empty"); // TODO locale
+			throw new \Exception("Must have a length of at least ".$this->min_length); // TODO locale
+		}
+		if (strlen($value) > $this->max_length)
+			throw new \Exception("Cannot be greater than ".$this->max_length); // TODO locale
+		return $value;
+	}
 }
 
 class ColumnEnum extends Column {
@@ -335,6 +392,29 @@ class ColumnEnum extends Column {
 		}
 		$sql .= ")";
 		return $sql;
+	}
+}
+
+class ColumnDate extends Column {
+
+	public $can_be_null;
+	
+	public function __construct(&$table, $name, $can_be_null = true) {
+		parent::__construct($table, $name);
+		$this->can_be_null = $can_be_null;
+	}
+	
+	
+	public function get_sql_type() { return "DATE"; }
+	
+	public function validate($value) {
+		if ($value === "") $value = null;
+		if ($value === null) {
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid date"); // TODO locale
+			return null;
+		}
+		// TODO check if valid format
+		return $value;
 	}
 }
 

@@ -24,6 +24,7 @@ $app_model = null;
  */
 class PNApplication {
 
+	/** @var PNApplication */
 	public static $instance;
 	
 	public static $errors = array();
@@ -85,6 +86,9 @@ class PNApplication {
 		$c->init();
 	}
 	
+	/**
+	 * @return \data\Model the data model given by all components
+	 */
 	public function &data_model() {
 		global $app_model;
 		if ($app_model == null) {
@@ -92,7 +96,7 @@ class PNApplication {
 			$app_model = new data\Model();
 			// init with utilities tables
 			$app_model->addTable("DataLocks")->addPrimaryKey("id")->addInteger("timestamp")->addString("locker_domain")->addString("locker_username")->addString("locked_table", 64)->addBoolean("full_table");
-			$app_model->addTable("DataLocksField")->addForeignKey("lock_id", "DataLocks")->addInteger("timestamp")->addString("field")->addString("value");
+			$app_model->addTable("DataLocksFields")->addForeignKey("lock_id", "DataLocks")->addInteger("timestamp")->addString("field")->addString("value");
 			// populate model from every component
 			$done = array();
 			foreach ($this->components as $name=>&$c)

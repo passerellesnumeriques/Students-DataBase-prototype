@@ -131,29 +131,30 @@ class user_management extends Component {
 	
 	public function populate_model(&$model) {
 		$model->addTable("Users")
-			->addString("domain")
-			->addString("username")
+			->addString("domain",100,1,false)
+			->addString("username",100,1,false)
 			->addIndex("domain","username")
 			->restrictReadAccess("consult_user_list",true)
 			->addDisplayableData("domain", "User","Domain")
 			->addDisplayableData("username", "User","Username");
+		$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&domain=%Users.domain%&username=%Users.username%");
 		$model->addTable("UserRights")
-			->addString("domain", 100)
-			->addString("username", 100)
-			->addString("right", 100)
+			->addString("domain", 100, 1, false)
+			->addString("username", 100, 1, false)
+			->addString("right", 100, 1, false)
 			->addString("value")
 			->addIndex("domain","username")
 			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
 			->restrictReadAccess("consult_user_rights",true);
 		$model->addTable("Role")
 			->addPrimaryKey("id")
-			->addString("name")
+			->addString("name", 100, 1, false)
 			->addDisplayableData("name", "User","Role")
 			->allowReadAccess()
 			->restrictFieldWriteAccess("name","manage_roles",true);
 		$model->addTable("UserRole")
-			->addString("domain", 100)
-			->addString("username", 100)
+			->addString("domain", 100, 1, false)
+			->addString("username", 100, 1, false)
 			->addForeignKey("role_id", "Role")
 			->addIndex("domain","username")
 			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
@@ -162,7 +163,7 @@ class user_management extends Component {
 			->restrictRemoveAccess("assign_role",true);
 		$model->addTable("RoleRights")
 			->addForeignKey("role_id", "Role")
-			->addString("right", 100)
+			->addString("right", 100, 1, false)
 			->addString("value")
 			->addIndex("role_id")
 			->restrictAddAccess("manage_roles",true)
@@ -199,6 +200,19 @@ class user_management extends Component {
 				new BooleanRight("assign_role", "Assign/Unassign roles to users",array(true=>array("consult_user_list"=>true,"consult_user_role"=>true))),
 				new BooleanRight("edit_user_rights", "Assign/Unassign rights to users",array(true=>array("consult_user_list"=>true,"consult_user_rights"=>true))),
 			))
+		);
+	}
+	
+	public function get_profile_pages(&$people) {
+		$domain = @$_GET["domain"];
+		$username = @$_GET["username"];
+		if ($domain <> null && $people == null) {
+			$people = $this->app->people->get_people_from_user($domain, $username);
+		} else if ($domain == null && $people <> null) {
+			$this->app->people->get_user_from_people($people, $domain, $username);
+		}
+		return array(
+			"user_rights"=>array("<img src='/static/user_management/access_list.png'/> ".get_locale("user_management","User Rights"),"/dynamic/user_management/page/rights?domain=".$domain."&username=".$username),
 		);
 	}
 	

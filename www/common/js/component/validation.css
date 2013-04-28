@@ -1,0 +1,12 @@
+.validation_message {
+	visibility: hidden;
+	position: absolute;
+	top: -10000px;
+	color: red;
+}
+.validation_message img {
+	vertical-align: bottom;
+}
+.validation_error {
+	border: 1px solid red;
+}

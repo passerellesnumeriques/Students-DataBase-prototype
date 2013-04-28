@@ -3,7 +3,7 @@ table.grid {
 	border-spacing: 0px;
 	border: 1px solid black;
 }
-table.grid, table.grid input {
+table.grid, table.grid input, table.grid select {
 	font-size: 11px;
 }
 table.grid td,th {

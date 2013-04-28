@@ -42,7 +42,12 @@ class Page {
 	<script type="text/javascript" src="/static/common/js/pn.js"></script>
 	<script type="text/javascript" src="/static/common/js/databaselock.js"></script>
 	<?php
-	foreach ($this->javascripts as $js) echo "<script type='text/javascript' src='".$js[0]."'>".$js[1]."</script>";
+	foreach ($this->javascripts as $js) { 
+		echo "<script type='text/javascript' src='".$js[0]."'>";
+		echo $js[1];
+		echo "pn._script_loaded(\"".$js[0]."\");";
+		echo "</script>";
+	}
 	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
 ?>
 </head>
