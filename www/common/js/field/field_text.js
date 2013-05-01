@@ -3,4 +3,5 @@ function field_text() {
 		var text = document.createTextNode(data);
 		return parent.appendChild(text);
 	}
+	this.isEditable = function() { return false; };
 }

@@ -11,10 +11,10 @@ function field_editable_text(max_length,onchanged,onunchanged) {
 			setTimeout(function() {
 				if (input.value != data) {
 					if (onchanged)
-						onchanged(input);
+						onchanged(input, input.value);
 				} else {
 					if (onunchanged)
-						onunchanged(input);
+						onunchanged(input, input.value);
 				}
 			},1);
 		};
@@ -22,4 +22,8 @@ function field_editable_text(max_length,onchanged,onunchanged) {
 		input.onblur = f;
 		return parent.appendChild(input);
 	}
+	this.isEditable = function() { return true; };
+	this.hasChanged = function(input) { return input.value != input.data; };
+	this.getValue = function(input) { return input.value; };
+	this.getOriginalValue = function(input) { return input.data; };
 }

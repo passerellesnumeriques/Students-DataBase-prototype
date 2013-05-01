@@ -1,0 +1,23 @@
+.datalist_header {
+	height: 28px;
+	background-color: #E0E0E0;
+	border-bottom: 1px solid #A0A0A0;
+}
+#datalist_data_area {
+	/* padding-top: 2px; */
+}
+#datalist_data {
+	border: 0px;
+}
+tr.datalist_fields_category {
+	background-color: #D0D0FF;
+}
+tr.datalist_fields {
+	font-size: 11px;
+}
+tr.datalist_fields:nth-child(even) {
+	background-color: #FFFFFF;
+}
+tr.datalist_fields:nth-child(odd) {
+	background-color: #D8D8FF;
+}

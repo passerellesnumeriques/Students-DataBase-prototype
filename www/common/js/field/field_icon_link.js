@@ -10,4 +10,5 @@ function field_icon_link() {
 		link.appendChild(img);
 		return parent.appendChild(link);
 	}
+	this.isEditable = function() { return false; };
 }

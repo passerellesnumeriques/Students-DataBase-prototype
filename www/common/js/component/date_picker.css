@@ -1,0 +1,12 @@
+.date_picker {
+	border: 1px solid black;
+	background-color: white;
+}
+.date_picker select {
+	font-size: 11px;
+	margin: 0px;
+	padding: 0px;
+}
+.date_picker .small_calendar {
+	border: 0px;
+}

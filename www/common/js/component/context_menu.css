@@ -1,0 +1,19 @@
+.context_menu {
+	position: absolute;
+	visibility: hidden;
+	top: -10000px;
+	border: 1px solid black;
+	background-color: #C0C0F0;
+}
+.context_menu_item {
+	background-color: #C0C0F0;
+	text-align: left;
+	cursor: pointer;
+	padding: 2px;
+}
+.context_menu_item:hover {
+	background-color: #FFF0D0;
+}
+.context_menu_item img {
+	vertical-align: bottom;
+}
