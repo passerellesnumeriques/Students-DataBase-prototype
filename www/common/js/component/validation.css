@@ -5,7 +5,7 @@
 	color: red;
 }
 .validation_message img {
-	vertical-align: bottom;
+	vertical-align: middle;
 }
 .validation_error {
 	border: 1px solid red;

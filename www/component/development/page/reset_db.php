@@ -1,6 +1,7 @@
 <?php 
+require_once("component/data_model/DataModel.inc");
 require_once("common/DataBaseModel.inc");
-$model = PNApplication::$instance->data_model();
+$model = DataModel::get();
 
 $domains = preg_split("/,/", file_get_contents("domains",true));
 foreach ($domains as $domain) {

@@ -1,73 +1,25 @@
-<?php 
-namespace data {
-
-/** Defines the data model of the application. Each component is supposed to populate this model with its own part of the model */
-class Model {
-	
-	private $tables = array();
-	private $data_category_link = array();
-	
-	/** Add a table to the model, and returns it
-	 * 
-	 * @param string $name name of the table to ad
-	 * @return \data\Table
-	 */
-	public function &addTable($name) {
-		$table = new Table($this, $name);
-		$this->tables[$name] = &$table;
-		return $table;
-	}
-	
-	public function &getTable($name) {
-		if (!isset($this->tables[$name])) throw new \Exception("Unknown table ".$name);
-		if ($this->tables[$name]->canAccess()) return $this->tables[$name];
-		throw new \Exception("Access denied: table ".$name);
-	}
-	
-	/** should be used only in very specific places, while ensuring that this will not give privileges to the user */ 
-	public function &internalGetTable($name) {
-		return $this->tables[$name];
-	}
-	
-	public function &getTables() {
-		$a = array();
-		foreach ($this->tables as $name=>&$table)
-			if ($table->canAccess())
-				$a[$name] = &$table;
-		return $a;
-	}
-	
-	/** indicates which page to go in order to display information about the given category */ 
-	public function addDataCategoryLink($category, $link) {
-		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
-		$this->data_category_link[$category] = $link;
-	}
-	public function getDataCategoryLink($category) {
-		if (strpos($category, "::") === FALSE) $category = \Locale::$current_component."::".$category;
-		return @$this->data_category_link[$category];
-	} 
-	
-}
-
+<?php
+namespace datamodel {
 class Table {
-	
+
 	private $model;
 	private $name;
 	private $columns = array();
 	private $indexes = array();
 	private $links = array();
 	private $table_read_access = array();
+	public $table_specific_read_access = array();
 	private $table_add_access = array();
 	private $table_remove_access = array();
 	private $fields_read_access = array();
 	private $fields_write_access = array();
 	private $displayable_data = array();
-	
+
 	public function __construct(&$model, $name) {
 		$this->model = &$model;
 		$this->name = $name;
 	}
-	
+
 	/** Add a primary key (integer ID) */
 	public function addPrimaryKey($name, $size=32) {
 		$c = new PrimaryKey($this, $name, $size);
@@ -75,52 +27,52 @@ class Table {
 		array_push($this->indexes, array("primary",$name));
 		return $this;
 	}
-	
+
 	/** Add a foreign key to the given table */
 	public function addForeignKey($name, $table) {
 		$c = new ForeignKey($this, $name, $table);
 		array_push($this->columns, $c);
 		return $this;
 	}
-	
+
 	/** Add an integer column. Size is in bits */
-	public function addInteger($name, $size=32, $min = null, $max = null) {
-		$c = new ColumnInteger($this, $name, $size, $min, $max);
+	public function addInteger($name, $size=32, $min = null, $max = null, $can_be_null = true, $unique = false) {
+		$c = new ColumnInteger($this, $name, $size, $min, $max, $can_be_null, $unique);
 		array_push($this->columns, $c);
 		return $this;
 	}
 
 	/** Add a boolean column */
-	public function addBoolean($name) {
-		$c = new ColumnBoolean($this, $name);
+	public function addBoolean($name, $can_be_null = true) {
+		$c = new ColumnBoolean($this, $name, $can_be_null);
 		array_push($this->columns, $c);
 		return $this;
 	}
-	
+
 	/** Add a string column */
-	public function addString($name, $max_length=255, $min_length = 0, $can_be_null = true) {
-		$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null);
+	public function addString($name, $max_length=255, $min_length = 0, $can_be_null = true, $unique = false) {
+		$c = new ColumnString($this, $name, $max_length, $min_length, $can_be_null, $unique);
 		array_push($this->columns, $c);
 		return $this;
 	}
-	
+
 	/** Add an enum column, with the given possible values */
-	public function addEnum($name, $values) {
+	public function addEnum($name, $values, $can_be_null = true, $unique = false) {
 		$c = new ColumnEnum($this, $name, $values);
 		array_push($this->columns, $c);
 		return $this;
 	}
-	
+
 	/** Add a date column */
-	public function addDate($name, $can_be_null = true) {
-		$c = new ColumnDate($this, $name, $can_be_null);
+	public function addDate($name, $can_be_null = true, $unique = false) {
+		$c = new ColumnDate($this, $name, $can_be_null, $unique);
 		array_push($this->columns, $c);
 		return $this;
 	}
-	
+
 	/** Indicate one or several columns should be indexed for faster access.
 	 * As parameters, this method expects the list of columns to be indexed together.
-	 * @return \data\Table
+	 * @return \datamodel\Table
 	 */
 	public function addIndex() {
 		$nb = func_num_args();
@@ -134,19 +86,23 @@ class Table {
 		}
 		return $this;
 	}
-	
+
 	/** Indicate a link to another table, not using a foreign key. */
 	public function &addLink($table_name, $fields_matching, $unique) {
 		array_push($this->links, new Link($this, $table_name, $fields_matching, $unique));
 		return $this;
 	}
-	
+
 	public function &allowReadAccess() {
 		$this->table_read_access = null;
 		return $this;
 	}
 	public function &restrictReadAccess($right_name, $right_value) {
 		$this->table_read_access[$right_name] = $right_value;
+		return $this;
+	}
+	public function &allowSpecificReadAccess($field, $value_func) {
+		array_push($this->table_specific_read_access, array($field, $value_func));
 		return $this;
 	}
 	public function &restrictAddAccess($right_name, $right_value) {
@@ -177,8 +133,17 @@ class Table {
 	public function &preventWriteAccess($field) {
 		$this->fields_write_access[$field] = false;
 	}
-	
+
 	public function canAccess() {
+		if ($this->table_read_access === null) return true;
+		if (count($this->table_specific_read_access) > 0) return true;
+		if (count($this->table_read_access) == 0) return false;
+		foreach ($this->table_read_access as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+				return false;
+		return true;
+	}
+	public function canReadAll() {
 		if ($this->table_read_access === null) return true;
 		if (count($this->table_read_access) == 0) return false;
 		foreach ($this->table_read_access as $right_name=>$right_value)
@@ -200,10 +165,26 @@ class Table {
 		if ($val === false) return false;
 		foreach ($val as $right_name=>$right_value)
 			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+				return false;
+		return true;
+	}
+	public function canAdd() {
+		if (count($this->table_add_access) == 0)
+			return false;
+		foreach ($this->table_add_access as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
+				return false;
+		return true;
+	}
+	public function canRemove() {
+		if (count($this->table_remove_access) == 0)
+			return false;
+		foreach ($this->table_remove_access as $right_name=>$right_value)
+			if (!\PNApplication::$instance->user_management->has_right($right_name, $right_value))
 			return false;
 		return true;
 	}
-	
+
 	/** Indicates that a particular column is a displayable data (not internal).
 	 *
 	 * @param string $category name of the category in which this data will be displayed. This string is supposed to be used with Locale in order to obtain a localized name of the category.
@@ -216,12 +197,16 @@ class Table {
 		$this->displayable_data[$field] = array($category, $name);
 		return $this;
 	}
-	
+
+	public function hide($field) {
+		unset($this->displayable_data[$field]);
+	}
+
 	/** returns the list of displayable data in this table: field=>array(category,name). category and name are localized string prefixed by namespace:: */
 	public function getDisplayableData() {
 		return $this->displayable_data;
 	}
-	
+
 	/** Returns the localized name of the given data */
 	public function getDisplayableDataName($field) {
 		$data = @$this->displayable_data[$field];
@@ -241,10 +226,10 @@ class Table {
 		$name = \Locale::get_string(substr($name, 0, $i), substr($name, $i+2));
 		return array($cat,$name);
 	}
-	
+
 	public function &getModel() { return $this->model; }
 	public function getName() { return $this->name; }
-	
+
 	public function getPrimaryKey() {
 		foreach ($this->columns as $c)
 			if ($c instanceof PrimaryKey) {
@@ -268,11 +253,168 @@ class Table {
 				array_push($cols, $c);
 		return $cols;
 	}
-	
+
 	public function getLinks() {
 		return $this->links;
 	}
-	
+
+	/** @return \SQLQuery */
+	public function &select() {
+		require_once("common/SQLQuery.inc");
+		return \SQLQuery::create()->select($this->name);
+	}
+	/** @return \SQLQuery */
+	public function &select_by_key($key) {
+		$q = $this->select()->where($this->getPrimaryKey()->name, $key);
+		return $q;
+	}
+
+	/** Insert a new data in the table */
+	public function insert($fields) {
+		// check we are allowed
+		if (!$this->canAdd()) throw new \Exception("Access denied: add data to table ".$this->name);
+		// lock the table
+		require_once("common/DataBaseLock.inc");
+		require_once("common/SQLQuery.inc");
+		$locker = null;
+		$lock = \DataBaseLock::lock($this->name, null, $locker, false);
+		if ($lock == null)
+			throw new \Exception("Access denied: the table ".$this->name." is locked by ".$locker);
+		$id = null;
+		$error = null;
+		try {
+			// check unicity
+			foreach ($this->columns as $col) {
+				if ($col->unique) {
+					if (!isset($fields[$col->name]))
+						throw new \Exception("Missing column ".$col->name." to insert data in table ".$this->name);
+					$r = \SQLQuery::create()->select($this->name)->where($col->name,$fields[$col->name])->execute_single_row();
+					if ($r <> null)
+						throw new \Exception(get_locale("common","__ already exists",array("name"=>isset($this->displayable_data[$col->name]) ? $this->getDisplayableDataName($col->name) : $col->name)));
+				}
+			}
+			// insert
+			$id = \SQLQuery::insert($this->name, $fields);
+		} catch (\Exception $e) {
+			$error = $e;
+		}
+		// unlock the table
+		\DataBaseLock::unlock($lock);
+		if ($error <> null) throw $error;
+		return $id;
+	}
+
+	/** Remove the data having the given primary key, and all linked data */
+	public function remove_key($key) {
+		// search for all tables that may contain a data to remove
+		$tables = array(&$this);
+		$this->search_tables_for_remove($tables);
+		// check we can access all the tables
+		foreach ($tables as $t)
+			if (!$t->canRemove())
+				throw new \Exception("Access denied: remove data from table ".$t->name);
+		// lock all the tables
+		require_once("common/DataBaseLock.inc");
+		require_once("common/SQLQuery.inc");
+		$locker = null;
+		$locks = array();
+		foreach ($tables as $t) {
+			$lock = \DataBaseLock::lock($t->name, null, $locker, false);
+			if ($lock == null) {
+				foreach ($locks as $l)
+					\DataBaseLock::unlock($l);
+				throw new \Exception("Access denied: the table ".$t->name." is locked by ".$locker);
+			}
+		}
+		// remove data
+		$this->perform_remove($key);
+		// unlock tables
+		foreach ($locks as $l)
+			\DataBaseLock::unlock($l);
+	}
+
+	private function search_tables_for_remove(&$tables) {
+		foreach ($this->model->internalGetTables() as $t) {
+			if (in_array($t, $tables)) continue;
+			foreach ($t->columns as $col)
+				if ($col instanceof ForeignKey && $col->foreign_table == $this->name) {
+					array_push($tables, $t);
+					$t->search_tables_for_remove($tables);
+					break;
+				}
+		}
+	}
+
+	private function perform_remove($key) {
+		// remove data
+		\DataBase::$conn->execute("DELETE FROM `".$this->name."` WHERE `".$this->getPrimaryKey()->name."`=".$key);
+		// remove linked data
+		require_once("common/SQLQuery.inc");
+		foreach ($this->model->internalGetTables() as $t) {
+			foreach ($t->columns as $col)
+				if ($col instanceof ForeignKey && $col->foreign_table == $this->name) {
+					if ($t->getPrimaryKey() <> null) {
+						$linked = \SQLQuery::create()->select($t->name)->field($t->getPrimaryKey()->name)->where($col->name, $key)->execute_single_field();
+						if ($linked)
+						foreach ($linked as $linked_key)
+							$t->perform_remove($linked_key);
+					} else {
+						// no primary key, just remove the entries
+						\DataBase::$conn->execute("DELETE FROM `".$t->name."` WHERE `".$col->name."`=".$key);
+					}
+					break;
+				}
+		}
+	}
+
+	public function update_by_key($key, $fields_values, $lock_id = null) {
+		// check we are allowed
+		foreach ($fields_values as $field->$value)
+			if (!$this->canModifyField($field)) throw new \Exception("Access Denied: modify ".$field." on table ".$this->name);
+		// lock table
+		require_once("common/DataBaseLock.inc");
+		if ($lock_id <> null) {
+			if (!\DataBaseLock::check($lock_id, $this->name, array($this->getPrimaryKey()->name=>$key)))
+				throw new \Exception(get_locale("common", "Access Denied"));
+		} else {
+			$locker = null;
+			$lock_id = \DataBaseLock::lock($this->name, array($this->getPrimaryKey()->name=>$key), $locker, false);
+			if ($lock_id == null)
+				throw new \Exception(get_locate("common", "This data is already locked by")." ".$locker);
+		}
+		// validate values, and check unicity
+		require_once("common/SQLQuery.inc");
+		foreach ($fields_values as $field=>$value) {
+			$col = $this->getColumn($field);
+			try { $fields_values[$field] = $col->validate($value); }
+			catch (Exception $e) {
+				\DataBaseLock::unlock($lock_id);
+				throw new \Exception((isset($this->displayable_data[$field]) ? $this->getDisplayableDataName($field) : $field).": ".$e->getMessage());
+			}
+			if ($col->unique) {
+				$r = \SQLQuery::create()->select($this->name)->where($col->name, $fields_values[$field])->execute_single_row();
+				if ($r <> null) {
+					\DataBaseLock::unlock($lock_id);
+					throw new \Exception(get_locale("common","__ already exists",array("name"=>isset($this->displayable_data[$col->name]) ? $this->getDisplayableDataName($col->name) : $col->name)));
+				}
+			}
+		}
+		// everything is valid and allowed, we can perform the update
+		$sql = "UPDATE `".$this->name."` SET ";
+		$first = true;
+		foreach ($fields_values as $field=>$value) {
+			if ($first) $first = false; else $sql .= ",";
+			$sql .= "`".$field."`=";
+			if ($value === null)
+				$sql .= "NULL";
+			else
+				$sql .= "'".DataBase::$conn->escape_string($value)."'";
+		}
+		$sql .= " WHERE `".$this->getPrimaryKey()->name."`='".$key."'";
+		$error = DataBaseLock::unlock($lock_id);
+		if ($error <> null) throw new \Exception($error);
+	}
+
 }
 
 class Link {
@@ -289,41 +431,46 @@ class Link {
 }
 
 abstract class Column {
-	
+
 	public $table;
 	public $name;
-	
-	public function __construct(&$table, $name) {
+	public $can_be_null;
+	public $unique;
+
+	public function __construct(&$table, $name, $can_be_null, $unique) {
 		$this->table = &$table;
 		$this->name = $name;
+		$this->can_be_null = $can_be_null;
+		$this->unique = $unique;
 	}
-	
+
 	public function get_sql() {
 		$sql = "`".$this->name."` ";
 		$sql .= $this->get_sql_type();
 		return $sql;
 	}
 	public abstract function get_sql_type();
-	
+
 	public function validate($value) { return $value; }
-	
+
 }
 
 class ColumnInteger extends Column {
 
 	public $size;
 	public $min, $max;
-	
-	public function __construct(&$table, $name, $size, $min = null, $max = null) {
-		parent::__construct($table, $name);
+
+	public function __construct(&$table, $name, $size, $min = null, $max = null, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
 		$this->size = $size;
 		$this->min = $min;
 		$this->max = $max;
 	}
-	
+
 	public function get_sql_type() { return "INT(".$this->size.")"; }
-	
+
 	public function validate($value) {
+		if ($this->can_be_null && $value === null) return null;
 		if (!is_integer($value)) $value = intval($value);
 		if ($this->min !== null && $value < $this->min) throw new \Exception("Minimum is ".$this->min); // TODO locale
 		if ($this->max !== null && $value > $this->max) throw new \Exception("Maximum is ".$this->max); // TODO locale
@@ -334,11 +481,12 @@ class ColumnInteger extends Column {
 
 class ColumnBoolean extends ColumnInteger {
 
-	public function __construct(&$table, $name) {
-		parent::__construct($table, $name, 1);
+	public function __construct(&$table, $name, $can_be_null = false) {
+		parent::__construct($table, $name, 1, $can_be_null, false);
 	}
-	
+
 	public function validate($value) {
+		if ($this->can_be_null && $value === null) return null;
 		return $value == true;
 	}
 
@@ -348,24 +496,22 @@ class ColumnString extends Column {
 
 	public $max_length;
 	public $min_length;
-	public $can_be_null;
-	
-	public function __construct(&$table, $name, $max_length, $min_length = 0, $can_be_null = true) {
-		parent::__construct($table, $name);
+
+	public function __construct(&$table, $name, $max_length, $min_length = 0, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
 		$this->max_length = $max_length;
 		$this->min_length = $min_length;
-		$this->can_be_null = $can_be_null;
 	}
 
 	public function get_sql_type() { /* TODO choose the type depending on max_length */ return "VARCHAR(".$this->max_length.")"; }
-	
+
 	public function validate($value) {
 		if ($value === null) {
-			if (!$this->can_be_null) throw new \Exception("Cannot be empty"); // TODO locale
+			if (!$this->can_be_null) throw new \Exception(get_locale("common","Cannot be empty"));
 			return null;
 		}
 		if (strlen($value) < $this->min_length) {
-			if (strlen($value) == 0) throw new \Exception("Cannot be empty"); // TODO locale
+			if (strlen($value) == 0) throw new \Exception(get_locale("common","Cannot be empty"));
 			throw new \Exception("Must have a length of at least ".$this->min_length); // TODO locale
 		}
 		if (strlen($value) > $this->max_length)
@@ -378,8 +524,8 @@ class ColumnEnum extends Column {
 
 	public $values;
 
-	public function __construct(&$table, $name, $values) {
-		parent::__construct($table, $name);
+	public function __construct(&$table, $name, $values, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
 		$this->values = $values;
 	}
 
@@ -397,16 +543,13 @@ class ColumnEnum extends Column {
 
 class ColumnDate extends Column {
 
-	public $can_be_null;
-	
-	public function __construct(&$table, $name, $can_be_null = true) {
-		parent::__construct($table, $name);
-		$this->can_be_null = $can_be_null;
+	public function __construct(&$table, $name, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
 	}
-	
-	
+
+
 	public function get_sql_type() { return "DATE"; }
-	
+
 	public function validate($value) {
 		if ($value === "") $value = null;
 		if ($value === null) {
@@ -419,26 +562,25 @@ class ColumnDate extends Column {
 }
 
 class PrimaryKey extends ColumnInteger {
-	
+
 	public function __construct(&$table, $name, $size) {
-		parent::__construct($table, $name, $size);
+		parent::__construct($table, $name, $size, false, true);
 	}
-	
+
 	public function get_sql_type() { return "INT(".$this->size.") NOT NULL AUTO_INCREMENT"; }
 }
 
 class ForeignKey extends ColumnInteger {
 
 	public $foreign_table;
-	
+
 	public function __construct(&$table, $name, $foreign_table) {
 		$this->foreign_table = $foreign_table;
 		$size = $table->getModel()->internalGetTable($foreign_table)->getPrimaryKey()->size;
-		parent::__construct($table, $name, $size);
+		parent::__construct($table, $name, $size, true, false);
 	}
 
 	public function get_sql_type() { return "INT(".$this->table->getModel()->internalGetTable($this->foreign_table)->getPrimaryKey()->size.")"; }
 }
-
-} // namespace data
+}
 ?>

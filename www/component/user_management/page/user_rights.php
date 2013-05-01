@@ -1,4 +1,4 @@
-<?php 
+<?php
 // get the user we need to display
 $domain = $_GET["domain"];
 $username = $_GET["username"];
@@ -28,17 +28,19 @@ foreach ($roles as $role)
 	break;
 }
 
-echo "<div style='background-color:#D0D0FF;color:#4040A0;font-size:12pt;border-bottom:1px solid #8080F0;padding:2px'>";
-echo "<img src='/static/user_management/access_list_32.png' style='vertical-align:bottom'/>";
-echo get_locale("User").": ".get_locale("Domain")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$domain."</span>, ".get_locale("Username")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$username."</span>";
-if (!$is_admin && $can_edit)
-	echo "<span style='border-left:1px solid #4040A0;padding-left:5px;margin-left:5px;height:100%'><button onclick='um_rights_save()'><img src='/static/common/images/save.png'/> ".get_locale("common","Save")."</button></span>";
-if ($locked <> null) {
-	echo "<img src='/static/common/images/lock.png'/> ";
-	locale("common","This page is already locked by");
-	echo " ".$locked;
+require_once("component/application/SubPageHeader.inc");
+$header = new SubPageHeader('/static/user_management/access_list_32.png', get_locale("User").": ".get_locale("Domain")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$domain."</span>, ".get_locale("Username")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$username."</span>");
+if (!$is_admin && $can_edit) {
+	$header->start_section();
+	$header->add_content("<button onclick='um_rights_save()'><img src='/static/common/images/save.png'/> ".get_locale("common","Save")."</button>");
+	$header->end_section();
 }
-echo "</div>";
+if ($locked <> null) {
+	$header->start_section();
+	$header->add_content("<img src='/static/common/images/lock.png'/> ".get_locale("common","This page is already locked by")." ".$locked);
+	$header->end_section();
+}
+$header->generate();
 
 if ($is_admin) {
 	locale("This user is an administrator, it has the right to do everything");
@@ -120,9 +122,10 @@ echo "<tr><th colspan=2 rowspan=2>".get_locale("Right")."</th><th rowspan=2>".ge
 echo "<tr>";
 foreach ($roles as $role)
 	echo "<th>".$role["name"]."</th>";
+echo "</tr>";
 foreach ($categories as $namespace=>$cats) {
 	foreach ($cats as $cat_name=>$rights) {
-		echo "<tr><td colspan=".(5+$roles_cols)."5 class='category_title'>".get_locale($namespace, $cat_name)."</td></tr>";
+		echo "<tr><td colspan=".(5+$roles_cols)." class='category_title'>".get_locale($namespace, $cat_name)."</td></tr>";
 		foreach ($rights as $r) {
 			echo "<tr>";
 			echo "<td width='10px'></td>";

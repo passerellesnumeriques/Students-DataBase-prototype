@@ -8,7 +8,7 @@
 class DataBaseModel {
 	
 	public static function update_model(&$model) {
-		$ref = new ReflectionClass("\data\Model");
+		$ref = new ReflectionClass("DataModel");
 		$p = $ref->getProperty("tables");
 		$p->setAccessible(true);
 		$tables = $p->getValue($model);
@@ -23,7 +23,7 @@ class DataBaseModel {
 	private static function create_table(&$table) {
 		$sql = "CREATE TABLE `".$table->getName()."` (";
 		
-		$ref = new ReflectionClass("\data\Table");
+		$ref = new ReflectionClass("\datamodel\Table");
 		$p = $ref->getProperty("columns");
 		$p->setAccessible(true);
 		$columns = $p->getValue($table);

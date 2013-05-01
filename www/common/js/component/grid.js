@@ -3,6 +3,7 @@ function grid(element) {
 	var t = this;
 	t.element = element;
 	t.columns = [];
+	t.selectable = false;
 
 	t.addColumn = function(title, width, field_type) {
 		var th = document.createElement('TH');
@@ -17,12 +18,64 @@ function grid(element) {
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumnField = function(index) { return t.columns[index]; };
 	
+	t.setSelectable = function(selectable) {
+		if (t.selectable == selectable) return;
+		t.selectable = selectable;
+		if (selectable) {
+			var th = document.createElement('TH');
+			var cb = document.createElement("INPUT");
+			cb.type = 'checkbox';
+			cb.onchange = function() { if (this.checked) t.selectAll(); else t.unselectAll(); }
+			th.appendChild(cb);
+			var col = document.createElement('COL');
+			col.width = 20;
+			if (t.header.childNodes.length == 0) {
+				t.header.appendChild(th);
+				t.colgroup.appendChild(col);
+			} else {
+				t.header.insertBefore(th, t.header.childNodes[0]);
+				t.colgroup.insertBefore(col, t.colgroup.childNodes[0]);
+			}
+		} else {
+			t.header.removeChild(t.header.childNodes[0]);
+			t.colgroup.removeChild(t.colgroup.childNodes[0]);
+		}
+	};
+	t.selectAll = function() {
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			cb.checked = 'checked';
+			cb.onchange();
+		}
+	};
+	t.unselectAll = function() {
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			cb.checked = '';
+			cb.onchange();
+		}
+	};
+	
 	t.setData = function(data) {
 		// empty table
 		while (t.table.childNodes.length > 0) t.table.removeChild(t.table.childNodes[0]);
 		// create rows
 		for (var i = 0; i < data.length; ++i) {
 			var tr = document.createElement("TR");
+			if (t.selectable) {
+				var td = document.createElement("TD");
+				tr.appendChild(td);
+				var cb = document.createElement("INPUT");
+				cb.type = 'checkbox';
+				cb.onchange = function() {
+					this.parentNode.parentNode.className = this.checked ? "selected" : "";
+				};
+				td.appendChild(cb);
+			}
 			for (var j = 0; j < t.columns.length; ++j) {
 				var td = document.createElement("TD");
 				tr.appendChild(td);

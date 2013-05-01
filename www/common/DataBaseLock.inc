@@ -19,10 +19,11 @@ class DataBaseLock {
 		$res = DataBase::$conn->execute("SELECT * FROM DataLocks WHERE locked_table='".DataBase::$conn->escape_string($table)."'");
 		if ($res <> null) {
 			$where = "";
-			foreach ($fields as $name=>$value) {
-				if ($where <> "") $where .= " OR ";
-				$where .= "(`field`='".DataBase::$conn->escape_string($name)."' AND `value`='".DataBase::$conn->escape_string($value).")";
-			}
+			if ($fields <> null)
+				foreach ($fields as $name=>$value) {
+					if ($where <> "") $where .= " OR ";
+					$where .= "(`field`='".DataBase::$conn->escape_string($name)."' AND `value`='".DataBase::$conn->escape_string($value).")";
+				}
 			while (($row = DataBase::$conn->next_row($res)) <> null) {
 				if ($row["locker_domain"] <> PNApplication::$instance->user_management->domain ||
 					$row["locker_username"] <> PNApplication::$instance->user_management->username) {
@@ -183,6 +184,25 @@ class DataBaseLock {
 		}
 		DataBase::$conn->execute("UNLOCK TABLES");
 		return true;
+	}
+
+	public static function is_locked_by_someone_else($table, &$locker) {
+		DataBase::$conn->execute("LOCK TABLES DataLocks WRITE, DataLocksFields WRITE");
+		$res = DataBase::$conn->execute(
+			"SELECT * FROM DataLocks WHERE ".
+			" AND locked_table='".DataBase::$conn->escape_string($table)."'");
+		// check if it exist
+		if (!$res) { DataBase::$conn->execute("UNLOCK TABLES"); return false; }
+		while (($r = DataBase::$conn->next_row($res)) <> null) {
+			if ($r["locker_domain"] <> PNApplication::$instance->user_management->domain ||
+				$r["locker_username"] <> PNApplication::$instance->user_management->username) {
+			$locker = $r["locker_domain"]."\\".$r["locker_username"];
+			DataBase::$conn->execute("UNLOCK TABLES");
+			return true;
+		}
+		}
+		DataBase::$conn->execute("UNLOCK TABLES");
+		return false;
 	}
 	
 	private static function generate_script($id) {

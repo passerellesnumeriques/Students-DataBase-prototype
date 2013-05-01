@@ -1,5 +1,5 @@
 <?php 
-require_once("component/data_list/DataList.inc");
+require_once("component/data_model/list/DataList.inc");
 // initialize DataList
 $list = new DataList($_POST["starting_table"]);
 $list->update_from_request();

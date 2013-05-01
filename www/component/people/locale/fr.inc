@@ -8,8 +8,8 @@ return array(
 	"~personal ~information" => "~information ~personelle",
 	"~first ~name" => "~prénom",
 	"~last ~name" => "~nom de ~famille",
+	"~middle ~name" => "~deuxième ~nom",
+	"~khmer ~name" => "~nom ~khmer",
 	"sex" => "sexe",
-		
-	"name cannot be empty" => "un nom ne peut pas être vide",
 );
 ?>

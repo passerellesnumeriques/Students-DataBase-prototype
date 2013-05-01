@@ -32,7 +32,7 @@ window.pn_database_locks = {
 			if (now - this._locks[i].time > this._timeout_time) {
 				pn.add_javascript("/static/common/js/component/popup_window.js",function() {
 					var p = new popup_window("",null);
-					p.setContentFrame("/static/common/js/databaselock_inactivity.html");
+					p.setContentFrame("/static/application/databaselock_inactivity.html");
 					p.onclose = function() {
 						setTimeout("window.pn_database_locks._check();", this._check_time);
 					};

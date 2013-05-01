@@ -106,6 +106,19 @@ html, body {
 	position: fixed;
 	top: 35px;
 }
+.sub_page_header {
+	background-color: #D0D0FF;
+	color: #4040A0;
+	font-size: 12pt;
+	border-bottom: 1px solid #8080F0;
+	padding: 2px;
+}
+.sub_page_header_section {
+	border-left: 1px solid #4040A0;
+	padding-left:5px;
+	margin-left:5px;
+	height:100%;
+}
 button img {
 	vertical-align: bottom;
 }

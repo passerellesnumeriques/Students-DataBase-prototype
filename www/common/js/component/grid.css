@@ -22,3 +22,9 @@ table.grid tbody tr:nth-child(even) {
 table.grid tbody tr:nth-child(odd) {
 	background-color: #D8D8FF;
 }
+table.grid tbody tr:nth-child(even).selected {
+	background-color: #FFFFC0;
+}
+table.grid tbody tr:nth-child(odd).selected {
+	background-color: #D8D8C0;
+}

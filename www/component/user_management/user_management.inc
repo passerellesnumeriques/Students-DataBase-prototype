@@ -1,24 +1,24 @@
-<?php 
+<?php
 require_once("common/Event.inc");
 class user_management extends Component {
-	
+
 	/** @var string domain of the user logged in */
 	public $domain = null;
 	/** @var string username of the user logged in */
 	public $username = null;
 	/** @var string authentication token returned by the authentication system */
 	public $auth_token = null;
-	
+
 	/** @var Event raised when a user logged in */
 	public $logged_in;
 	/** @var Event raised when the user logout */
 	public $logged_out;
-	
+
 	function init() {
 		$this->logged_in = new Event();
 		$this->logged_out = new Event();
 	}
-	
+
 	public function login($domain, $username, $password) {
 		if ($this->username <> null) $this->logout();
 		$auth = $this->app->authentication->get_authentication_system($domain);
@@ -30,13 +30,13 @@ class user_management extends Component {
 		$this->logged_in->fire();
 		return true;
 	}
-	
+
 	public function logout() {
 		$this->logged_out->fire();
 		setcookie(session_name(), "", time()-10000, "/dynamic/");
 		session_destroy();
 	}
-	
+
 	private $rights = array();
 	private $is_admin = array();
 	public function has_right($right_name, $value = true) {
@@ -47,23 +47,23 @@ class user_management extends Component {
 				foreach ($c->get_readable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
 				foreach ($c->get_writable_rights() as $cat) foreach ($cat->rights as $r) $all_rights[$r->name] = $r;
 			}
-			
+
 			require_once("common/SQLQuery.inc");
 			// get roles of the user
-			$roles = SQLQuery::create()->select("UserRole")->field("role_id")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
+			$roles = SQLQuery::create()->bypass_security()->select("UserRole")->field("role_id")->where("domain",$this->domain)->where("username",$this->username)->execute_single_field();
 			// check if the user is an administrator
 			foreach ($roles as $role_id)
 				if ($role_id == 0) { $this->is_admin[PNApplication::$instance->current_domain] = true; break; }
 			if (!isset($this->is_admin[PNApplication::$instance->current_domain])) {
 				// get rights directly attached to the user
-				$user_rights = SQLQuery::create()->select("UserRights")->field("right")->field("value")->where("domain",$this->domain)->where("username",$this->username)->execute();
+				$user_rights = SQLQuery::create()->bypass_security()->select("UserRights")->field("right")->field("value")->where("domain",$this->domain)->where("username",$this->username)->execute();
 				$rights = array();
 				if ($user_rights)
 				foreach ($user_rights as $r)
 					$rights[$r["right"]] = $all_rights[$r["right"]]->parse_value($r["value"]);
 				// merge with rights attached to the roles of the user
 				if (count($roles) > 0)
-					$role_rights = SQLQuery::create()->select("RoleRights")->field("right")->field("value")->where_in("role_id", $roles)->execute();
+					$role_rights = SQLQuery::create()->bypass_security()->select("RoleRights")->field("right")->field("value")->where_in("role_id", $roles)->execute();
 				else $role_rights = null;
 				if ($role_rights)
 				foreach ($role_rights as $r) {
@@ -74,7 +74,7 @@ class user_management extends Component {
 				}
 				// check all rights exist, and compute implications
 				user_management::compute_rights_implications($rights, $all_rights);
-				
+
 				// if we are not on the local domain, remove all writable rights, to make everything read-only
 				if (PNApplication::$instance->current_domain != file_get_contents("local_domain")) {
 					foreach (PNApplication::$instance->components as $cname=>$c)
@@ -96,7 +96,7 @@ class user_management extends Component {
 				$this->rights[PNApplication::$instance->current_domain] = $rights;
 			}
 		}
-		if (isset($this->is_admin[PNApplication::$instance->current_domain])) return in_array($right_name, $this->rights[PNApplication::$instance->current_domain]); 
+		if (isset($this->is_admin[PNApplication::$instance->current_domain])) return in_array($right_name, $this->rights[PNApplication::$instance->current_domain]);
 		if (!isset($this->rights[PNApplication::$instance->current_domain][$right_name])) return false;
 		return $this->rights[PNApplication::$instance->current_domain][$right_name] === $value;
 	}
@@ -128,62 +128,29 @@ class user_management extends Component {
 			}
 		} while ($changed);
 	}
-	
-	public function populate_model(&$model) {
-		$model->addTable("Users")
-			->addString("domain",100,1,false)
-			->addString("username",100,1,false)
-			->addIndex("domain","username")
-			->restrictReadAccess("consult_user_list",true)
-			->addDisplayableData("domain", "User","Domain")
-			->addDisplayableData("username", "User","Username");
-		$model->addDataCategoryLink("User","/dynamic/people/page/profile?plugin=user_management&page=user_rights&domain=%Users.domain%&username=%Users.username%");
-		$model->addTable("UserRights")
-			->addString("domain", 100, 1, false)
-			->addString("username", 100, 1, false)
-			->addString("right", 100, 1, false)
-			->addString("value")
-			->addIndex("domain","username")
-			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
-			->restrictReadAccess("consult_user_rights",true);
-		$model->addTable("Role")
-			->addPrimaryKey("id")
-			->addString("name", 100, 1, false)
-			->addDisplayableData("name", "User","Role")
-			->allowReadAccess()
-			->restrictFieldWriteAccess("name","manage_roles",true);
-		$model->addTable("UserRole")
-			->addString("domain", 100, 1, false)
-			->addString("username", 100, 1, false)
-			->addForeignKey("role_id", "Role")
-			->addIndex("domain","username")
-			->addLink("Users", array("domain"=>"domain","username"=>"username"), false)
-			->restrictReadAccess("consult_user_roles",true)
-			->restrictAddAccess("assign_role",true)
-			->restrictRemoveAccess("assign_role",true);
-		$model->addTable("RoleRights")
-			->addForeignKey("role_id", "Role")
-			->addString("right", 100, 1, false)
-			->addString("value")
-			->addIndex("role_id")
-			->restrictAddAccess("manage_roles",true)
-			->restrictRemoveAccess("manage_roles",true);
-	}
-	
+
 	protected function is_page_allowed($path) {
 		if ($path == "home") return true;
 		if ($path == "users")
 			return $this->has_right("consult_user_list");
-		if ($path == "rights")
+		if ($path == "user_rights")
 			return $this->has_right("consult_user_rights");
+		if ($path == "role_rights")
+			return $this->has_right("manage_roles");
+		if ($path == "roles")
+			return $this->has_right("manage_roles");
 		return false;
 	}
 	protected function is_service_allowed($path) {
 		if ($path == "save_user_rights")
 			return $this->has_right("edit_user_rights");
+		if ($path == "save_role_rights")
+			return $this->has_right("manage_roles");
+		if ($path == "create_role" || $path == "remove_role")
+			return $this->has_right("manage_roles");
 		return false;
 	}
-	
+
 	public function get_readable_rights() {
 		return array(
 			new AccessRightCategory("user_management","User Management",array(
@@ -202,7 +169,7 @@ class user_management extends Component {
 			))
 		);
 	}
-	
+
 	public function get_profile_pages(&$people) {
 		$domain = @$_GET["domain"];
 		$username = @$_GET["username"];
@@ -212,10 +179,10 @@ class user_management extends Component {
 			$this->app->people->get_user_from_people($people, $domain, $username);
 		}
 		return array(
-			"user_rights"=>array("<img src='/static/user_management/access_list.png'/> ".get_locale("user_management","User Rights"),"/dynamic/user_management/page/rights?domain=".$domain."&username=".$username),
+			"user_rights"=>array("/static/user_management/access_list.png", get_locale("user_management","User Rights"),"/dynamic/user_management/page/user_rights?domain=".$domain."&username=".$username),
 		);
 	}
-	
+
 }
 
 class AccessRightCategory {

@@ -13,6 +13,172 @@ class DataContext {
 	}
 }
 
+class DataPathBuilder {
+	public static function build(DataModel &$model, DataPath $current_path, $table, $field) {
+		$i = strpos($field, ">");
+		$indirection = null;
+		if ($i !== FALSE) {
+			$indirection = substr($field, $i+1);
+			$field = substr($field, 0, $i);
+		}
+		$visited_tables = array();
+		try {
+			$col = DataPathBuilder::build_simple_column($model, $current_path, $table, $field, $visited_tables);
+		} catch (Exception $e) {
+			return null;
+		}
+		if ($col == null)
+			return null;
+		while ($indirection !== null) {
+			try {
+				$col_model = $model->getTable($col->table)->getColumn($col->field);
+			} catch (Exception $e) { return null; }
+			$i = strpos($indirection, ">");
+			if ($i === FALSE) {
+				$field = $indirection;
+				$indirection = null;
+			} else {
+				$field = substr($indirection, 0, $i);
+				$indirection = substr($indirection, $i+1);
+			}
+			if ($col_model instanceof datamodel\ForeignKey) {
+				try { $model->getTable($col_model->foreign_table); }
+				catch (Exception $e) { return null; }
+				$col = new DataPathField(new DataPathForeign($col, $col_model), $field);
+				continue;
+			}
+			// TODO
+			break;
+		};
+		return $col;
+	}
+	private static function build_simple_column(DataModel &$model, DataPath $current_path, $table, $field, &$visited_tables) {
+		if (in_array($current_path->table, $visited_tables)) return null;
+		array_push($visited_tables, $current_path->table);
+	
+		// check if this is a field on the current table
+		if ($table == $current_path->table)
+			return new DataPathField($current_path, $field);
+		// search for a foreign key from the current table, to the given table
+		foreach ($model->getTable($current_path->table)->getColumns() as $col)
+			if ($col instanceof \datamodel\ForeignKey && $col->foreign_table == $table)
+			return new DataPathField(new DataPathForeign($current_path, $col), $field);
+		// search for a link from the current table, to the given table
+		foreach ($model->getTable($current_path->table)->getLinks() as $link) {
+			if ($link->table == $table) {
+				// link found
+				return new DataPathField(new DataPathLink($current_path, $link), $field);
+			}
+		}
+		// search for a foreign key in the given table, to the current table
+		foreach ($model->getTable($table)->getColumns() as $col) {
+			if (!($col instanceof \datamodel\ForeignKey)) continue;
+			if ($col->foreign_table == $current_path->table)
+				return new DataPathField(new DataPathJoin($current_path, $col), $field);
+		}
+		// search for a link from the given table, to the current table (reverse link)
+		foreach ($model->getTable($table)->getLinks() as $link) {
+			if ($link->table == $current_path->table) {
+				// link found
+				return new DataPathField(new DataPathLinkReverse($current_path, $table, $link), $field);
+			}
+		}
+		// try with different foreign keys we have in the current table
+		foreach ($model->getTable($current_path->table)->getColumns() as $col)
+			if ($col instanceof \datamodel\ForeignKey) {
+			$temp_path = new DataPathForeign($current_path, $col);
+			$visited = array_merge($visited_tables);
+			try {
+				$res = DataPathBuilder::build_simple_column($model, $temp_path, $table, $field, $visited);
+				if ($res <> null) return $res;
+			} catch (Exception $e) {}
+		}
+		// try with different links we have in our current table
+		foreach ($model->getTable($current_path->table)->getLinks() as $link) {
+			$temp_path = new DataPathLink($current_path, $link);
+			$visited = array_merge($visited_tables);
+			try {
+				$res = DataPathBuilder::build_simple_column($model, $temp_path, $table, $field, $visited);
+				if ($res <> null) return $res;
+			} catch (Exception $e) {}
+		}
+		// try with different links we have to our current table
+		foreach ($model->getTables() as $table_name=>$t) {
+			foreach ($t->getLinks() as $link) {
+				if ($link->table == $current_path->table) {
+					// link found
+					$temp_path = new DataPathLinkReverse($current_path, $t->getName(), $link);
+					$visited = array_merge($visited_tables);
+					try {
+						$res = DataPathBuilder::build_simple_column($model, $temp_path, $table, $field, $visited);
+						if ($res <> null) return $res;
+					} catch (Exception $e) {}
+				}
+			}
+		}
+		// try with tables containing a foreign key to our current table
+		foreach ($model->getTables() as $table_name=>$t) {
+			foreach ($t->getColumns() as $col) {
+				if (!($col instanceof \datamodel\ForeignKey)) continue;
+				if ($col->foreign_table == $current_path->table) {
+					// foreign key found
+					$temp_path = new DataPathJoin($current_path, $col);
+					$visited = array_merge($visited_tables);
+					try {
+						$res = DataPathBuilder::build_simple_column($model, $temp_path, $table, $field, $visited);
+						if ($res <> null) return $res;
+					} catch (Exception $e) {}
+				}
+			}
+		}
+		// didn't find any path
+		return null;
+	}
+	
+	public static function find_possible_paths(DataModel &$model, DataPath $current_path, &$paths, &$visited_tables) {
+		// avoid infinite recursion
+		if (in_array($current_path->table, $visited_tables)) return;
+		array_push($visited_tables, $current_path->table);
+		// check we can access
+		try { $model->getTable($current_path->table); }
+		catch (Exception $e) { return; }
+		// search foreign keys in current table
+		foreach ($model->getTable($current_path->table)->getColumns() as $field) {
+			if ($field instanceof \datamodel\ForeignKey) {
+				$p = new DataPathForeign($current_path, $field);
+				DataPathBuilder::find_possible_paths($model, $p, $paths, $visited_tables);
+			} else {
+				$name = $model->getTable($current_path->table)->getDisplayableDataName($field->name);
+				if ($name == null) continue; // not a displayable data
+				array_push($paths, new DataPathField($current_path, $field->name));
+			}
+		}
+		// search links in current table
+		foreach ($model->getTable($current_path->table)->getLinks() as $link) {
+			$p = new DataPathLink($current_path, $link);
+			DataPathBuilder::find_possible_paths($model, $p, $paths, $visited_tables);
+		}
+		// search foreign keys from other tables to current table
+		foreach ($model->getTables() as $table_name=>$table) {
+			foreach ($table->getColumns() as $field) {
+				if ($field instanceof \datamodel\ForeignKey && $field->foreign_table == $current_path->table) {
+					$p = new DataPathJoin($current_path, $field);
+					DataPathBuilder::find_possible_paths($model, $p, $paths, $visited_tables);
+				}
+			}
+		}
+		// search links from other tables to current table
+		foreach ($model->getTables() as $table_name=>$table) {
+			foreach ($table->getLinks() as $link) {
+				if ($link->table <> $current_path->table) continue;
+				$p = new DataPathLinkReverse($current_path, $table->getName(), $link);
+				DataPathBuilder::find_possible_paths($model, $p, $paths, $visited_tables);
+			}
+		}
+	}
+	
+}
+
 abstract class DataPath {
 	public $final_name;
 	public $table;
@@ -67,7 +233,7 @@ class DataPathField extends DataPath {
 		$search = @$ctx->list->search[$this->get_path()];
 		if ($search !== null) {
 			$col = $ctx->list->model->getTable($this->table)->getColumn($this->field);
-			if ($col instanceof \data\ColumnString)
+			if ($col instanceof \datamodel\ColumnString)
 				$sql->where("LOWER(`".$this->sql_table."`.`".$this->field."`) LIKE LOWER('%".DataBase::$conn->escape_string($search)."%')");
 			else
 				$sql->where("`".$this->sql_table."`.`".$this->field."` = '".DataBase::$conn->escape_string($search)."'");
@@ -93,7 +259,7 @@ class DataPathField extends DataPath {
 class DataPathForeign extends DataPath {
 	/** @var DataPath */
 	public $path;
-	/** @var \data\ForeignKey */
+	/** @var \datamodel\ForeignKey */
 	public $foreign_key;
 	public function __construct($path, $foreign_key) {
 		parent::__construct($foreign_key->foreign_table);

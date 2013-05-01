@@ -4,10 +4,12 @@ $this->add_javascript("/static/common/js/component/wizard.js");
 $this->add_stylesheet("/static/common/js/component/wizard.css");
 $this->add_javascript("/static/common/js/component/validation.js");
 $this->add_stylesheet("/static/common/js/component/validation.css");
+$this->add_javascript("/static/common/js/component/form.js");
 
-$res = DataBase::$conn->execute("SELECT * FROM Curriculum");
-while (($r = DataBase::$conn->next_row($res)) <> null) {
-	echo $r["name"];
+require_once("common/SQLQuery.inc");
+$curricula = SQLQuery::create()->select("Curriculum")->execute();
+foreach ($curricula as $curriculum) {
+	echo $curriculum["name"];
 	echo "<br/>";
 }
 if (PNApplication::$instance->user_management->has_right("edit_curricula")) {
@@ -16,36 +18,78 @@ if (PNApplication::$instance->user_management->has_right("edit_curricula")) {
 <div id='new_curriculum_wizard' class='wizard'
 	title="<?php locale("New curriculum")?>"
 	icon="/static/common/images/add.png"
+	finish="curriculum_wizard_finish"
 >
 	<div class='wizard_page'
 		title='<?php locale("Curriculum")?>'
 		icon='/static/curriculum/curriculum_32.png'
-		validate="curriculum_wizard_validate_name"
+		validate="curriculum_wizard_validate"
 	>
-		<?php locale("Curriculum Name")?> <input type='text' size=30 maxlength=100 id='curriculum_name' onkeyup="wizard_validate(this)"/><br/>
+		<form name='curriculum_wizard' onsubmit='return false'>
+		<?php locale("Curriculum Name")?> <input type='text' size=30 maxlength=100 name='curriculum_name' onkeyup="wizard_validate(this)"/>
 		<span class='validation_message' id='curriculum_name_validation'></span>
-	</div>
-	<div class='wizard_page'>
-		Page 2
+		<br/>
+		<?php locale("Create a new curriculum")?><br/>
+		<input type='radio' name='creation_type' value='from_scratch' checked='checked' onchange="wizard_validate(this)"/> <?php locale("from scratch")?><br/>
+		<input type='radio' name='creation_type' value='copy' onchange="wizard_validate(this)"/> <?php locale("from existing one")?>:
+			<select name='copy_curriculum' onchange="wizard_validate(this)">
+				<?php foreach ($curricula as $curriculum) echo "<option value='".$curriculum["id"]."'>".$curriculum["name"]."</option>";?>
+			</select> 
+			<span class='validation_message' id='copy_curriculum_validation'></span>
+			<br/>
+		</form>
 	</div>
 </div>
 <script type='text/javascript'>
-function curriculum_wizard_validate_name(wizard,handler) {
-	var name = document.getElementById('curriculum_name');
+function curriculum_wizard_validate(wizard,handler) {
+	var form = document.forms['curriculum_wizard'];
+	var name = form.elements['curriculum_name'];
+	var type = form.elements['creation_type'];
+	var copy = form.elements['copy_curriculum'];
+	var ok = true;
+	// check name not empty, and does not exist yet
 	if (name.value.length == 0) {
-		validation_error(name, "<?php locale("Cannot be empty");?>");
-		wizard.resize();
-		handler(false);
-		return;
-	}
-	pn.ajax_service_json("/dynamic/curriculum/service/curriculum_exists",{name:name.value},function(exists){
-		if (!exists)
+		validation_error(name, "<?php locale("common","Cannot be empty");?>");
+		ok = false;
+	} else {
+		// check the name does not exist yet
+		for (var i = 0; i < copy.options.length; ++i)
+			if (name.value == copy.options[i].innerHTML) {
+				ok = false;
+				validation_error(name, "<?php locale("common","__ already exists", array("name"=>get_locale("Curriculum")));?>");
+			}
+		if (ok) 
 			validation_ok(name);
-		else
-			validation_error(name, "<?php locale("This curriculum already exists");?>");
-		wizard.resize();
-		handler(!exists);
-	});
+	}
+	if (type[0].checked) {
+		// from scratch
+		validation_ok(copy);
+	} else {
+		// copy
+		if (copy.selectedIndex < 0) {
+			validation_error(copy, "<?php locale("common","Please select");?>");
+			ok = false;
+		} else
+			validation_ok(copy);
+	}
+	wizard.resize();
+	handler(ok);
+}
+function curriculum_wizard_finish(wizard) {
+	var form = document.forms['curriculum_wizard'];
+	var name = form.elements['curriculum_name'].value;
+	var type = get_radio_value(form, 'creation_type');
+	var copy = null;
+	if (type == 'copy') {
+		copy = form.elements['copy_curriculum'];
+		copy = copy.options[copy.selectedIndex];
+	}
+	var data = {name:name};
+	if (copy) data["copy"] = copy;
+	pn.ajax_service_json("/dynamic/curriculum/service/create",data,function(result){
+		if (result && result.id)
+			location.href = '/dynamic/curriculum/page/curriculum?id='+result.id;
+	},true);
 }
 </script>
 <?php }?>

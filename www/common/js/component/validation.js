@@ -1,6 +1,7 @@
 function validation_error(input, message) {
 	input.className = 'validation_error';
-	var e = document.getElementById(input.id+'_validation');
+	var id = input.id ? input.id : input.name;
+	var e = document.getElementById(id+'_validation');
 	if (e) {
 		e.innerHTML = "<img src='/static/common/images/error.png'/> "+message;
 		e.style.position = 'static';
@@ -9,10 +10,12 @@ function validation_error(input, message) {
 }
 function validation_ok(input) {
 	input.className = "";
-	var e = document.getElementById(input.id+'_validation');
+	var id = input.id ? input.id : input.name;
+	var e = document.getElementById(id+'_validation');
 	if (e) {
 		e.innerHTML = "";
 		e.style.position = 'absolute';
 		e.style.visibility = 'hidden';
+		e.style.top = '-10000px';
 	}
 }

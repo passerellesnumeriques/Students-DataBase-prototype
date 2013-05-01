@@ -1,5 +1,5 @@
 <?php 
-require_once("component/data_list/DataList.inc");
+require_once("component/data_model/list/DataList.inc");
 $list = new DataList("People");
 $list->add("People.first_name", false);
 $list->add("People.last_name", false);

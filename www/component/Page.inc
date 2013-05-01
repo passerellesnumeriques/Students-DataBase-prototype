@@ -4,6 +4,8 @@ class Page {
 	private $javascripts = array();
 	private $stylesheets = array();
 	private $onload = null;
+	public $component;
+	public $path;
 	
 	public function add_javascript($path, $onload = "") {
 		if (!in_array($path, $this->javascripts))
@@ -15,19 +17,27 @@ class Page {
 	}
 	public function onload($script) { $this->onload = $script; }
 	
+	private $flushed = false;
 	public function generate($component, $path) {
+		$this->component = $component->name;
+		$this->path = $path;
 		$file = "component/".$component->name."/page/".$path.".php";
-		if (!file_exists($file)) {
-			PNApplication::error_html("Page <i>".$path."</i> does not exist in component <i>".$component->name."</i>");
-			PNApplication::print_errors();
-			return;
-		}
 		ob_start();
 		include $file;
 		$content = ob_get_clean();
-		$this->start_page();
+		if (!$this->flushed)
+			$this->start_page();
 		echo $content;
 		$this->end_page();
+	}
+	
+	public function flush() {
+		if (!$this->flushed) {
+			$this->flushed = true;
+			$this->start_page();
+		}
+		$content = ob_get_clean();
+		echo $content;
 	}
 
 	private function start_page() {
@@ -40,7 +50,8 @@ class Page {
 	<link rel="stylesheet" href="/static/application/style.css"/>
 	<script type="text/javascript" src="/static/common/js/utils.js"></script>
 	<script type="text/javascript" src="/static/common/js/pn.js"></script>
-	<script type="text/javascript" src="/static/common/js/databaselock.js"></script>
+	<script type="text/javascript" src="/dynamic/common/page/js/common_locale.js"></script>
+	<script type="text/javascript" src="/static/application/databaselock.js"></script>
 	<?php
 	foreach ($this->javascripts as $js) { 
 		echo "<script type='text/javascript' src='".$js[0]."'>";

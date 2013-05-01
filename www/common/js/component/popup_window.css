@@ -22,6 +22,6 @@
 	width: 20px;
 	cursor: pointer;
 	background-image: url("/static/common/images/close.png");
-	background-position: 0px;
+	background-position: center;
 	background-repeat: no-repeat;
 }

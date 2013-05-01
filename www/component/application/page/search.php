@@ -1,15 +1,17 @@
-<?php 
+<?php
 $q = $_GET["q"];
 
 $categories = array();
-require_once("component/data_list/DataList.inc");
-$model = PNApplication::$instance->data_model();
+require_once("component/data_model/DataModel.inc");
+require_once("component/data_model/list/DataList.inc");
+$model = DataModel::get();
 foreach ($model->getTables() as $table) {
 	$displayable = $table->getDisplayableData();
 	if (count($displayable) == 0) continue;
-	$list = new DataList($table->getName());
 	foreach ($displayable as $field=>$localized) {
+		$list = new DataList($table->getName());
 		$list->add($table->getName().".".$field, false);
+		$list->search($table->getName().".".$field, $q);
 		$link = $model->getDataCategoryLink($localized[0]);
 		if ($link <> null) {
 			$i = 0;
@@ -21,33 +23,36 @@ foreach ($model->getTables() as $table) {
 				$list->add($f, false);
 			}
 		}
-	}
-	// remove not unique columns
-	for ($i = 0; $i < count($list->columns); $i++)
-		if (!$list->columns[$i]->is_unique()) {
-			array_splice($list->columns, $i, 1);
-			$i--;		
+		if (PNApplication::has_errors()) {
+			// not allowed
+			PNApplication::$errors = array();
+			continue;
 		}
-	$result = $list->process();
-	if ($result["count"] > 0)
-	foreach ($displayable as $field=>$localized) {
-		if (!isset($categories[$localized[0]]))
-			$categories[$localized[0]] = array();
-		$link = $model->getDataCategoryLink($localized[0]);
-		$a = array();
-		foreach ($result["list"] as $row) {
-			$value = $row[$list->get($table->getName().".".$field)->final_name];
-			$r = array($value);
-			if ($link <> null) {
-				$l = $link;
-				foreach ($list->columns as $col)
-					if ($col->final_name)
-						$l = str_replace("%".$col->get_path()."%", $row[$col->final_name], $l);
-				array_push($r, $l);
+		// remove not unique columns
+		for ($i = 0; $i < count($list->columns); $i++)
+			if (!$list->columns[$i]->is_unique()) {
+				array_splice($list->columns, $i, 1);
+				$i--;
 			}
-			array_push($a, $r);
+		$result = $list->process();
+		if ($result["count"] > 0) {
+			if (!isset($categories[$localized[0]]))
+				$categories[$localized[0]] = array();
+			$a = array();
+			foreach ($result["list"] as $row) {
+				$value = $row[$list->get($table->getName().".".$field)->final_name];
+				$r = array($value);
+				if ($link <> null) {
+					$l = $link;
+					foreach ($list->columns as $col)
+						if ($col->final_name)
+							$l = str_replace("%".$col->get_path()."%", $row[$col->final_name], $l);
+					array_push($r, $l);
+				}
+				array_push($a, $r);
+			}
+			$categories[$localized[0]][$localized[1]] = $a;
 		}
-		$categories[$localized[0]][$localized[1]] = $a;
 	}
 }
 
@@ -60,12 +65,12 @@ foreach ($categories as $cat_name=>$cat_content) {
 		$result = array();
 		foreach ($list as $data) {
 			$found = false;
-			foreach ($result as &$d) 
+			foreach ($result as &$d)
 				if ($d[0] == $data[0]) {
 					$found = true;
 					$d[1]++;
 					$d[2] = null; // no link
-					break;			
+					break;
 				}
 			if (!$found)
 				array_push($result, array($data[0], 1, @$data[1]<>null && strpos($data[1], "%") === FALSE ? $data[1] : null));

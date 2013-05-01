@@ -20,6 +20,7 @@ function datalist_init_grid() {
 	else
 		datalist_grid.reset();
 	datalist_grid.startLoading();
+	datalist_grid.setSelectable(datalist_selectable);
 	datalist_fields_changed = [];
 	var button = document.getElementById('datalist_save');
 	button.style.visibility = 'hidden';
@@ -27,7 +28,7 @@ function datalist_init_grid() {
 	for (var i = 0; i < datalist_visible_fields.length; ++i) {
 		var field = _datalist_get_field(datalist_visible_fields[i]);
 		if (field == null) continue;
-		var type = _datalist_create_field(field.type, field.edited,function(input){
+		var type = datamodel_create_field(field.type, field.edited,function(input){
 			_datalist_field_changed(input);
 		},function(input){
 			_datalist_field_unchanged(input);
@@ -37,27 +38,6 @@ function datalist_init_grid() {
 	for (var i = 0; i < datalist_item_actions.length; ++i) {
 		datalist_grid.addColumn("",null,new field_icon_link());
 	}
-}
-function _datalist_create_field(type, editable, onchange, onunchange) {
-	var field = null;
-	if (type.startsWith("string")) {
-		if (editable)
-			field = new field_editable_text(type.substring(6,1)==":" ? type.substring(7) : null,onchange,onunchange);
-		else
-			field = new field_text();
-	} else if (type.startsWith("enum[")) {
-		var values = eval(type.substring(4));
-		if (editable)
-			field = new field_enum(values,onchange,onunchange);
-		else
-			field = new field_text();
-	} else if (type == "date") {
-		if (editable)
-			field = new field_date();
-		else
-			field = new field_text();
-	}
-	return field;
 }
 
 function datalist_form_data() {
@@ -73,7 +53,7 @@ function datalist_form_data() {
 function datalist_refresh() {
 	datalist_init_grid(); // reset columns
 	var data = datalist_form_data();
-	pn.ajax_service_json("/dynamic/data_list/service/get_data", data, function(result) {
+	pn.ajax_service_json("/dynamic/data_model/service/get_data", data, function(result) {
 		if (result != null) {
 			document.getElementById('datalist_total_entries').innerHTML = result.total;
 			document.getElementById('datalist_start_entry').innerHTML = result.data.length == 0 ? 0 : result.start+1;
@@ -196,7 +176,7 @@ function datalist_save() {
 			data += "&"+encodeURIComponent("mod_"+i+"_change_"+j+"_value")+"="+encodeURIComponent(modifications[i].changes[j].value);
 		}
 	}
-	pn.ajax_service_json("/dynamic/data_list/service/save_data", data, function(result) {
+	pn.ajax_service_json("/dynamic/data_model/service/save_data", data, function(result) {
 		datalist_refresh();
 	});
 }
@@ -286,7 +266,7 @@ function datalist_edit_field(icon, field_path) {
 	pn.lock_screen();
 	var data = datalist_form_data();
 	data += "&lock_field="+encodeURIComponent(field_path);
-	pn.ajax_service_xml("/dynamic/data_list/service/lock", data, function(xml) {
+	pn.ajax_service_xml("/dynamic/data_model/service/lock", data, function(xml) {
 		if (!xml) {
 			pn.unlock_screen();
 			return;
@@ -307,7 +287,7 @@ function datalist_noedit_field(icon, field_path) {
 	var field = _datalist_get_field(field_path);
 	var data = datalist_form_data();
 	data += "&lock="+field.lock;
-	pn.ajax_service_xml("/dynamic/data_list/service/unlock", data, function(xml) {
+	pn.ajax_service_xml("/dynamic/data_model/service/unlock", data, function(xml) {
 		if (!xml) {
 			pn.unlock_screen();
 			return;
@@ -345,7 +325,7 @@ function _datalist_add_search_input(td, field_path) {
 				}
 		}
 	};
-	var typed_field = _datalist_create_field(field.type, true, update, update);
+	var typed_field = datamodel_create_field(field.type, true, update, update);
 	var input = typed_field.create(td, datalist_search[_datalist_encode_field(field_path)]);
 	input.focus();
 }

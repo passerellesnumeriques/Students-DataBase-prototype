@@ -1,5 +1,5 @@
 <?php
-require_once("component/data_list/DataList.inc");
+require_once("component/data_model/list/DataList.inc");
 $list = new DataList($_POST["starting_table"]); 
 for ($i = 0; isset($_POST["pk".$i]); $i++) {
 	$list->primary_key($_POST["pk".$i]);

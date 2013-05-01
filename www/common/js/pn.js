@@ -31,6 +31,7 @@ pn = {
 		if (onload) s.data.add_listener(onload);
 		s.type = "text/javascript";
 		s.onload = function() { pn._scripts_loaded.push(p); this.data.fire(); };
+		s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { pn._scripts_loaded.push(p); this.data.fire(); this.onreadystatechange = null; } };
 		s.src = url;
 		head.appendChild(s);
 	},
@@ -60,7 +61,34 @@ pn = {
 	},
 	error_dialog: function(message) {
 		pn.add_javascript("/static/common/js/component/popup_window.js",function() {
-			var p = new popup_window("Error", "/static/common/images/error.png", message);
+			var p = new popup_window(pn.locale["Error"], "/static/common/images/error.png", message);
+			p.show();
+		});
+	},
+	confirm_dialog: function(message, handler) {
+		pn.add_javascript("/static/common/js/component/popup_window.js",function() {
+			var content = document.createElement("TABLE");
+			content.style.margin = "0px";
+			content.style.borderCollapse = "collapse";
+			content.style.borderSpacing = "0px";
+			var tr = document.createElement("TR"); content.appendChild(tr);
+			var td = document.createElement("TD"); tr.appendChild(td);
+			td.style.padding = "3px";
+			td.innerHTML = message;
+			tr = document.createElement("TR"); content.appendChild(tr);
+			td = document.createElement("TD"); tr.appendChild(td);
+			td.style.backgroundColor = '#D0D0D0';
+			td.style.textAlign = 'center';
+			td.style.borderTop = '1px solid #808080';
+			var yes_button = document.createElement("BUTTON");
+			yes_button.innerHTML = "<img src='/static/common/images/ok.png' style='vertical-align:bottom'/> "+pn.locale["Yes"];
+			td.appendChild(yes_button);
+			var no_button = document.createElement("BUTTON");
+			no_button.innerHTML = "<img src='/static/common/images/close.png' style='vertical-align:bottom'/> "+pn.locale["No"];
+			td.appendChild(no_button);
+			var p = new popup_window(pn.locale["Confirmation"], "/static/common/images/question.png", content);
+			yes_button.onclick = function() { p.close(); handler(true); };
+			no_button.onclick = function() { p.close(); handler(false); };
 			p.show();
 		});
 	},
@@ -118,8 +146,6 @@ pn = {
 	        sent();
 	    };
 	    xhr.send(data);
-	    if (foreground)
-	    	sent();
 	},
 	ajax_service_json: function(url, data, handler, foreground) {
 		var xhr = new XMLHttpRequest();
@@ -159,7 +185,5 @@ pn = {
 	    	data = s;
 	    }
 	    xhr.send(data);
-	    if (foreground)
-	    	sent();
-	}
+	},
 }

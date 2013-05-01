@@ -1,4 +1,4 @@
-<?php 
+<?php
 class people extends Component {
 
 	public $user_people_id;
@@ -8,7 +8,7 @@ class people extends Component {
 	function init() {
 		$this->app->user_management->logged_in->listen($this, "logged_in");
 	}
-	
+
 	public function logged_in() {
 		require_once("common/SQLQuery.inc");
 		$people = SQLQuery::create()
@@ -18,6 +18,7 @@ class people extends Component {
 			->field("People", "id")
 			->field("People", "first_name")
 			->field("People", "last_name")
+			->bypass_security() // here we just get name of the user, no need to check if he can see it
 			->execute_single_row();
 		if ($people <> null) {
 			$this->user_people_id = $people["id"];
@@ -25,9 +26,9 @@ class people extends Component {
 			$this->last_name = $people["last_name"];
 		}
 	}
-	
+
 	public function dependencies() { return array("user_management"); }
-	
+
 	public function get_readable_rights() {
 		return array(
 			new AccessRightCategory("people","Personal Information",array(
@@ -38,44 +39,23 @@ class people extends Component {
 	public function get_writable_rights() {
 		return array(
 			new AccessRightCategory("people","Personal Information",array(
-				new BooleanRight("edit_people_details","Edit Personal Information"),
+				new BooleanRight("edit_people_details","Edit Personal Information",array(true=>array("see_other_people_details"=>true))),
 			)),
 		);
 	}
-	
-	public function populate_model(&$model) {
-		$model->addDataCategoryLink("Personal Information", "/dynamic/people/page/profile?plugin=people&people=%People.id%");
-		$model->addTable("People")
-			->addPrimaryKey("id")
-			->addString("first_name", 100, 1, false)
-			->addString("last_name", 100, 1, false)
-			->addEnum("sex", array("M","F"))
-			->addDate("birth", true)
-			->addDisplayableData("first_name", "Personal Information", "First Name")
-			->addDisplayableData("last_name", "Personal Information", "Last Name")
-			->addDisplayableData("sex", "Personal Information", "Sex")
-			->addDisplayableData("birth", "Personal Information", "Birth Date")
-			->allowReadAccess()
-			->restrictWriteAccess("edit_people_details",true);
-		$model->addTable("UserPeople")
-			->addString("domain", 100, 1, false)
-			->addString("username", 100, 1, false)
-			->addForeignKey("people", "People")
-			->addIndex("domain","username")
-			->addLink("Users",array("domain"=>"domain","username"=>"username"),true)
-			->allowReadAccess();
-	}
-	
+
 	protected function is_page_allowed($path) {
-		// TODO
-		return true;
-	}
-	protected function is_service_allowed($path) {
-		if ($path == "lock" || $path == "unlock" || $path == "save")
-			return $this->app->user_management->has_right("edit_people_details");
+		if ($path == "list" || $path == "home")
+			return $this->app->user_management->has_right("see_other_people_details");
+		if ($path == "profile")
+			return true;
+		if ($path == "profile_people") {
+			if ($_GET["people"] == $this->user_people_id) return true;
+			return $this->app->user_management->has_right("see_other_people_details");
+		}
 		return false;
 	}
-	
+
 	public function get_user_from_people($people, &$domain, &$username) {
 		require_once("common/SQLQuery.inc");
 		$r = SQLQuery::create()->select("UserPeople")->field("domain")->field("username")->where("people",$people)->execute_single_row();
@@ -88,12 +68,12 @@ class people extends Component {
 		require_once("common/SQLQuery.inc");
 		return SQLQuery::create()->select("UserPeople")->field("people")->where("domain",$domain)->where("username",$username)->execute_single_value();
 	}
-	
+
 	public function get_profile_pages(&$people) {
 		return array(
-			"profile_people"=>array("<img src='/static/people/profile_16.png'/> ".get_locale("people","Personal Information"),"/dynamic/people/page/profile_people?people=".$people),
+			"profile_people"=>array("/static/people/profile_16.png", get_locale("people","Personal Information"), "/dynamic/people/page/profile_people?people=".$people),
 		);
 	}
-	
+
 }
 ?>

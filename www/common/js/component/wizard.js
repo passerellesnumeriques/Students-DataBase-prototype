@@ -59,20 +59,27 @@ function wizard(container) {
 		t.showPage(t.current_page+1);
 	};
 	t.finish = function() {
-		
+		t.popup.close(t.keep_on_close);
+		if (t.onfinish) t.onfinish(t);
 	};
 	t.resize = function() { if (t.popup) t.popup.resize(); };
 	
 	if (container) {
+		t.keep_on_close = true;
 		if (container.data) {
 			// wizard already loaded
 			t.icon = container.data.icon;
 			t.title = container.data.title;
 			t.pages = container.data.pages;
+			t.onfinish = container.data.onfinish;
 		} else {
 			// load from elements on page
 			t.icon = container.getAttribute("icon"); container.removeAttribute("icon");
 			t.title = container.getAttribute("title"); container.removeAttribute("title");
+			if (container.hasAttribute("finish")) {
+				t.onfinish = eval("("+container.getAttribute("finish")+")");
+				container.removeAttribute("finish");
+			}
 			for (var i = 0; i < container.childNodes.length; ++i) {
 				var e = container.childNodes[i];
 				if (e.nodeType != 1) continue;
@@ -106,6 +113,7 @@ function wizard(container) {
 		var tr = document.createElement("TR"); t.element.appendChild(tr);
 		tr.className = "wizard_header";
 		t.page_icon_td = document.createElement("TD"); tr.appendChild(t.page_icon_td);
+		t.page_icon_td.style.width = "35px";
 		t.page_icon = document.createElement("IMG"); t.page_icon_td.appendChild(t.page_icon);
 		t.page_title_td = document.createElement("TD"); tr.appendChild(t.page_title_td);
 		tr = document.createElement("TR"); t.element.appendChild(tr);

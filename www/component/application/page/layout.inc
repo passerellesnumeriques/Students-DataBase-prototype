@@ -18,18 +18,20 @@ $this->add_stylesheet("/static/common/js/component/context_menu.css");
 			<span class='application_menu_item'><img src='/static/common/images/search.png'/><form action="/dynamic/application/page/search" method="get" target="application_content" style='display:inline;'><input name="q" type='text' size=15 style='margin:0px;padding:0px;border:1px solid #8080FF;font-size:11px' autocomplete="off"/></form></span>
 		</td>
 		<td nowrap="nowrap" class='application_header_section'>
-			<?php 
+			<?php
 			global $app;
-			echo $app->people->first_name." ".$app->people->last_name." ";
+			echo "<a href='/dynamic/people/page/profile?people=".$app->people->user_people_id."' target='application_content'>";
+			echo $app->people->first_name." ".$app->people->last_name;
+			echo "</a>";
 			?>
 			<img src='/static/common/images/settings.png' style='vertical-align:bottom'/>
 			<a href="/dynamic/application/page/logout" style='text-decoration:none;color:black'><img src='/static/common/images/logout.gif' style='border:0px;vertical-align:bottom'/><?php locale("application","Logout")?></a>
 		</td><td nowrap="nowrap" class='application_header_section' title="<?php locale("application","Database")?>">
 			<img src='/static/application/database.png' style='vertical-align:bottom'/>
-			<select style='padding:0px;margin:0px' onchange="location.href='/dynamic/application/service/set_domain?domain='+this.value;">
+			<select style='padding:0px;margin:0px' onchange="location.href='/dynamic/application/service/set_domain?format=xml&domain='+this.value;">
 			<?php
 			foreach (preg_split("/,/", file_get_contents("domains",true)) as $domain)
-				echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>"; 
+				echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 			?>
 			</select>
 		</td><td nowrap="nowrap" class='application_header_section' title="Language">
