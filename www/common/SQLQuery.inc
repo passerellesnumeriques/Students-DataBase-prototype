@@ -1,10 +1,10 @@
 <?php
-/** Helper to build and execute a SQL query */ 
+/** Helper to build and execute a SQL query */
 class SQLQuery {
 
 	/** utility method to ease chained usage: SQLQuery::create()->select(...)->field(...)->.... */
 	public static function &create() { $q = new SQLQuery(); return $q; }
-	
+
 	public function __construct($copy = null) {
 		if ($copy) {
 			$this->tables = $copy->tables;
@@ -16,23 +16,26 @@ class SQLQuery {
 			$this->group_by = $copy->group_by;
 		}
 	}
-	
+
 	public $tables = array();
 	public $fields = array();
+	public $count = null;
 	public $where = array();
 	public $joins = array();
 	public $limit_from = 0;
 	public $limit_number = -1;
 	public $group_by = array();
-	
+	public $order_by = array();
+	public $bypass_security = false;
+
 	private $field_id_counter = 0;
 	private $table_id_counter = 0;
-	
+
 	/** Generates a unique field alias name (useful when building a big list) */
 	public function field_id() { return "f".($this->field_id_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function table_id() { return "t".($this->table_id_counter++); }
-	
+
 	/** Prepares a select in the given tables.
 	 * Usage:
 	 *  - 1 parameter as string: the name of the table in which the select will be performed
@@ -57,8 +60,8 @@ class SQLQuery {
 		}
 		return $this;
 	}
-	
-	/** 
+
+	/**
 	 * Indicates a field should be returned by the quer.
 	 * Usage:
 	 *  (field_name): in case only one table was indicated in the select() method, this table will be used together with the given field
@@ -73,25 +76,18 @@ class SQLQuery {
 			array_push($this->fields, array($table,$name,$alias));
 		return $this;
 	}
-	
-	public function reset_fields() {
+
+	public function &reset_fields() {
 		$this->fields = array();
+		return $this;
 	}
-	public function count($fields = null) {
-		if ($fields == null)
-			array_push($this->fields, "COUNT(*)");
-		else {
-			$s = "COUNT(";
-			$first = true;
-			foreach ($fields as $f) {
-				if ($first) $first = false; else $s .= ",";
-				$s .= "`".$f[0]."`.`".$f[1]."`";
-			}
-			$s .= ")";
-			array_push($this->fields, $s);
-		}
+	public function &count($alias = null) {
+		$this->count = array($alias);
+		return $this;
 	}
-	
+
+	public function &bypass_security() { $this->bypass_security = true; return $this; }
+
 	/**
 	 * Usages:
 	 *  - SQL condition: where("`field1`='value'")
@@ -124,7 +120,7 @@ class SQLQuery {
 		}
 		return $this;
 	}
-	
+
 	/** if only one table is used, we can use it as ($field,$values), meaning no need to specify the table */
 	public function &where_in($table, $field, $values = null) {
 		if ($values === null) {
@@ -143,7 +139,7 @@ class SQLQuery {
 		array_push($this->where, $w);
 		return $this;
 	}
-	
+
 	public function &join($table_from, $table_to, $fields_matching, $alias = null) {
 		array_push($this->joins, array($table_from, $table_to, $fields_matching, $alias));
 		return $this;
@@ -166,35 +162,80 @@ class SQLQuery {
 		}
 		return null;
 	}
-	
-	public function limit($from, $number) {
+
+	public function &limit($from, $number) {
 		$this->limit_from = $from;
 		$this->limit_number = $number;
+		return $this;
 	}
-	
+
 	/** If only one parameter, it means that only one table is selected, and we will use this table */
-	public function group_by($table, $field=null) {
+	public function &group_by($table, $field=null) {
 		if ($field == null) {
 			$field = $table;
 			foreach ($this->tables as $t=>$a) $table = $t;
 		}
 		array_push($this->group_by, array($table, $field));
+		return $this;
 	}
-	
+
+	public function &order_by($table, $field, $asc=true) {
+		array_push($this->order_by, array($table, $field, $asc));
+		return $this;
+	}
+
 	public function generate() {
+		if (!$this->bypass_security) {
+			// validate the query
+			require_once("component/data_model/DataModel.inc");
+			$final_fields = array();
+			foreach ($this->tables as $t=>$alias) {
+				$table = DataModel::get()->getTable($t);
+				if ($alias == null) $alias = $table->getName();
+				if (count($this->fields) == 0 && $this->count === null) {
+					foreach ($table->getColumns() as $col)
+						array_push($final_fields, array($alias, $col->name, null));
+				} else foreach ($this->fields as $f) {
+					if ($f[0] == $t || $f[0] == $alias)
+						array_push($final_fields, array($f[0], $table->getColumn($f[1])->name, $f[2])); // check the field is accessible
+				}
+				if (!$table->canReadAll())
+					foreach ($table->table_specific_read_access as $specific) {
+						$this->where($specific[0], $specific[1]());
+					}
+			}
+			foreach ($this->joins as $join) {
+				$table = DataModel::get()->getTable($join[1]);
+				if (count($this->fields) == 0 && $this->count === null) {
+					foreach ($table->getColumns() as $col)
+						array_push($final_fields, array($join[3], $col->name, null));
+				} else foreach ($this->fields as $f) {
+					if ($f[0] == $join[1] || $f[0] == $join[3])
+						array_push($final_fields, array($join[3], $table->getColumn($f[1])->name, $f[2])); // check the field is accessible
+				}
+				if (!$table->canReadAll())
+					foreach ($table->table_specific_read_access as $specific) {
+						$this->where($specific[0], $specific[1]());
+					}
+			}
+			$this->fields = $final_fields;
+		}
+
 		$sql = "SELECT ";
-		if (count($this->fields) == 0)
+		if (count($this->fields) == 0 && $this->count === null && $this->bypass_security)
 			$sql .= "*";
 		else {
 			$first = true;
 			foreach ($this->fields as $f) {
 				if ($first) $first = false; else $sql .= ",";
-				if (is_string($f))
-					$sql .= $f;
-				else {
-					$sql .= "`".$f[0]."`.`".$f[1]."`";
-					if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
-				}
+				$sql .= "`".$f[0]."`.`".$f[1]."`";
+				if ($f[2] <> null) $sql .= " AS `".$f[2]."`";
+			}
+			if ($this->count !== null) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "COUNT(*)";
+				if ($this->count[0] <> null)
+					$sql .= " AS `".$this->count[0]."`";
 			}
 		}
 		$sql .= " FROM ";
@@ -230,12 +271,20 @@ class SQLQuery {
 				$sql .= "`".$g[0]."`.`".$g[1]."`";
 			}
 		}
+		if (count($this->order_by) > 0) {
+			$sql .= " ORDER BY ";
+			$first = true;
+			foreach ($this->order_by as $o) {
+				if ($first) $first = false; else $sql .= ",";
+				$sql .= "`".$o[0]."`.`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
+			}
+		}
 		if ($this->limit_number > 0) {
 			$sql .= " LIMIT ".$this->limit_from.",".$this->limit_number;
 		}
 		return $sql;
 	}
-	
+
 	public function execute() {
 		$sql = $this->generate();
 		$res = DataBase::$conn->execute($sql);
@@ -245,7 +294,7 @@ class SQLQuery {
 			array_push($a, $r);
 		return $a;
 	}
-	
+
 	public function execute_single_field() {
 		$a = $this->execute();
 		if ($a === null) return null;
@@ -253,14 +302,14 @@ class SQLQuery {
 		foreach ($a as $r) array_push($a2, $r[0]);
 		return $a2;
 	}
-	
+
 	public function execute_single_value() {
 		$a = $this->execute_single_field();
 		if ($a === null) return null;
 		if (count($a) == 0) return null;
 		return $a[0];
 	}
-	
+
 	public function execute_single_row() {
 		$sql = $this->generate();
 		$res = DataBase::$conn->execute($sql);
@@ -269,7 +318,7 @@ class SQLQuery {
 		if ($r === FALSE) return null;
 		return $r;
 	}
-	
+
 	public static function update($table, $fields_values, $where) {
 		$sql = "UPDATE `".$table."` SET ";
 		$first = true;
@@ -314,7 +363,7 @@ class SQLQuery {
 		}
 		$sql .= ")";
 		DataBase::$conn->execute($sql);
-		return DataBase::$conn->get_last_error_number();
+		return DataBase::$conn->get_insert_id();
 	}
 }
 ?>

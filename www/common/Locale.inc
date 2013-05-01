@@ -71,7 +71,7 @@ class Locale {
 		if ($nb > 2) {
 			$a = func_get_arg(2);
 			foreach ($a as $k=>$v)
-				$str = str_replace("%".$k."%", $v);
+				$str = str_replace("%".$k."%", $v, $str);
 		}
 		return $str;
 	}
@@ -130,7 +130,7 @@ else {
 		}
 	}
 	if (Locale::$language == null)
-		Locale::$language = $known[0];
+		Locale::$language = Locale::$known[0];
 	$_SESSION["lang"] = Locale::$language;
 	setcookie("lang",Locale::$language,time()+2*365*24*60*60,"/dynamic/");
 }

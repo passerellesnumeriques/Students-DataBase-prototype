@@ -64,6 +64,7 @@ function continue_loading() {
 		s.type = "text/javascript";
 		s.onload = function() { size_done += script.size; setTimeout(continue_loading,1); };
 		s.onerror = function() { size_done += script.size; setTimeout(continue_loading,1); };
+		s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { size_done += script.size; setTimeout(continue_loading,1); this.onreadystatechange = null; } };
 		s.src = script.url;
 		document.getElementsByTagName("HEAD")[0].appendChild(s);
 	} else if (css.length > 0) {

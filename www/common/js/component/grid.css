@@ -3,7 +3,7 @@ table.grid {
 	border-spacing: 0px;
 	border: 1px solid black;
 }
-table.grid, table.grid input {
+table.grid, table.grid input, table.grid select {
 	font-size: 11px;
 }
 table.grid td,th {
@@ -21,4 +21,10 @@ table.grid tbody tr:nth-child(even) {
 }
 table.grid tbody tr:nth-child(odd) {
 	background-color: #D8D8FF;
+}
+table.grid tbody tr:nth-child(even).selected {
+	background-color: #FFFFC0;
+}
+table.grid tbody tr:nth-child(odd).selected {
+	background-color: #D8D8C0;
 }

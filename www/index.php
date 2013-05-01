@@ -1,8 +1,14 @@
 <?php
+function component_auto_loader($classname) {
+	require_once("component/".$classname."/".$classname.".inc");
+}
+
 if (isset($_GET["set_language"])) {
+	spl_autoload_register('component_auto_loader');
 	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
+	spl_autoload_unregister('component_auto_loader');
 	$_SESSION["lang"] = $_GET["set_language"];
 	header("Location: ?");
 	setcookie("lang",$_GET["set_language"],time()+2*365*24*60*60,"/dynamic/");
@@ -24,12 +30,12 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 
 if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
 
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
-
 if ($path == "") {
 	header("Location: /dynamic/application/page/enter");
 	die();
 }
+
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
 // get type of resource
 $i = strpos($path, "/");
@@ -42,10 +48,6 @@ $i = strpos($path, "/");
 if ($i === FALSE) die("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
-
-function __autoload($classname) {
-	require_once("component/".$classname."/".$classname.".inc");
-}
 
 switch ($type) {
 case "static":
@@ -86,11 +88,13 @@ case "dynamic":
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 
+	spl_autoload_register('component_auto_loader');
 	require_once("component/PNApplication.inc");
 	session_set_cookie_params(24*60*60, "/dynamic/");
 	session_start();
 	require_once("common/Locale.inc");
 	require_once("common/DataBase.inc");
+	spl_autoload_unregister('component_auto_loader');
 	
 	global $app;
 	if (!isset($_SESSION["app"])) {
@@ -105,9 +109,24 @@ case "dynamic":
 	require_once("common/DataBaseSystem_MySQL.inc");
 	DataBase::$conn = new DataBaseSystem_MySQL();
 	DataBase::$conn->connect("localhost", "root", "", "students_".$app->current_domain);
+
+	if ($component_name == "common") {
+		Locale::$current_component = "common";
+		$i = strrpos($path, ".");
+		if ($i === FALSE) die("Invalid request: common dynamic resource without extension");
+		$ext = substr($path, $i+1);
+		switch ($ext) {
+			case "js":
+				header("Content-Type: text/javascript;charset=UTF-8");
+				break;
+			default: die("Invalid common dynamic resource type: ".$ext);
+		}
+		include "common/".$path.".php";
+		die();
+	}
 	
 	if (!isset($app->components[$component_name])) die("Invalid request: unknown component ".$component_name);
-
+	
 	switch ($request_type) {
 	case "page":
 		header("Content-Type: text/html;charset=UTF-8");
