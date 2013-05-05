@@ -5,9 +5,14 @@ function grid(element) {
 	t.columns = [];
 	t.selectable = false;
 
-	t.addColumn = function(title, width, field_type) {
+	t.addColumn = function(title, width, field_type, attached_data, onclick) {
 		var th = document.createElement('TH');
 		th.innerHTML = title;
+		if (onclick) {
+			th.style.cursor = 'pointer';
+			var index = t.columns.length;
+			th.onclick = function () { onclick(index, attached_data); };
+		}
 		t.header.appendChild(th);
 		var col = document.createElement('COL');
 		if (width) col.width = width;
@@ -17,6 +22,10 @@ function grid(element) {
 	}
 	t.getNbColumns = function() { return t.columns.length; };
 	t.getColumnField = function(index) { return t.columns[index]; };
+	t.setColumnTitle = function(index, title) {
+		var th = t.header.childNodes[index+(t.selectable ? 1 : 0)];
+		th.innerHTML = title;
+	};
 	
 	t.setSelectable = function(selectable) {
 		if (t.selectable == selectable) return;
@@ -36,7 +45,7 @@ function grid(element) {
 				t.header.insertBefore(th, t.header.childNodes[0]);
 				t.colgroup.insertBefore(col, t.colgroup.childNodes[0]);
 			}
-		} else {
+		} else if (t.header.childNodes.length > 0) {
 			t.header.removeChild(t.header.childNodes[0]);
 			t.colgroup.removeChild(t.colgroup.childNodes[0]);
 		}
@@ -49,6 +58,7 @@ function grid(element) {
 			cb.checked = 'checked';
 			cb.onchange();
 		}
+		t._selection_changed();
 	};
 	t.unselectAll = function() {
 		for (var i = 0; i < t.table.childNodes.length; ++i) {
@@ -58,6 +68,24 @@ function grid(element) {
 			cb.checked = '';
 			cb.onchange();
 		}
+		t._selection_changed();
+	};
+	t._selection_changed = function() {
+		if (t.onselect) {
+			t.onselect(t.getSelection());
+		}
+	};
+	t.onselect = null;
+	t.getSelection = function() {
+		var selection = [];
+		for (var i = 0; i < t.table.childNodes.length; ++i) {
+			var tr = t.table.childNodes[i];
+			var td = tr.childNodes[0];
+			var cb = td.childNodes[0];
+			if (cb.checked)
+				selection.push(i);
+		}
+		return selection;
 	};
 	
 	t.setData = function(data) {
@@ -73,6 +101,7 @@ function grid(element) {
 				cb.type = 'checkbox';
 				cb.onchange = function() {
 					this.parentNode.parentNode.className = this.checked ? "selected" : "";
+					t._selection_changed();
 				};
 				td.appendChild(cb);
 			}
@@ -99,6 +128,8 @@ function grid(element) {
 		while (t.header.childNodes.length > 0) t.header.removeChild(t.header.childNodes[0]);		
 		while (t.colgroup.childNodes.length > 0) t.colgroup.removeChild(t.colgroup.childNodes[0]);
 		t.columns = [];
+		t.setSelectable(!t.selectable);
+		t.setSelectable(!t.selectable);
 	}
 	
 	t.startLoading = function() {

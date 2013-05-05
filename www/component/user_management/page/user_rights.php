@@ -29,16 +29,12 @@ foreach ($roles as $role)
 }
 
 require_once("component/application/SubPageHeader.inc");
-$header = new SubPageHeader('/static/user_management/access_list_32.png', get_locale("User").": ".get_locale("Domain")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$domain."</span>, ".get_locale("Username")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$username."</span>");
+$header = new SubPageHeader($this, '/static/user_management/access_list_32.png', get_locale("User").": ".get_locale("Domain")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$domain."</span>, ".get_locale("Username")." <span style='font-family:Courrier New;font-weight:bold;font-style:italic'>".$username."</span>");
 if (!$is_admin && $can_edit) {
-	$header->start_section();
-	$header->add_content("<button onclick='um_rights_save()'><img src='/static/common/images/save.png'/> ".get_locale("common","Save")."</button>");
-	$header->end_section();
+	$header->add_header("<div class='button' onclick='um_rights_save()'><img src='/static/common/images/save.png'/> ".get_locale("common","Save")."</div>");
 }
 if ($locked <> null) {
-	$header->start_section();
-	$header->add_content("<img src='/static/common/images/lock.png'/> ".get_locale("common","This page is already locked by")." ".$locked);
-	$header->end_section();
+	$header->add_header("<img src='/static/common/images/lock.png'/> ".get_locale("common","This page is already locked by")." ".$locked);
 }
 $header->generate();
 

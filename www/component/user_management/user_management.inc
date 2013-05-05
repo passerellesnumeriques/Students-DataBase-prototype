@@ -148,6 +148,8 @@ class user_management extends Component {
 			return $this->has_right("manage_roles");
 		if ($path == "create_role" || $path == "remove_role")
 			return $this->has_right("manage_roles");
+		if ($path == "assign_roles" || $path == "unassign_roles")
+			return $this->has_right("assign_role");
 		return false;
 	}
 

@@ -1,4 +1,3 @@
-Curricula:<br/>
 <?php
 $this->add_javascript("/static/common/js/component/wizard.js");
 $this->add_stylesheet("/static/common/js/component/wizard.css");
@@ -6,15 +5,29 @@ $this->add_javascript("/static/common/js/component/validation.js");
 $this->add_stylesheet("/static/common/js/component/validation.css");
 $this->add_javascript("/static/common/js/component/form.js");
 
+require_once("component/application/SubPageHeader.inc");
+$header = new SubPageHeader($this, '/static/curriculum/curriculum_32.png', get_locale("Curricula"));
+if (PNApplication::$instance->user_management->has_right("edit_curricula")) {
+	$header->add_header("<div class='button' onclick=\"new wizard('new_curriculum_wizard').launch()\"><img src='/static/common/images/add.png'/> ".get_locale("New curriculum")."</div>");
+}
+$header->generate();
+
 require_once("common/SQLQuery.inc");
 $curricula = SQLQuery::create()->select("Curriculum")->execute();
+echo "<table rules='all' style='border:1px solid black;border-collapse:collapse;margin:5px'>";
+echo "<tr><th>".get_locale("common","Name")."</th></tr>";
 foreach ($curricula as $curriculum) {
+	echo "<tr>";
+	echo "<td>";
+	echo "<a href='curriculum?id=".$curriculum["id"]."'>";
 	echo $curriculum["name"];
-	echo "<br/>";
+	echo "</a>";
+	echo "</td>";
+	echo "</tr>";
 }
+echo "</table>";
 if (PNApplication::$instance->user_management->has_right("edit_curricula")) {
 ?>
-<button onclick="new wizard('new_curriculum_wizard').launch()"><img src='/static/common/images/add.png'/> <?php locale("New curriculum")?></button>
 <div id='new_curriculum_wizard' class='wizard'
 	title="<?php locale("New curriculum")?>"
 	icon="/static/common/images/add.png"
@@ -34,7 +47,7 @@ if (PNApplication::$instance->user_management->has_right("edit_curricula")) {
 		<input type='radio' name='creation_type' value='copy' onchange="wizard_validate(this)"/> <?php locale("from existing one")?>:
 			<select name='copy_curriculum' onchange="wizard_validate(this)">
 				<?php foreach ($curricula as $curriculum) echo "<option value='".$curriculum["id"]."'>".$curriculum["name"]."</option>";?>
-			</select> 
+			</select>
 			<span class='validation_message' id='copy_curriculum_validation'></span>
 			<br/>
 		</form>
@@ -58,7 +71,7 @@ function curriculum_wizard_validate(wizard,handler) {
 				ok = false;
 				validation_error(name, "<?php locale("common","__ already exists", array("name"=>get_locale("Curriculum")));?>");
 			}
-		if (ok) 
+		if (ok)
 			validation_ok(name);
 	}
 	if (type[0].checked) {
@@ -86,7 +99,7 @@ function curriculum_wizard_finish(wizard) {
 	}
 	var data = {name:name};
 	if (copy) data["copy"] = copy;
-	pn.ajax_service_json("/dynamic/curriculum/service/create",data,function(result){
+	pn.ajax_service_json("/dynamic/curriculum/service/create_curriculum",data,function(result){
 		if (result && result.id)
 			location.href = '/dynamic/curriculum/page/curriculum?id='+result.id;
 	},true);

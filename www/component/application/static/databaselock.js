@@ -46,16 +46,19 @@ window.pn_database_locks = {
 		if (!popup)
 			setTimeout("window.pn_database_locks._check();", this._check_time);		
 	},
+	_last_activity: new Date().getTime(),
 	_user_active: function() {
 		for (var i = 0; i < this._locks.length; ++i)
 			this._locks[i].time = new Date().getTime();
+		this._last_activity = new Date().getTime();
+		window.databaselock_update_inactivity();
 	},
 	_user_inactive: function() {
 		var remaining = this._locks.length;
 		if (remaining == 0) return;
 		var closed = function() {
 			if (--remaining == 0)
-				window.top.location = "/";
+				window.top.document.getElementById('application_content').src = "/dynamic/application/page/home";
 		}
 		for (var i = 0; i < this._locks.length; ++i)
 			pn.ajax_service_xml("/dynamic/application/service/close_db_lock","id="+this._locks[i].id,function(xml){
@@ -85,6 +88,34 @@ function init_databaselock() {
 		window.onbeforeunload = function() {
 			window.pn_database_locks._close_window();
 		}
+		if (window == window.top)
+			window.databaselock_update_inactivity_interval = setInterval(window.databaselock_update_inactivity, 2000);
+	}
+}
+if (window == window.top)
+window.databaselock_update_inactivity = function() {
+	var time = new Date().getTime();
+	time -= window.pn_database_locks._last_activity;
+	var status = document.getElementById('inactivity_status');
+	clearInterval(window.databaselock_update_inactivity_interval);
+	if (time < 10000) {
+		status.style.visibility = 'hidden';
+		status.style.position = 'absolute';
+		window.databaselock_update_inactivity_interval = setInterval(window.databaselock_update_inactivity, 2000);
+	} else if (time > 30*60*1000) {
+		window.top.location = "/dynamic/application/page/logout";
+	} else {
+		status.style.visibility = 'visible';
+		status.style.position = 'static';
+		var t = document.getElementById('inactivity_time');
+		var s = "";
+		if (time >= 60*1000) {
+			s += Math.floor(time/(60*1000))+"m";
+			time = time % (60*1000);
+		}
+		s += Math.floor(time/1000)+"s";
+		t.innerHTML = s;
+		window.databaselock_update_inactivity_interval = setInterval(window.databaselock_update_inactivity, 1000);
 	}
 }
 

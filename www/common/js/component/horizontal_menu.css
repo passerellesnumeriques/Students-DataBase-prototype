@@ -1,0 +1,7 @@
+.horizontal_menu {
+	visibility: hidden;
+	width: 100%;
+}
+.horizontal_menu>* {
+	margin-left: 5px;
+}

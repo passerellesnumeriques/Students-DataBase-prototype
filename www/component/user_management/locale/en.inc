@@ -1,18 +1,22 @@
-<?php 
+<?php
 return array(
 	"access" => "access",
 	"~access ~denied" => "~access ~denied",
 	"~access ~rights" => "~access ~rights",
 	"~assign/~unassign ~rights to ~users"=>"~assign/~unassign ~rights to ~users",
 	"~assign/~unassign ~roles to ~users"=>"~assign/~unassign ~roles to ~users",
+	"~assign ~roles" => "~assign ~roles",
+	"~unassign ~roles" => "~unassign ~roles",
+	"assign the following roles to the" => "assign the following roles to the",
+	"unassign the following roles to the" => "unassign the following roles to the",
 	"and unassign" => "and unassign",
-	"~add ~user" => "~add ~user", 
+	"~add ~user" => "~add ~user",
 	"~attached ~to ~user" => "~attached ~to ~user",
 	"domain"=>"domain",
-	"~inherited ~from ~roles" => "~inherited ~from ~roles", 
+	"~inherited ~from ~roles" => "~inherited ~from ~roles",
 	"login"=>"login",
 	"~manage ~roles (create/remove/edit)"=>"~manage ~roles (create/remove/edit)",
-	"~new ~role" => "~new ~role", 
+	"~new ~role" => "~new ~role",
 	"password"=>"password",
 	"right"=>"right",
 	"role"=>"role",
@@ -24,11 +28,11 @@ return array(
 	"~see the ~list of ~users"=>"~see the ~list of ~users",
 	"user"=>"user",
 	"users"=>"users",
-	"~users ~list" => "~users ~list", 
-	"~user ~management" => "~user ~management", 
-	"~user ~rights" => "~user ~rights", 
+	"~users ~list" => "~users ~list",
+	"~user ~management" => "~user ~management",
+	"~user ~rights" => "~user ~rights",
 	"username"=>"username",
-		
+
 	"This user is an administrator, it has the right to do everything"=>"This user is an administrator, it has the right to do everything",
 );
 ?>

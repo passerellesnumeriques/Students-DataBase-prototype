@@ -4,6 +4,7 @@
 	top: -10000px;
 	border: 1px solid black;
 	background-color: #C0C0F0;
+	box-shadow: 3px 3px 3px #C0C0D0;
 }
 .context_menu_item {
 	background-color: #C0C0F0;
@@ -16,4 +17,13 @@
 }
 .context_menu_item img {
 	vertical-align: bottom;
+}
+.context_menu_item a {
+	text-decoration: none;
+}
+.context_menu_title {
+	background-color: #E0E0E0;
+	border-bottom: 1px solid black;
+	text-align: center;
+	padding: 2px;
 }
