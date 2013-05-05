@@ -5,7 +5,7 @@
 var scripts = [];
 var css = [];
 var images = [];
-<?php 
+<?php
 function browse($path, $url) {
 	$dir = @opendir($path);
 	if ($dir == null) return;
@@ -23,7 +23,7 @@ function browse($path, $url) {
 				case "gif":
 				case "jpg":
 				case "jpeg":
-				case "png": 
+				case "png":
 					echo "images.push({url:\"".$url.$filename."\",size:".filesize($path."/".$filename)."});\n";
 					break;
 			}
@@ -45,26 +45,26 @@ browse($_SERVER["DOCUMENT_ROOT"]."/common", "/static/common/");
 browse_components($_SERVER["DOCUMENT_ROOT"]."/component");
 ?>
 
-var total_size = 0;
-var size_done = 0;
-for (var i = 0; i < scripts.length; ++i) total_size += scripts[i].size;
-for (var i = 0; i < css.length; ++i) total_size += css[i].size;
-for (var i = 0; i < images.length; ++i) total_size += images[i].size;
+window.total_size = 0;
+window.size_done = 0;
+for (var i = 0; i < scripts.length; ++i) window.total_size += scripts[i].size;
+for (var i = 0; i < css.length; ++i) window.total_size += css[i].size;
+for (var i = 0; i < images.length; ++i) window.total_size += images[i].size;
 
-function continue_loading() {
+window.continue_loading = function() {
 	var loading = document.all ? document.all['loading'] : document.getElementById('loading');
 	var container = document.all ? document.all['container'] : document.getElementById('container');
 	loading.style.height = container.offsetHeight+"px";
-	loading.style.width = Math.round(size_done*container.offsetWidth/total_size)+"px";
+	loading.style.width = Math.round(window.size_done*container.offsetWidth/window.total_size)+"px";
 
 	if (scripts.length > 0) {
 		var script = scripts[0];
 		scripts.splice(0,1);
 		var s = document.createElement("SCRIPT");
 		s.type = "text/javascript";
-		s.onload = function() { size_done += script.size; setTimeout(continue_loading,1); };
-		s.onerror = function() { size_done += script.size; setTimeout(continue_loading,1); };
-		s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { size_done += script.size; setTimeout(continue_loading,1); this.onreadystatechange = null; } };
+		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; };
+		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
+		s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { window.size_done += script.size; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; } };
 		s.src = script.url;
 		document.getElementsByTagName("HEAD")[0].appendChild(s);
 	} else if (css.length > 0) {
@@ -73,21 +73,21 @@ function continue_loading() {
 		var s = document.createElement("LINK");
 		s.rel = "stylesheet";
 		s.type = "text/css";
-		s.onload = function() { size_done += script.size; setTimeout(continue_loading,1); };
-		s.onerror = function() { size_done += script.size; setTimeout(continue_loading,1); };
+		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
+		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
 		s.href = script.url;
 		document.getElementsByTagName("HEAD")[0].appendChild(s);
 	} else if (images.length > 0) {
 		var script = images[0];
 		images.splice(0,1);
 		var s = document.createElement("IMG");
-		s.onload = function() { size_done += script.size; setTimeout(continue_loading,1); };
-		s.onerror = function() { size_done += script.size; setTimeout(continue_loading,1); };
+		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
+		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
 		s.src = script.url;
 		s.style.position = "fixed";
 		s.style.top = (container.offsetHeight+10)+"px";
 		document.body.appendChild(s);
-	} else {
+	} else if (window.size_done == window.total_size) {
 		var e = document.all ? window.parent.document.all['application_loading'] : window.parent.document.getElementById('application_loading');
 		e.parentNode.removeChild(e);
 	}
@@ -109,11 +109,11 @@ html,body,#container {
 }
 </style>
 </head>
-<body onload='setTimeout(continue_loading,<?php echo $_GET['delay']?>);'>
+<body onload='setTimeout(window.continue_loading,<?php echo $_GET['delay']?>);'>
 <div id='container'>
 <div id='loading'></div>
 </div>
 </body>
 </html>
-<?php 
+<?php
 ?>

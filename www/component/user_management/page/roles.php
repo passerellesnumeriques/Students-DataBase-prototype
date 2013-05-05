@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once("common/SQLQuery.inc");
 $roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","username")->join("Role","UserRole",array("id"=>"role_id"))->count("nb_users")->group_by("Role","id")->order_by("Role","name",true)->execute();
 
@@ -8,10 +8,8 @@ $this->add_javascript("/static/common/js/component/validation.js");
 $this->add_stylesheet("/static/common/js/component/validation.css");
 
 require_once("component/application/SubPageHeader.inc");
-$header = new SubPageHeader("/static/user_management/role_32.png", get_locale("Roles"));
-$header->start_section();
-$header->add_content("<button onclick=\"new wizard('new_role_wizard').launch()\"><img src='/static/common/images/add.png'/> ".get_locale("New Role")."</button>");
-$header->end_section();
+$header = new SubPageHeader($this, "/static/user_management/role_32.png", get_locale("Roles"));
+$header->add_header("<div class='button' onclick=\"new wizard('new_role_wizard').launch()\"><img src='/static/common/images/add.png'/> ".get_locale("New Role")."</div>");
 $header->generate();
 
 echo "<table rules='all' style='border:1px solid black;margin:5px'>";
@@ -59,7 +57,7 @@ $first = true;
 foreach ($roles as $role) {
 	if ($first) $first = false; else echo ",";
 	echo json_encode($role["name"]);
-} 
+}
 ?>];
 function new_role_validate(wizard,handler) {
 	var form = document.forms['new_role_wizard'];
@@ -76,7 +74,7 @@ function new_role_validate(wizard,handler) {
 				ok = false;
 				validation_error(name, "<?php locale("common","__ already exists",array("name"=>get_locale("Role")));?>");
 			}
-		if (ok) 
+		if (ok)
 			validation_ok(name);
 	}
 	wizard.resize();

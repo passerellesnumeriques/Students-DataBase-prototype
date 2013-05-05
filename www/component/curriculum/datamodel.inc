@@ -1,13 +1,20 @@
-<?php 
+<?php
+/* @var $model DataModel */
 $model->addTable("Curriculum")
 	->addPrimaryKey("id")
-	->addString("name", 100, 1, false);
+	->addString("name", 100, 1, false)
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("CurriculumBranch")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false)
 	->addForeignKey("curriculum", "Curriculum")
 	->addForeignKey("previous", "CurriculumBranch")
-	->addForeignKey("next", "CurriculumBranch");
+	->addForeignKey("next", "CurriculumBranch")
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("CurriculumPeriod")
 	->addPrimaryKey("id")
 	->addString("name", 100, 1, false)
@@ -15,24 +22,42 @@ $model->addTable("CurriculumPeriod")
 	->addForeignKey("curriculum", "Curriculum")
 	->addForeignKey("branch", "CurriculumBranch")
 	->addForeignKey("next", "CurriculumPeriod")
-	->addForeignKey("previous", "CurriculumPeriod");
+	->addForeignKey("previous", "CurriculumPeriod")
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("CurriculumClassType")
 	->addPrimaryKey("id")
-	->addString("name", 100, 1, false);
+	->addString("name", 100, 1, false)
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("CurriculumSubject")
 	->addPrimaryKey("id")
 	->addString("code", 30, 1, false)
-	->addString("name", 100, 1, false);
+	->addString("name", 100, 1, false)
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("CurriculumSubjectPreRequisites")
 	->addForeignKey("subject","CurriculumSubject")
-	->addForeignKey("prerequisite","CurriculumSubject");
+	->addForeignKey("prerequisite","CurriculumSubject")
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("SubjectTotalHours")
 	->addForeignKey("subject", "CurriculumSubject")
 	->addForeignKey("class_type", "CurriculumClassType")
-	->addInteger("total_hours");
+	->addInteger("total_hours")
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 $model->addTable("PeriodSubjects")
 	->addForeignKey("period", "CurriculumPeriod")
 	->addForeignKey("subject", "CurriculumSubject")
 	->addForeignKey("class_type", "CurriculumClassType")
-	->addInteger("hours");
+	->addInteger("hours")
+	->restrictReadAccess("consult_curricula", true)
+	->restrictAddAccess("edit_curricula", true)
+	->restrictRemoveAccess("edit_curricula", true);
 ?>

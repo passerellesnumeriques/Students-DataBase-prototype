@@ -60,35 +60,73 @@ pn = {
 		document.getElementsByTagName("HEAD")[0].appendChild(s);
 	},
 	error_dialog: function(message) {
+		pn.add_stylesheet("/static/common/js/component/popup_window.css");
 		pn.add_javascript("/static/common/js/component/popup_window.js",function() {
 			var p = new popup_window(pn.locale["Error"], "/static/common/images/error.png", message);
 			p.show();
 		});
 	},
 	confirm_dialog: function(message, handler) {
+		pn.add_stylesheet("/static/common/js/component/popup_window.css");
 		pn.add_javascript("/static/common/js/component/popup_window.js",function() {
-			var content = document.createElement("TABLE");
-			content.style.margin = "0px";
-			content.style.borderCollapse = "collapse";
-			content.style.borderSpacing = "0px";
-			var tr = document.createElement("TR"); content.appendChild(tr);
-			var td = document.createElement("TD"); tr.appendChild(td);
-			td.style.padding = "3px";
-			td.innerHTML = message;
-			tr = document.createElement("TR"); content.appendChild(tr);
-			td = document.createElement("TD"); tr.appendChild(td);
-			td.style.backgroundColor = '#D0D0D0';
-			td.style.textAlign = 'center';
-			td.style.borderTop = '1px solid #808080';
-			var yes_button = document.createElement("BUTTON");
-			yes_button.innerHTML = "<img src='/static/common/images/ok.png' style='vertical-align:bottom'/> "+pn.locale["Yes"];
-			td.appendChild(yes_button);
-			var no_button = document.createElement("BUTTON");
-			no_button.innerHTML = "<img src='/static/common/images/close.png' style='vertical-align:bottom'/> "+pn.locale["No"];
-			td.appendChild(no_button);
-			var p = new popup_window(pn.locale["Confirmation"], "/static/common/images/question.png", content);
-			yes_button.onclick = function() { p.close(); handler(true); };
-			no_button.onclick = function() { p.close(); handler(false); };
+			var p = new popup_window(pn.locale["Confirmation"], "/static/common/images/question.png", message);
+			var result = false;
+			p.addYesNoButtons(function() {
+				result = true;
+				p.close();
+			});
+			p.onclose = function() {
+				handler(result);
+			};
+			p.show();
+		});
+	},
+	input_dialog: function(icon,title,message,default_value,max_length,validation_handler,ok_handler) {
+		pn.add_stylesheet("/static/common/js/component/popup_window.css");
+		pn.add_javascript("/static/common/js/component/popup_window.js",function() {
+			var content = document.createElement("DIV");
+			content.innerHTML = message+"<br/>";
+			var input = document.createElement("INPUT");
+			input.type = 'text';
+			input.value = default_value;
+			input.maxLength = max_length;
+			content.appendChild(input);
+			var error_div = document.createElement("DIV");
+			error_div.style.visibility = 'hidden';
+			error_div.style.position = 'absolute';
+			error_div.innerHTML = "<img src='/static/common/images/error.png' style='vertical-align:bottom'/> ";
+			var error_message = document.createElement("SPAN");
+			error_message.style.color = 'red';
+			error_div.appendChild(error_message);
+			content.appendChild(error_div);
+			var p = new popup_window(title, icon, content);
+			var result = null;
+			p.addOkCancelButtons(function() {
+				result = input.value;
+				p.close();
+			});
+			var validate = function() {
+				var error = validation_handler(input.value);
+				if (error != null) {
+					p.disableButton('ok');
+					input.style.border = "1px solid red";
+					error_message.innerHTML = error;
+					error_div.style.visibility = 'visible';
+					error_div.style.position = 'static';
+					p.resize();
+				} else {
+					p.enableButton('ok');
+					input.style.border = "";
+					error_div.style.visibility = 'hidden';
+					error_div.style.position = 'absolute';
+					p.resize();
+				}
+			};
+			validate();
+			input.onkeyup = input.onblur = validate;
+			p.onclose = function() {
+				ok_handler(result);
+			};
 			p.show();
 		});
 	},
@@ -100,7 +138,7 @@ pn = {
 		document.getElementById(frame_id).src = url;
 	},
 	
-	lock_screen: function() {
+	lock_screen: function(onclick) {
 		var div = document.getElementById('lock_screen');
 		if (div) return;
 		div = document.createElement('DIV');
@@ -112,12 +150,22 @@ pn = {
 		div.style.left = "0px";
 		div.style.width = getWindowWidth()+"px";
 		div.style.height = getWindowHeight()+"px";
-		document.body.appendChild(div);
+		if (onclick)
+			div.onclick = onclick;
+		if (pn.animation)
+			div.anim = pn.animation.fadeIn(div,200,null,10,50);
+		return document.body.appendChild(div);
 	},
-	unlock_screen: function() {
-		var div = document.getElementById('lock_screen');
+	unlock_screen: function(div) {
+		if (!div) div = document.getElementById('lock_screen');
 		if (!div) return;
-		document.body.removeChild(div);
+		if (pn.animation) {
+			if (div.anim) pn.animation.stop(div.anim);
+			pn.animation.fadeOut(div,200,function(){
+				document.body.removeChild(div);				
+			},50,0);
+		} else
+			document.body.removeChild(div);
 	},
 	
 	ajax_service_xml: function(url, data, handler,foreground) {

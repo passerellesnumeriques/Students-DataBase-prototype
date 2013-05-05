@@ -1,18 +1,37 @@
+if (typeof pn != 'undefined')
+	pn.add_javascript("/static/common/js/animation.js");
 function context_menu(menu) {
 	if (typeof menu == "string") menu = document.getElementById(menu);
-	if (menu.parentNode != null && menu.parentNode.nodeType == 1)
+	if (menu != null && menu.parentNode != null && menu.parentNode.nodeType == 1)
 		menu.parentNode.removeChild(menu);
 	var t = this;
+	if (menu == null) {
+		menu = document.createElement("DIV");
+		menu.className = 'context_menu';
+	}
 	for (var i = 0; i < menu.childNodes.length; ++i)
 		if (menu.childNodes[i].nodeType == 1 && menu.childNodes[i].className == "context_menu_item") {
-			if (menu.childNodes[i].onclick && !menu.childNodes[i].data)
+			if (typeof menu.childNodes[i].onclickset == 'undefined' && menu.childNodes[i].onclick && !menu.childNodes[i].data)
 				menu.childNodes[i].data = menu.childNodes[i].onclick;
 			menu.childNodes[i].onclick = function() {
 				t.hide();
 				if (this.data) this.data();
 				return false;
 			};
+			menu.childNodes[i].onclickset = true;
 		}
+	
+	t.addItem = function(element) {
+		menu.appendChild(element);
+		if (typeof element.onclickset == 'undefined' && element.onclick && !element.data)
+			element.data = element.onclick;
+		element.onclick = function() {
+			t.hide();
+			if (this.data) this.data();
+			return false;
+		};
+		element.onclickset = true;
+	};
 	
 	t.showBelowElement = function(from) {
 		menu.style.visibility = "visible";
@@ -31,7 +50,7 @@ function context_menu(menu) {
 			y = y+from.offsetHeight;
 		}
 		if (x+w > getWindowWidth()) {
-			x = getWindowWidth()-w+"px";
+			x = getWindowWidth()-w;
 		}
 		document.body.removeChild(menu);
 		t.showAt(x,y);
@@ -48,10 +67,19 @@ function context_menu(menu) {
 		setTimeout(function() {
 			listenEvent(window,'click',t._listener);
 		},1);
+		if (pn.animation) {
+			if (menu.anim) pn.animation.stop(menu.anim);
+			menu.anim = pn.animation.fadeIn(menu,300);
+		}
 	};
 	t.hide = function() {
-		menu.style.visibility = "hidden";
-		menu.style.top = "-10000px";
+		if (pn.animation) {
+			if (menu.anim) pn.animation.stop(menu.anim);
+			menu.anim = pn.animation.fadeOut(menu,300);
+		} else {
+			menu.style.visibility = "hidden";
+			menu.style.top = "-10000px";
+		}
 		for (var i = 0; i < document.body.childNodes.length; ++i)
 			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
 		unlistenEvent(window, 'click', t._listener);

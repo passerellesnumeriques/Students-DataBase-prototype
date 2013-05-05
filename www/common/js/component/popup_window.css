@@ -10,6 +10,13 @@
 	background-color: #A0A0D0;
 	height: 20px;
 }
+.popup_window.blink {
+	box-shadow: 0 0 20px 3px #FFA000;
+	border: 1px solid #FFA000;
+}
+.popup_window.blink .popup_window_title {
+	background-color: #FFA000;
+}
 .popup_window_title td {
 	padding: 2px;
 	color: white;
@@ -24,4 +31,12 @@
 	background-image: url("/static/common/images/close.png");
 	background-position: center;
 	background-repeat: no-repeat;
+}
+.popup_window_buttons {
+	background-color: #D0D0D0;
+	height: 20px;
+}
+.popup_window_buttons td {
+	border-top: 1px solid #808080;
+	text-align: right;
 }

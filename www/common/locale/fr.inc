@@ -1,10 +1,14 @@
-<?php 
+<?php
 return array(
 	"actions" => "actions",
 	"add" => "ajouter",
 	"cancel" => "annuler",
 	"confirmation" => "confirmation",
+	"edit" => "éditer",
 	"error" => "erreur",
+	"export" => "exporter",
+	"import" => "importer",
+	"name" => "nom",
 	"next" => "suivant",
 	"ok" => "ok",
 	"no" => "non",
@@ -26,13 +30,13 @@ return array(
 	"october" => "octobre",
 	"november" => "novembre",
 	"december" => "décembre",
-		
+
 	"__ ~already ~exists" => "%name% ~existe ~déjà",
 	"are you sure you want to remove" => "êtes-vous sûr de vouloir supprimer",
 	"cannot be empty" => "ne peut pas être vide",
 	"~please ~select" => "~veuillez ~sélectionner",
-		
-	"this data is already locked by" => "cette donnée est déjà vérouillée par", 
-	"this page is already locked by" => "cette page est déjà vérouillée par", 
+
+	"this data is already locked by" => "cette donnée est déjà vérouillée par",
+	"this page is already locked by" => "cette page est déjà vérouillée par",
 );
 ?>
