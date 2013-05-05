@@ -48,6 +48,14 @@ class DataList {
 		$this->selectable = $is_selectable;
 	}
 
+	public function sort($field, $asc=true) {
+		foreach ($this->columns as $col)
+			if ($col->get_path() == $field) {
+				$col->sort = $asc;
+				break;
+			}
+	}
+
 	public function search($field, $value) {
 		$this->search[$field] = $value;
 	}
@@ -111,6 +119,10 @@ class DataList {
 		foreach ($_POST as $name=>$value) {
 			if (substr($name, 0, 7) == "search_" && $value <> "")
 				$this->search($this->decode_field(substr($name,7)), $value);
+			else if (substr($name, 0, 9) == "sort_asc_")
+				$this->sort($_POST[$name], true);
+			else if (substr($name, 0, 10) == "sort_desc_")
+				$this->sort($_POST[$name], false);
 		}
 		return true;
 	}
@@ -128,6 +140,10 @@ class DataList {
 	/** url can contains fields corresponding to the item, with format %field% */
 	public function add_item_action($icon_url, $alt_text, $url) {
 		array_push($this->item_actions, array($icon_url, $alt_text, $url));
+	}
+
+	public function add_selection_action($html) {
+		array_push($this->selection_actions, $html);
 	}
 
 	public function build($page) {
@@ -151,6 +167,11 @@ class DataList {
 
 		// limit results
 		$sql->limit($this->start_entry, $this->max_entries);
+
+		// sorting
+		foreach ($this->columns as $col)
+			if ($col->sort !== null)
+				$sql->order_by($col->sql_field, $col->sort);
 
 		// add missing primary keys, and get their aliases
 		$keys = array();

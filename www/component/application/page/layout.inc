@@ -1,11 +1,24 @@
 <?php
+$this->add_javascript("/static/common/js/component/horizontal_menu.js");
+$this->add_stylesheet("/static/common/js/component/horizontal_menu.css");
 $this->add_javascript("/static/common/js/component/context_menu.js");
 $this->add_stylesheet("/static/common/js/component/context_menu.css");
+$this->onload("new horizontal_menu('application_menu');application_resize_frame();");
 ?>
 <div id='application_header'>
 	<table cellspacing=0 cellpadding=0 width=100%>
 	<tr>
 		<td width=100% style='padding-left:50px' align=center>
+			<div class='horizontal_menu' id='application_menu'>
+				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/><?php locale("selection","Selection")?></div>
+				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/academic/page/home';"><img src='/static/academic/academic_16.png'/><?php locale("academic","Academic")?></div>
+				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/students_life/page/home';"><img src='/static/students_life/students_life_16.png'/><?php locale("students_life","Students' Life")?></div>
+				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/in_company/page/home';"><img src='/static/in_company/in_company_16.png'/><?php locale("in_company","In Company")?></div>
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/user_management/page/home';"><img src='/static/user_management/user_management_16.png'/><?php locale("user_management","User Management")?></div>
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/home';"><img src='/static/people/people_16.png'/><?php locale("people","People")?></div>
+				<div class='application_menu_item'><img src='/static/application/more.png'/><?php locale("application","More")?></div>
+			</div>
+			<!--
 			<span class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/selection/page/home';"><img src='/static/selection/selection_16.png'/><?php locale("selection","Selection")?></span>
 			<span class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/academic/page/home';"><img src='/static/academic/academic_16.png'/><?php locale("academic","Academic")?></span>
 			<span class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/students_life/page/home';"><img src='/static/students_life/students_life_16.png'/><?php locale("students_life","Students' Life")?></span>
@@ -16,16 +29,30 @@ $this->add_stylesheet("/static/common/js/component/context_menu.css");
 				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/home';"><img src='/static/people/people_16.png'/><?php locale("people","People")?></div>
 			</div>
 			<span class='application_menu_item'><img src='/static/common/images/search.png'/><form action="/dynamic/application/page/search" method="get" target="application_content" style='display:inline;'><input name="q" type='text' size=15 style='margin:0px;padding:0px;border:1px solid #8080FF;font-size:11px' autocomplete="off"/></form></span>
+			 -->
 		</td>
-		<td nowrap="nowrap" class='application_header_section'>
-			<?php
-			global $app;
-			echo "<a href='/dynamic/people/page/profile?people=".$app->people->user_people_id."' target='application_content'>";
-			echo $app->people->first_name." ".$app->people->last_name;
-			echo "</a>";
-			?>
+		<td nowrap="nowrap" class='application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this);">
+			<?php echo PNApplication::$instance->people->first_name." ".PNApplication::$instance->people->last_name;?>
 			<img src='/static/common/images/settings.png' style='vertical-align:bottom'/>
-			<a href="/dynamic/application/page/logout" style='text-decoration:none;color:black'><img src='/static/common/images/logout.gif' style='border:0px;vertical-align:bottom'/><?php locale("application","Logout")?></a>
+			<div id='user_settings_menu' class='context_menu'>
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->people->user_people_id?>';">
+					<img src='/static/people/profile_16.png'/>
+					<?php locale("people","Profile")?>
+				</div>
+				<div class='context_menu_item' onclick="location='/dynamic/application/page/logout';">
+					<img src='/static/common/images/logout.gif'/>
+					<?php locale("application","Logout")?>
+				</div>
+				<hr style='width:95%;height:1px;color:black;background-color:black;border:0px;'/>
+				<div style='padding:2px'>
+					Language:
+					<?php
+					foreach (Locale::$known as $lang)
+						if (Locale::$language <> $lang)
+							echo "<a href='?set_language=".$lang."'><img src='/static/common/flags/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
+					?>
+				</div>
+			</div>
 		</td><td nowrap="nowrap" class='application_header_section' title="<?php locale("application","Database")?>">
 			<img src='/static/application/database.png' style='vertical-align:bottom'/>
 			<select style='padding:0px;margin:0px' onchange="location.href='/dynamic/application/service/set_domain?format=xml&domain='+this.value;">
@@ -34,23 +61,23 @@ $this->add_stylesheet("/static/common/js/component/context_menu.css");
 				echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 			?>
 			</select>
-		</td><td nowrap="nowrap" class='application_header_section' title="Language">
-			<?php
-			foreach (Locale::$known as $lang)
-				if (Locale::$language <> $lang)
-					echo "<a href='?set_language=".$lang."'><img src='/static/common/flags/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
-			?>
 		</td>
 	</tr>
 	</table>
 </div>
 <iframe frameborder=0 width=100% id='application_content' name='application_content' src='/dynamic/application/page/home'></iframe>
 <div id='application_footer'>
-Copyright (c) Passerelles numériques
+Copyright (c) 2013<?php
+$now = date("Y");
+if ($now <> "2013") echo "-".$now;
+?> - Passerelles numériques
 -
 <a href="https://github.com/passerellesnumeriques/Students-DataBase/issues/new" target="_blank">Report a bug or request for new feature</a>
 <div style='float:right'>
 <span id='application_loading'><?php locale("application","Loading application")?> <iframe style='width:100px;height:10px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=2000'></iframe></span>
+</div>
+<div style='float:right;visibility:hidden;position:absolute;top:-10000px;padding-right:3px' id='inactivity_status'>
+	<?php locale("application","Inactivity")?>: <span id='inactivity_time'></span>
 </div>
 </div>
 <a href="/dynamic/application/page/enter" style='position:fixed;top:-2px;left:2px'>

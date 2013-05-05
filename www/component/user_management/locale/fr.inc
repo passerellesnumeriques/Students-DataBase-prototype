@@ -1,12 +1,16 @@
-<?php 
+<?php
 return array(
 	"access" => "accès",
 	"~access ~denied" => "~accès ~refusé",
 	"~access ~rights" => "~droits d'~accès",
 	"~add ~user" => "~ajouter un ~utilisateur",
-	"~assign/~unassign ~rights to ~users"=>"~assigner/~désassigner des ~droits aux ~utilisateurs",		
+	"~assign/~unassign ~rights to ~users"=>"~assigner/~désassigner des ~droits aux ~utilisateurs",
+	"~assign ~roles" => "~assigner des ~rôles",
+	"~unassign ~roles" => "~désassigner des ~rôles",
+	"assign the following roles to the" => "assigner les rôles suivants aux",
+	"unassign the following roles to the" => "désassigner les rôles suivants aux",
 	"and unassign" => "et de désassigner",
-	"~assign/~unassign ~roles to ~users"=>"~assigner/~désassigner des ~rôles aux ~utilisateurs",		
+	"~assign/~unassign ~roles to ~users"=>"~assigner/~désassigner des ~rôles aux ~utilisateurs",
 	"~attached ~to ~user" => "~attaché ~à l'~utilisateur",
 	"domain"=>"domaine",
 	"~inherited ~from ~roles" => "~hérité ~des ~rôles",
@@ -25,10 +29,10 @@ return array(
 	"user"=>"utilisateur",
 	"users"=>"utilisateurs",
 	"~users ~list" => "~liste des ~utilisateurs",
-	"~user ~management" => "~gestion des ~utilisateurs", 
-	"~user ~rights" => "~droits de l'~utilisateur", 
+	"~user ~management" => "~gestion des ~utilisateurs",
+	"~user ~rights" => "~droits de l'~utilisateur",
 	"username"=>"identifiant",
-		
+
 	"This user is an administrator, it has the right to do everything"=>"Cet utilisateur est un administrateur, il a le droit de faire ce qu'il veut",
 );
 ?>

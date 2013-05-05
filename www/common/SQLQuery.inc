@@ -179,7 +179,16 @@ class SQLQuery {
 		return $this;
 	}
 
-	public function &order_by($table, $field, $asc=true) {
+	/** Usage: (table,field,asc) or (alias,asc) or (alias) */
+	public function &order_by($table, $field=null, $asc=true) {
+		if ($field === null) {
+			$field = $table;
+			$table = null;
+		} else if (is_bool($field)) {
+			$asc = $field;
+			$field = $table;
+			$table = null;
+		}
 		array_push($this->order_by, array($table, $field, $asc));
 		return $this;
 	}
@@ -276,7 +285,9 @@ class SQLQuery {
 			$first = true;
 			foreach ($this->order_by as $o) {
 				if ($first) $first = false; else $sql .= ",";
-				$sql .= "`".$o[0]."`.`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
+				if ($o[0] !== null)
+					$sql .= "`".$o[0]."`.";
+				$sql .= "`".$o[1]."` ".($o[2] ? "ASC" : "DESC");
 			}
 		}
 		if ($this->limit_number > 0) {

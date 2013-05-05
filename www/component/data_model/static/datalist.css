@@ -12,6 +12,9 @@
 tr.datalist_fields_category {
 	background-color: #D0D0FF;
 }
+tr.datalist_fields_category td {
+	padding-left: 2px;
+}
 tr.datalist_fields {
 	font-size: 11px;
 }
@@ -20,4 +23,7 @@ tr.datalist_fields:nth-child(even) {
 }
 tr.datalist_fields:nth-child(odd) {
 	background-color: #D8D8FF;
+}
+tr.datalist_fields td:first-of-type {
+	padding-left: 2px;
 }

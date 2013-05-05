@@ -1,9 +1,10 @@
-<?php 
+<?php
 return array(
 	"~auto ~refresh" => "~auto ~refresh",
 	"~available ~fields" => "~available ~fields",
 	"display" => "display",
 	"entries" => "entries",
+	"~export ~format" => "~export ~format",
 	"refresh" => "refresh",
 	"~visible ~fields" => "~visible ~fields",
 );

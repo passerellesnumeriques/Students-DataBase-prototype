@@ -1,6 +1,6 @@
-<?php 
+<?php
 class curriculum extends Component {
-	
+
 	public function get_readable_rights() {
 		return array(
 			new AccessRightCategory("curriculum","Curriculum",array(
@@ -15,15 +15,17 @@ class curriculum extends Component {
 			)),
 		);
 	}
-	
+
 	protected function is_page_allowed($path) {
-		if ($path == "curricula")
+		if ($path == "curricula" || $path == "curriculum")
 			return $this->app->user_management->has_right("consult_curricula");
 		return false;
 	}
 	protected function is_service_allowed($path) {
+		if ($path == "create_curriculum")
+			return $this->app->user_management->has_right("edit_curricula");
 		return false;
 	}
-	
+
 }
 ?>

@@ -1,12 +1,12 @@
-<?php 
+<?php
 class Page {
-	
+
 	private $javascripts = array();
 	private $stylesheets = array();
-	private $onload = null;
+	private $onload = "";
 	public $component;
 	public $path;
-	
+
 	public function add_javascript($path, $onload = "") {
 		if (!in_array($path, $this->javascripts))
 			array_push($this->javascripts, array($path,$onload));
@@ -15,8 +15,8 @@ class Page {
 		if (!in_array($path, $this->stylesheets))
 			array_push($this->stylesheets, $path);
 	}
-	public function onload($script) { $this->onload = $script; }
-	
+	public function onload($script) { $this->onload .= $script; }
+
 	private $flushed = false;
 	public function generate($component, $path) {
 		$this->component = $component->name;
@@ -30,7 +30,7 @@ class Page {
 		echo $content;
 		$this->end_page();
 	}
-	
+
 	public function flush() {
 		if (!$this->flushed) {
 			$this->flushed = true;
@@ -53,16 +53,14 @@ class Page {
 	<script type="text/javascript" src="/dynamic/common/page/js/common_locale.js"></script>
 	<script type="text/javascript" src="/static/application/databaselock.js"></script>
 	<?php
-	foreach ($this->javascripts as $js) { 
-		echo "<script type='text/javascript' src='".$js[0]."'>";
-		echo $js[1];
-		echo "pn._script_loaded(\"".$js[0]."\");";
+	foreach ($this->javascripts as $js) {
+		echo "<script type='text/javascript' src='".$js[0]."' onload='pn._script_loaded(\"".$js[0]."\");".$js[1]."'>";
 		echo "</script>";
 	}
 	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";
 ?>
 </head>
-<body<?php if ($this->onload <> null) echo " onload=\"".$this->onload."\"";?>>
+<body<?php if (strlen($this->onload) > 0) echo " onload=\"".$this->onload."\"";?>>
 <?php
 	}
 

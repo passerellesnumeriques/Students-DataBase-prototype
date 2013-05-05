@@ -1,10 +1,14 @@
-<?php 
+<?php
 return array(
 	"actions" => "actions",
 	"add" => "add",
 	"cancel" => "cancel",
 	"confirmation" => "confirmation",
+	"edit" => "edit",
 	"error" => "error",
+	"export" => "export",
+	"import" => "import",
+	"name" => "name",
 	"next" => "next",
 	"no" => "no",
 	"ok" => "ok",
@@ -13,7 +17,7 @@ return array(
 	"save" => "save",
 	"saving" => "saving",
 	"yes" => "yes",
-		
+
 	"january" => "january",
 	"february" => "february",
 	"march" => "march",
@@ -26,13 +30,13 @@ return array(
 	"october" => "october",
 	"november" => "november",
 	"december" => "december",
-		
+
 	"__ ~already ~exists" => "%name% ~already ~exists",
 	"are you sure you want to remove" => "are you sure you want to remove",
 	"cannot be empty" => "cannot be empty",
 	"~please ~select" => "~please ~select",
 
-	"this data is already locked by" => "this data is already locked by", 
-	"this page is already locked by" => "this page is already locked by", 
+	"this data is already locked by" => "this data is already locked by",
+	"this page is already locked by" => "this page is already locked by",
 );
 ?>

@@ -1,6 +1,6 @@
-<?php 
+<?php
 /**
- * Prints a localized string. 
+ * Prints a localized string.
  * Usages:
  *  locale("key");
  *  locale("key", array("param1"=>value1,...));
@@ -38,13 +38,13 @@ function get_locale() {
 }
 
 class Locale {
-	
+
 	/** @var string default namespace, used if no namespace is specified */
 	public static $current_component = "";
 	/** @var string current language of the user */
 	public static $language = null;
 	public static $known = array("en","fr","kh","vn","ph");
-	
+
 	public static function get_string($component, $key) {
 		if (!in_array($component, Locale::$loaded))
 			Locale::load($component);
@@ -55,18 +55,25 @@ class Locale {
 
 		$str = $a[0];
 		if (count($a[1]) > 0) {
+			$shift = 0;
 			for ($i = 0; $i < count($a[1]) && $i < count($a[2]); $i++) {
 				$word_pos = $a[1][$i];
 				$letter = substr($key,$word_pos,1);
 				if ($letter == strtolower($letter)) continue; // not a capital letter
 				$word_pos2 = $a[2][$i];
-				$str = substr($str, 0, $word_pos2).strtoupper(substr($str,$word_pos2,1)).substr($str,$word_pos2+1);
+				$word_pos2 += $shift;
+				$letter = mb_substr($str, $word_pos2, 1, "UTF-8");
+				$shift += strlen($letter)-1;
+				$str = substr($str, 0, $word_pos2).mb_strtoupper($letter, "UTF-8").substr($str, $word_pos2+strlen($letter));
 			}
 		} else {
-			if (substr($key,0,1) <> substr($key_lower,0,1))
-				$str = strtoupper(substr($str,0,1)).substr($str,1);
+			if (substr($key,0,1) <> substr($key_lower,0,1)) {
+				$first_letter = mb_substr($str, 0, 1, "UTF-8");
+				$remaining = substr($str, strlen($first_letter));
+				$str = mb_strtoupper($first_letter,"UTF-8").$remaining;
+			}
 		}
-		
+
 		$nb = func_num_args();
 		if ($nb > 2) {
 			$a = func_get_arg(2);
@@ -75,17 +82,17 @@ class Locale {
 		}
 		return $str;
 	}
-	
+
 	private static $loaded = array();
 	private static $strings = array(""=>array());
-	
+
 	private static function load($component) {
 		if ($component == "common")
 			Locale::load_file("common", "common/locale/");
 		else
 			Locale::load_file($component, "component/".$component."/locale/");
 	}
-	
+
 	public static function load_file($namespace, $path) {
 		$a = include($path.Locale::$language.".inc");
 		Locale::$strings[$namespace] = array();
@@ -105,7 +112,7 @@ class Locale {
 		}
 		array_push(Locale::$loaded, $namespace);
 	}
-	
+
 }
 
 if (isset($_SESSION["lang"]))

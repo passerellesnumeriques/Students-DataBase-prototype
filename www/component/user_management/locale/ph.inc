@@ -1,10 +1,14 @@
-<?php 
+<?php
 return array(
 	"access" => "access",
 	"~access ~denied" => "~access ~denied",
 	"~access ~rights" => "~access ~rights",
 	"~add ~user" => "~add ~user",
 	"~assign/~unassign ~rights to ~users"=>"~assign/~unassign ~rights to ~users",
+	"~assign ~roles" => "~assign ~roles",
+	"~unassign ~roles" => "~unassign ~roles",
+	"assign the following roles to the" => "assign the following roles to the",
+	"unassign the following roles to the" => "unassign the following roles to the",
 	"and unassign" => "and unassign",
 	"~assign/~unassign ~roles to ~users"=>"~assign/~unassign ~roles to ~users",
 	"~attached ~to ~user" => "~attached ~to ~user",
@@ -25,10 +29,10 @@ return array(
 	"user"=>"user",
 	"users"=>"users",
 	"~users ~list" => "~users ~list",
-	"~user ~management" => "~user ~management", 
-	"~user ~rights" => "~user ~rights", 
+	"~user ~management" => "~user ~management",
+	"~user ~rights" => "~user ~rights",
 	"username"=>"username",
-		
+
 	"This user is an administrator, it has the right to do everything"=>"This user is an administrator, it has the right to do everything",
 );
 ?>

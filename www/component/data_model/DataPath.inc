@@ -1,4 +1,4 @@
-<?php 
+<?php
 class DataContext {
 	public $list;
 	public $restrict_values = array();
@@ -55,7 +55,7 @@ class DataPathBuilder {
 	private static function build_simple_column(DataModel &$model, DataPath $current_path, $table, $field, &$visited_tables) {
 		if (in_array($current_path->table, $visited_tables)) return null;
 		array_push($visited_tables, $current_path->table);
-	
+
 		// check if this is a field on the current table
 		if ($table == $current_path->table)
 			return new DataPathField($current_path, $field);
@@ -134,7 +134,7 @@ class DataPathBuilder {
 		// didn't find any path
 		return null;
 	}
-	
+
 	public static function find_possible_paths(DataModel &$model, DataPath $current_path, &$paths, &$visited_tables) {
 		// avoid infinite recursion
 		if (in_array($current_path->table, $visited_tables)) return;
@@ -176,7 +176,7 @@ class DataPathBuilder {
 			}
 		}
 	}
-	
+
 }
 
 abstract class DataPath {
@@ -220,6 +220,7 @@ class DataPathField extends DataPath {
 	public $path;
 	public $field;
 	public $sql_field;
+	public $sort = null;
 	public function __construct($path, $field) {
 		parent::__construct($path->table);
 		$this->path = $path;
@@ -358,7 +359,7 @@ class DataPathLink extends DataPath {
 		return false;
 	}
 	public function get_path() { return $this->link->table."."; }
-	public function debug() { 
+	public function debug() {
 		$s = $this->path->debug();
 		$s .= " => LINK FORWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
 		$s .= " (Table ".$this->link->table." to table ".$this->link->table_from->getName();
@@ -418,7 +419,7 @@ class DataPathLinkReverse extends DataPath {
 		return false;
 	}
 	public function get_path() { return $this->link->table_from->getName()."."; }
-	public function debug() { 
+	public function debug() {
 		$s = $this->path->debug();
 		$s .= " => LINK BACKWARD ".($this->link->unique ? "UNIQUE" : "NOT UNIQUE");
 		$s .= " (Table ".$this->link->table_from->getName()." to table ".$this->link->table;
