@@ -1,9 +1,9 @@
 <?php
-$this->add_javascript("/static/common/js/component/wizard.js");
-$this->add_stylesheet("/static/common/js/component/wizard.css");
-$this->add_javascript("/static/common/js/component/validation.js");
-$this->add_stylesheet("/static/common/js/component/validation.css");
-$this->add_javascript("/static/common/js/component/form.js");
+$this->add_javascript("/static/common/js/wizard/wizard.js");
+$this->add_stylesheet("/static/common/js/wizard/wizard.css");
+$this->add_javascript("/static/common/js/validation.js");
+$this->add_stylesheet("/static/common/js/validation.css");
+$this->add_javascript("/static/common/js/form.js");
 
 require_once("component/application/SubPageHeader.inc");
 $header = new SubPageHeader($this, '/static/curriculum/curriculum_32.png', get_locale("Curricula"));
@@ -99,7 +99,7 @@ function curriculum_wizard_finish(wizard) {
 	}
 	var data = {name:name};
 	if (copy) data["copy"] = copy;
-	pn.ajax_service_json("/dynamic/curriculum/service/create_curriculum",data,function(result){
+	ajax.post_parse_result("/dynamic/curriculum/service/create_curriculum",data,function(result){
 		if (result && result.id)
 			location.href = '/dynamic/curriculum/page/curriculum?id='+result.id;
 	},true);

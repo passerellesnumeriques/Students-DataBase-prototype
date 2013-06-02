@@ -1,7 +1,7 @@
 function data_entity_edit(icon, table, field, field_type, key) {
 	icon.src = '/static/common/images/loading.gif';
 	icon.onclick = null;
-	pn.ajax_service_json("/dynamic/data_model/service/lock_entity",{table:table,key:key,field:field},function(result) {
+	ajax.post_parse_result("/dynamic/data_model/service/lock_entity",{table:table,key:key,field:field},function(result) {
 		if (result == null) {
 			icon.src = '/static/common/images/edit.png';
 			icon.onclick = function() { data_entity_edit(this, table, field, field_type, key); };
@@ -35,7 +35,7 @@ function data_entity_cancel_edit(icon, table, field, field_type, key, lock_id) {
 	var td = icon.parentNode.previousSibling;
 	while (td.nodeName != "TD") td = td.previousSibling;
 	td.innerHTML = value;
-	pn.ajax_service_json("/dynamic/data_model/service/unlock_entity",{lock:lock_id},function(result) {
+	ajax.post_parse_result("/dynamic/data_model/service/unlock_entity",{lock:lock_id},function(result) {
 		pn_database_locks.remove_lock(lock_id);
 		icon.src = '/static/common/images/edit.png';
 		icon.onclick = function() { data_entity_edit(this, table, field, field_type, key); };
@@ -52,7 +52,7 @@ function data_entity_save(icon, table, field, field_type, key, lock_id) {
 	if (!f[0].hasChanged(f[1])) {
 		var value = f[0].getOriginalValue(f[1]);
 		td.innerHTML = value;
-		pn.ajax_service_json("/dynamic/data_model/service/unlock_entity",{lock:lock_id},function(result) {
+		ajax.post_parse_result("/dynamic/data_model/service/unlock_entity",{lock:lock_id},function(result) {
 			pn_database_locks.remove_lock(lock_id);
 			icon.src = '/static/common/images/edit.png';
 			icon.onclick = function() { data_entity_edit(this, table, field, field_type, key); };
@@ -60,7 +60,7 @@ function data_entity_save(icon, table, field, field_type, key, lock_id) {
 		return;	
 	}
 	var value = f[0].getValue(f[1]);
-	pn.ajax_service_json("/dynamic/data_model/service/save_entity",{lock:lock_id,table:table,key:key,field:field,value:value},function(result) {
+	ajax.post_parse_result("/dynamic/data_model/service/save_entity",{lock:lock_id,table:table,key:key,field:field,value:value},function(result) {
 		pn_database_locks.remove_lock(lock_id);
 		icon.src = '/static/common/images/edit.png';
 		icon.onclick = function() { data_entity_edit(this, table, field, field_type, key); };

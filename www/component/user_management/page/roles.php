@@ -2,10 +2,10 @@
 require_once("common/SQLQuery.inc");
 $roles = SQLQuery::create()->select("Role")->field('id')->field('name')->field("UserRole","username")->join("Role","UserRole",array("id"=>"role_id"))->count("nb_users")->group_by("Role","id")->order_by("Role","name",true)->execute();
 
-$this->add_javascript("/static/common/js/component/wizard.js");
-$this->add_stylesheet("/static/common/js/component/wizard.css");
-$this->add_javascript("/static/common/js/component/validation.js");
-$this->add_stylesheet("/static/common/js/component/validation.css");
+$this->add_javascript("/static/common/js/wizard/wizard.js");
+$this->add_stylesheet("/static/common/js/wizard/wizard.css");
+$this->add_javascript("/static/common/js/validation.js");
+$this->add_stylesheet("/static/common/js/validation.css");
 
 require_once("component/application/SubPageHeader.inc");
 $header = new SubPageHeader($this, "/static/user_management/role_32.png", get_locale("Roles"));
@@ -83,16 +83,16 @@ function new_role_validate(wizard,handler) {
 function new_role_finish(wizard) {
 	var form = document.forms['new_role_wizard'];
 	var name = form.elements['role_name'].value;
-	pn.ajax_service_json("/dynamic/user_management/service/create_role",{name:name},function(result){
+	ajax.post_parse_result("/dynamic/user_management/service/create_role",{name:name},function(result){
 		if (result && result.id)
 			location.href = '/dynamic/user_management/page/role?id='+result.id;
 	},true);
 }
 
 function remove_role(id,name,nb_users) {
-	pn.confirm_dialog("<?php locale("common", "Are you sure you want to remove")?> <?php locale("the role")?> <i>"+name+"</i><br/><?php locale("and unassign")?> "+nb_users+" "+(nb_users>1?"<?php locale("users")?>":"<?php locale("user")?>")+" ?",function(confirmed){
+	confirm_dialog("<?php locale("common", "Are you sure you want to remove")?> <?php locale("the role")?> <i>"+name+"</i><br/><?php locale("and unassign")?> "+nb_users+" "+(nb_users>1?"<?php locale("users")?>":"<?php locale("user")?>")+" ?",function(confirmed){
 		if (!confirmed) return;
-		pn.ajax_service_json("/dynamic/user_management/service/remove_role",{id:id},function(result) {
+		ajax.post_parse_result("/dynamic/user_management/service/remove_role",{id:id},function(result) {
 			if (result) location.reload();
 		}, true);
 	});

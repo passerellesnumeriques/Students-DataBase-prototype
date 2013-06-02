@@ -430,4 +430,5 @@ class DataPathLinkReverse extends DataPath {
 		return $s;
 	}
 }
+
 ?>

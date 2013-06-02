@@ -1,0 +1,9 @@
+database=database
+~loading ~application=~loading ~application
+~application ~loaded=~application ~loaded
+logout=logout
+inactivity=inactivity
+more=more
+no result found for your search=no result found for your search
+results found=result(s) found
+logout_because_inactivity=you have been automatically logged out because you were inactive more than 30 minutes.

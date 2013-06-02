@@ -133,6 +133,15 @@ class Table {
 	public function &preventWriteAccess($field) {
 		$this->fields_write_access[$field] = false;
 	}
+	public function &noRestriction() {
+		$this->table_read_access = null;
+		$this->fields_read_access = array();
+		foreach ($this->columns as $col)
+			$this->fields_write_access[$col->name] = true;
+		$this->table_add_access = null;
+		$this->table_remove_access = null;
+		return $this;
+	}
 
 	public function canAccess() {
 		if ($this->table_read_access === null) return true;
@@ -169,6 +178,7 @@ class Table {
 		return true;
 	}
 	public function canAdd() {
+		if ($this->table_add_access === null) return true;
 		if (count($this->table_add_access) == 0)
 			return false;
 		foreach ($this->table_add_access as $right_name=>$right_value)
@@ -177,6 +187,7 @@ class Table {
 		return true;
 	}
 	public function canRemove() {
+		if ($this->table_remove_access === null) return true;
 		if (count($this->table_remove_access) == 0)
 			return false;
 		foreach ($this->table_remove_access as $right_name=>$right_value)
@@ -205,6 +216,18 @@ class Table {
 	/** returns the list of displayable data in this table: field=>array(category,name). category and name are localized string prefixed by namespace:: */
 	public function getDisplayableData() {
 		return $this->displayable_data;
+	}
+	/** same as getDisplayableData but the localized strings are resolved */
+	public function getDisplayableDataResolved() {
+		$a = array();
+		foreach ($this->displayable_data as $field=>$locale) {
+			$i = strpos($locale[0], "::");
+			$cat = \Locale::get_string(substr($locale[0], 0, $i), substr($locale[0], $i+2));
+			$i = strpos($locale[1], "::");
+			$name = \Locale::get_string(substr($locale[1], 0, $i), substr($locale[1], $i+2));
+			$a[$field] = array($cat,$name);
+		}
+		return $a;
 	}
 
 	/** Returns the localized name of the given data */
@@ -238,6 +261,11 @@ class Table {
 			}
 		return null;
 	}
+	/**
+	 * @param string $name name of the column to get
+	 * @throws \Exception in case the column is not accessible based on the rights of the user
+	 * @return Column|NULL the column or NULL if the column does not exist
+	 */
 	public function getColumn($name) {
 		foreach ($this->columns as $c)
 			if ($c->name == $name) {
@@ -332,6 +360,42 @@ class Table {
 		foreach ($locks as $l)
 			\DataBaseLock::unlock($l);
 	}
+	/** Remove data with given primary keys */
+	public function remove_keys($keys) {
+		// search for all tables that may contain a data to remove
+		$tables = array(&$this);
+		$this->search_tables_for_remove($tables);
+		// check we can access all the tables
+		foreach ($tables as $t)
+			if (!$t->canRemove())
+				throw new \Exception("Access denied: remove data from table ".$t->name);
+		// lock all the tables
+		require_once("common/DataBaseLock.inc");
+		require_once("common/SQLQuery.inc");
+		$locker = null;
+		$locks = array();
+		foreach ($tables as $t) {
+			$lock = \DataBaseLock::lock($t->name, null, $locker, false);
+			if ($lock == null) {
+				foreach ($locks as $l)
+					\DataBaseLock::unlock($l);
+				throw new \Exception("Access denied: the table ".$t->name." is locked by ".$locker);
+			}
+		}
+		// remove data
+		foreach ($keys as $key)
+			$this->perform_remove($key);
+		// unlock tables
+		foreach ($locks as $l)
+			\DataBaseLock::unlock($l);
+	}
+	/** Remove entries corresponding to the given rows */
+	public function remove_rows($rows) {
+		$keys = array();
+		$pk = $this->getPrimaryKey()->name;
+		foreach ($rows as $r) array_push($keys, $r[$pk]);
+		$this->remove_keys($keys);
+	}
 
 	private function search_tables_for_remove(&$tables) {
 		foreach ($this->model->internalGetTables() as $t) {
@@ -369,7 +433,7 @@ class Table {
 
 	public function update_by_key($key, $fields_values, $lock_id = null) {
 		// check we are allowed
-		foreach ($fields_values as $field->$value)
+		foreach ($fields_values as $field=>$value)
 			if (!$this->canModifyField($field)) throw new \Exception("Access Denied: modify ".$field." on table ".$this->name);
 		// lock table
 		require_once("common/DataBaseLock.inc");
@@ -408,10 +472,11 @@ class Table {
 			if ($value === null)
 				$sql .= "NULL";
 			else
-				$sql .= "'".DataBase::$conn->escape_string($value)."'";
+				$sql .= "'".\DataBase::$conn->escape_string($value)."'";
 		}
 		$sql .= " WHERE `".$this->getPrimaryKey()->name."`='".$key."'";
-		$error = DataBaseLock::unlock($lock_id);
+		\DataBase::execute($sql);
+		$error = \DataBaseLock::unlock($lock_id);
 		if ($error <> null) throw new \Exception($error);
 	}
 
@@ -425,6 +490,20 @@ class Link {
 	public function __construct(&$table_from, $table, $fields_matching, $unique) {
 		$this->table_from = &$table_from;
 		$this->table = $table;
+		$this->fields_matching = $fields_matching;
+		$this->unique = $unique;
+	}
+}
+class LinkMultiDataBase {
+	public $table_from;
+	public $table;
+	public $table_field_database;
+	public $fields_matching;
+	public $unique;
+	public function __construct(&$table_from, $table, $table_field_database, $fields_matching, $unique) {
+		$this->table_from = &$table_from;
+		$this->table = $table;
+		$this->table_field_database = $table_field_database;
 		$this->fields_matching = $fields_matching;
 		$this->unique = $unique;
 	}
@@ -452,6 +531,11 @@ abstract class Column {
 	public abstract function get_sql_type();
 
 	public function validate($value) { return $value; }
+
+	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
+		$page->add_javascript("/static/js/field/field_text.js");
+		return "new field_text()";
+	}
 
 }
 
@@ -517,6 +601,12 @@ class ColumnString extends Column {
 		if (strlen($value) > $this->max_length)
 			throw new \Exception("Cannot be greater than ".$this->max_length); // TODO locale
 		return $value;
+	}
+
+	public function create_javascript_field(&$page, $editable = false, $onchanged = null, $onunchanged = null) {
+		if (!$editable) return parent::create_javascript_field($page, false);
+		$page->add_javascript("/static/common/js/field/field_editable_text.js");
+		return "new field_editable_text(".$this->max_length.",".($onchanged <> null ? $onchanged : 'null').",".($onunchanged <> null ? $onunchanged : 'null').")";
 	}
 }
 

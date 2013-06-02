@@ -38,25 +38,24 @@ abstract class Component {
 	}
 	
 	public function service($path) {
+		header("Content-Type: text/json;charset=UTF-8");
 		$file = "component/".$this->name."/service/".$path.".php";
 		if (!file_exists($file)) {
-			$format = @$_GET["format"];
-			if ($format == "xml")
-				die("<error message='service does not exist'/>");
-			else if ($format == "json")
-				die("{errors:".json_encode("service does not exist")."}");
-			die("<error message='service does not exist'/>");
+			PNApplication::error("Service does not exist");
+			PNApplication::print_json_result(null);
+			return;
 		}
 		if ($this->app->user_management->username == null || !$this->is_service_allowed($path)) {
-			$format = @$_GET["format"];
-			if ($format == "xml")
-				die("<error message='Access denied'/>");
-			else if ($format == "json")
-				die("{errors:".json_encode("Access denied")."}");
-			die("<error message='Access denied'/>");
+			PNApplication::error("Access denied");
+			PNApplication::print_json_result(null);
+			return;
 		}
 		Locale::$current_component = $this->name;
+		ob_start();
 		include $file;
+		$result = ob_get_clean();
+		if ($result === "") $result = null;
+		PNApplication::print_json_result($result);
 	}
 	
 	public function dependencies() { return array(); }

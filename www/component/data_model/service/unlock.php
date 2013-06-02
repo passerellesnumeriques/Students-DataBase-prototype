@@ -7,6 +7,7 @@ $list->update_from_request();
 $lock = $_POST["lock"];
 require_once("common/DataBaseLock.inc");
 $error = DataBaseLock::unlock($lock);
-if ($error <> null) die("<error message=".json_encode($error)."/>");
-echo "<ok/>";
+if ($error <> null)
+	PNApplication::error($error);
+else echo "true";
 ?>

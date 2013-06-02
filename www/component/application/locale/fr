@@ -1,0 +1,9 @@
+database=base de données
+~loading ~application=~chargement de l'~application
+~application ~loaded=~application ~chargée
+logout=déconnexion
+inactivity=inactivité
+more=plus
+no result found for your search=aucun résultat trouvé pour votre recherche
+results found=résultat(s) trouvé(s)
+logout_because_inactivity=vous avez été automatiquement déconnecté car vous étiez inactif(ve) depuis plus de 30 minutes.

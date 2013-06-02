@@ -17,12 +17,23 @@ class curriculum extends Component {
 	}
 
 	protected function is_page_allowed($path) {
-		if ($path == "curricula" || $path == "curriculum")
+		if ($path == "curricula" ||
+			$path == "curriculum")
 			return $this->app->user_management->has_right("consult_curricula");
+		if ($path == "edit_class_types")
+			return $this->app->user_management->has_right("edit_curricula");
 		return false;
 	}
 	protected function is_service_allowed($path) {
-		if ($path == "create_curriculum")
+		if ($path == "create_curriculum" ||
+			$path == "create_branch" ||
+			$path == "rename_branch" ||
+			$path == "create_period" ||
+			$path == "create_subject_category" ||
+			$path == "edit_subject_category" ||
+			$path == "create_subject" ||
+			$path == "edit_subject" ||
+			$path == "add_period_subject")
 			return $this->app->user_management->has_right("edit_curricula");
 		return false;
 	}

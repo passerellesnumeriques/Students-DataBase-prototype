@@ -11,5 +11,5 @@ try {
 } catch (Exception $e) {
 	PNApplication::error($e->getMessage());
 }
-PNApplication::print_json_result(PNApplication::has_errors() ? "false" : "true");
+echo PNApplication::has_errors() ? "false" : "true";
 ?>

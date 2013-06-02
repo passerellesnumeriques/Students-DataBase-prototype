@@ -1,0 +1,201 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript'>common_images_url = "../../../www/common/images/";</script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/animation.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/ajax.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+<style type='text/css'>
+.horiz_menu_item {
+	padding: 1px 3px 1px 3px;
+	cursor: pointer;
+}
+</style>
+</head>
+<body>
+A collection of UI component is provided, making easier the creation of more complex UI elements, and providing functionalities on it.<br/>
+Here are the available components, with examples:
+<table class='table_all_border'>
+<colgroup>
+	<col></col>
+	<col></col>
+	<col width="300px"></col>
+</colgroup>
+<tr><th>Component</th><th>Description</th><th>Example</th></tr>
+<tr>
+	<td><a href="collapsable_section.html">Collapsable section</a></td>
+	<td>
+		A collapsable section, is a block having a title and a content. By clicking on the title, the user can hide or show the content.
+	</td>
+	<td>
+		<div id='collapsable_section_example' style='border:1px solid black'>
+			<div class='collapsable_section_header'>The title of the section</div>
+			<div class='collapsable_section_content'>The content of the section.<br/>This will be hidden by clicking on the title</div>
+		</div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/collapsable_section/collapsable_section.js",function() {
+				new collapsable_section('collapsable_section_example');
+			});
+			add_stylesheet("../../../www/common/js/collapsable_section/collapsable_section.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="context_menu.html">Context Menu</a></td>
+	<td>
+		A context menu is a popup menu, which is typically displayed at the mouse pointer location, or behind a button clicked by the user.
+	</td>
+	<td>
+		<span onclick="new context_menu('context_menu_example').showBelowElement(this);"><i>Click me to display a context menu</i></span>
+		<div id='context_menu_example' class='context_menu'>
+			<div class='context_menu_item'>Menu Item 1</div>
+			<div class='context_menu_item'>Menu Item 2</div>
+			<div class='context_menu_item'>Menu Item 3</div>
+			<div class='context_menu_item'>Menu Item 4</div>
+		</div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/context_menu/context_menu.js",function() {
+			});
+			add_stylesheet("../../../www/common/js/context_menu/context_menu.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="date_picker.html">Date Picker</a></td>
+	<td>
+		A date picker creates an element where the user can select a date by using drop down lists for day, month and year, or by using a calendar.
+	</td>
+	<td>
+		<div id='date_picker_example'></div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/date_picker/date_picker.js",function() {
+				document.getElementById('date_picker_example').appendChild(new date_picker(2050).getElement());
+			});
+			add_stylesheet("../../../www/common/js/date_picker/date_picker.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="horizontal_menu.html">Horizontal Menu</a></td>
+	<td>
+		Display horizontally items, up to the width of this menu.<br/>
+		The particularity of this component is it can adapt when there is not enough space: it displays all 
+		possible items, then display a 'show more' item.<br/>
+		When the user clicks on this particular item 'show more', a context menu appears with the remaining
+		items (the items which are not displayed because of lack of space).
+	</td>
+	<td>
+		<div id='example_horizontal_menu_splitter' style='height:100px'>
+			<div id='example_horizontal_menu'>
+				<span class='horiz_menu_item'>Item 1</span>
+				<span class='horiz_menu_item'>Item 2</span>
+				<span class='horiz_menu_item'>Item 3</span>
+				<span class='horiz_menu_item'>Item 4</span>
+				<span class='horiz_menu_item'>Item 5</span>
+				<span class='horiz_menu_item'>Show More</span>
+			</div>
+			<div style='overflow:auto'>Resize this element, so you can see what happen to the horizontal menu on the left side</div>
+		</div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/splitter_vertical/splitter_vertical.js",function() {
+				new splitter_vertical('example_horizontal_menu_splitter',0.6);
+			});
+			add_stylesheet("../../../www/common/js/splitter_vertical/splitter_vertical.css");
+			add_javascript("../../../www/common/js/horizontal_menu/horizontal_menu.js",function() {
+				new horizontal_menu('example_horizontal_menu');
+			});
+			add_stylesheet("../../../www/common/js/horizontal_menu/horizontal_menu.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="popup_window.html">Pop-up Window</a></td>
+	<td>
+		A popup window is a dialog box.
+	</td>
+	<td>
+		<a href='#' onclick="new popup_window('Example',null,'This is a popup window').show();return false;">Click me to display a popup window</a>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/popup_window/popup_window.js",function() {
+			});
+			add_stylesheet("../../../www/common/js/popup_window/popup_window.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="small_calendar.html">Small Calendar</a></td>
+	<td>
+		Small calendar displays a given month, and allow to select a day. It is typically used to be embedded,
+		one example is the date picker, which use it to display the days of the selected month. 
+	</td>
+	<td>
+		<div id='example_small_calendar'></div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/small_calendar/small_calendar.js",function() {
+				document.getElementById('example_small_calendar').appendChild(new small_calendar().getElement());
+			});
+			add_stylesheet("../../../www/common/js/small_calendar/small_calendar.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="splitter_vertical.html">Splitter Vertical</a></td>
+	<td>
+		Split an area vertically into 2 resizable parts.  
+	</td>
+	<td>
+		<div id='example_splitter_vertical' style='height:50px'>
+			<div>This is the left side</div>
+			<div>This is the right side</div>
+		</div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/splitter_vertical/splitter_vertical.js",function() {
+				new splitter_vertical('example_splitter_vertical',0.35);
+			});
+			add_stylesheet("../../../www/common/js/splitter_vertical/splitter_vertical.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="wizard.html">Wizard</a></td>
+	<td>
+		A wizard displays a popup, where the user can navigate from one 'page' to another using Previous and Next buttons.<br/>
+		Each page can provide validation: the user cannot move to the next page if the current page is not correct.  
+	</td>
+	<td>
+		<a href='#' onclick="new wizard('example_wizard').launch();return false;">Click me to display an example of wizard</a>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/wizard/wizard.js",function() {
+			});
+			add_stylesheet("../../../www/common/js/wizard/wizard.css");
+		</script>
+		<div
+			id='example_wizard'
+			class='wizard'
+			icon='example_16.png'
+			title='Example of Wizard'
+		>
+			<div
+				class='wizard_page'
+				icon='example_32.png'
+				title='Example'
+			>
+				Content of the first page
+				<br/>bla bla bla<br/>bla bla bla<br/>bla bla bla<br/>bla bla bla
+			</div>
+			<div
+				class='wizard_page'
+				icon='example_32.png'
+				title='Example'
+			>
+				Content of the second page
+				<br/>bla bla bla<br/>bla bla bla<br/>bla bla bla<br/>bla bla bla
+			</div>
+		</div>
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
