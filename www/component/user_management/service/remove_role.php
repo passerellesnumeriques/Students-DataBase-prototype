@@ -5,5 +5,5 @@ try {
 } catch (Exception $e) {
 	PNApplication::error($e->getMessage());
 }
-PNApplication::print_json_result("true");
+echo "true";
 ?>

@@ -12,13 +12,17 @@ foreach ($list->columns as $c) {
 		break;
 	}
 }
-if ($col == null) die("<error message=\"".htmlspecialchars("Invalid field '".$lock_field."'",ENT_COMPAT,"UTF-8")."\"/>");
+if ($col == null) {
+	PNApplication::error("Invalid field '".$lock_field."'");
+	return;
+}
 
 require_once("common/DataBaseLock.inc");
 $locked_by = null;
 ob_start();
 $lock_id = DataBaseLock::lock($col->table, null, $locked_by);
 ob_clean();
-if ($locked_by <> null) die("<error message=\"".htmlspecialchars(get_locale("common","This data is already locked by")." ".$locked_by,ENT_COMPAT,"UTF-8")."\"/>");
-echo "<ok lock='".$lock_id."'/>";
+if ($locked_by <> null)
+	PNApplication::error(get_locale("common","This data is already locked by")." ".$locked_by);
+echo "{lock:".$lock_id."}";
 ?>

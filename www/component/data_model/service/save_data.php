@@ -21,13 +21,15 @@ do {
 } while (true);
 foreach ($fields as $f)
 	if (!$list->add($f,true))
-		die ("{errors:".json_encode("Access denied for field ".$f)."}");
+		PNApplication::error("Access denied for field ".$f);
+if (PNApplication::has_errors()) return;
 
 // check we have locks for all those fields
 require_once("common/DataBaseLock.inc");
 foreach ($list->columns as $col)
 	if (!DataBaseLock::has_lock($col->table))
-		die("{errors:".json_encode("Access denied for field ".$f.": data must be locked before.")."}");
+		PNApplication::error("Access denied for field ".$f.": data must be locked before.");
+if (PNApplication::has_errors()) return;
 
 // update
 $i = 0;
@@ -55,5 +57,5 @@ do {
 	} while (isset($_POST["mod_".$i."_change_".$j."_field"]));
 	$i++;
 } while (true);
-PNApplication::print_json_result("true");
+echo "true";
 ?>

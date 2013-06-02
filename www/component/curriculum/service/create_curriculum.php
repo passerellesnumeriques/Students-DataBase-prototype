@@ -11,5 +11,5 @@ else {
 	DataBase::execute("INSERT INTO Curriculum (`name`) VALUE ('".DataBase::escape_string($name)."')");
 	$id = DataBase::get_insert_id();
 }
-PNApplication::print_json_result("{id:".$id."}");
+echo "{id:".$id."}";
 ?>

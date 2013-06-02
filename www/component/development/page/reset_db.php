@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once("component/data_model/DataModel.inc");
 require_once("common/DataBaseModel.inc");
 $model = DataModel::get();
@@ -70,7 +70,7 @@ foreach ($users as $user) {
 	$people_id = DataBase::$conn->get_insert_id();
 	$username = str_replace(" ","-", strtolower($user[0]).".".strtolower($user[1]));
 	DataBase::$conn->execute("INSERT INTO Users (domain,username) VALUES ('".$local_domain."','".$username."')");
-	DataBase::$conn->execute("INSERT INTO UserPeople (domain,username,people) VALUES ('".$local_domain."','".$username."',".$people_id.")");
+	DataBase::$conn->execute("INSERT INTO UserPeople (username,people) VALUES ('".$username."',".$people_id.")");
 	foreach ($user[3] as $role) {
 		DataBase::$conn->execute("INSERT INTO UserRole (domain,username,role_id) VALUES ('".$local_domain."','".$username."',".($role === 0 ? 0 : $roles_id[$role]).")");
 	}
@@ -82,6 +82,66 @@ foreach ($roles as $role_name=>$role_rights) {
 		DataBase::$conn->execute("INSERT INTO RoleRights (`role_id`,`right`,`value`) VALUES ('".$role_id."','".$right_name."','".$right_value."')");
 	}
 }
+
+DataBase::execute("INSERT INTO students_test.users (`domain`,`username`) VALUE ('PNP','glecousin')");
+DataBase::execute("INSERT INTO students_pnp.users (`domain`,`username`) VALUE ('PNP','glecousin')");
+DataBase::execute("INSERT INTO students_pnp.userpeople (`username`,`people`) VALUE ('glecousin','1')");
+DataBase::execute("INSERT INTO students_pnp.people (`id`,`first_name`,`last_name`) VALUE ('1','Guillaume','LE COUSIN')");
+
+function SplitSQL($file, $delimiter = ';')
+{
+    set_time_limit(0);
+
+    if (is_file($file) === true)
+    {
+        $file = fopen($file, 'r');
+
+        if (is_resource($file) === true)
+        {
+            $query = array();
+
+            while (feof($file) === false)
+            {
+                $query[] = fgets($file);
+
+                if (preg_match('~' . preg_quote($delimiter, '~') . '\s*$~iS', end($query)) === 1)
+                {
+                    $query = trim(implode('', $query));
+
+                    if (mysql_query($query) === false)
+                    {
+                        PNApplication::error($query);
+                    }
+
+                    else
+                    {
+                        //echo '<h3>SUCCESS: ' . $query . '</h3>' . "\n";
+                    }
+
+                    while (ob_get_level() > 0)
+                    {
+                        ob_end_flush();
+                    }
+
+                    flush();
+                }
+
+                if (is_string($query) === true)
+                {
+                    $query = array();
+                }
+            }
+
+            return fclose($file);
+        }
+    }
+
+    return false;
+}
+
+echo "Add curriculum test data</br>";
+SplitSQL("component/development/test_data/curriculum.sql");
+
 echo "<a href='/'>Back to application</a>";
 
 PNApplication::print_errors();

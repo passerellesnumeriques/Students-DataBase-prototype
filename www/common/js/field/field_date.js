@@ -1,6 +1,7 @@
-if (typeof pn != 'undefined') {
-	pn.add_javascript("/static/common/js/component/date_picker.js");
-	pn.add_javascript("/static/common/js/component/context_menu.js");
+if (typeof add_javascript != 'undefined') {
+	var url = get_script_path("field_date.js");
+	add_javascript(url+"../date_picker/date_picker.js");
+	add_javascript(url+"../context_menu/context_menu.js");
 }
 function field_date() {
 	var t = this;

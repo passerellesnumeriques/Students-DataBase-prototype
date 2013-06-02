@@ -16,8 +16,17 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	<link rel="stylesheet" href="/static/application/style.css"/>
 </head>
 <body>
-<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%">
+<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%" onsubmit="document.getElementById('frame_loading').contentWindow.stop_loading = true; return true;">
 <table style="width:100%;height:100%"><tr><td valign=middle align=center>
+<?php
+if (isset($_GET["from"])) {
+	switch ($_GET["from"]) {
+	case "inactivity":
+		locale("application","Logout_because_inactivity");
+		break;
+	}
+}
+?>
 <table style='border:1px solid #22bbea'>
 	<tr align=left><td rowspan=6 style='padding: 5px'>
 		<img src='/static/common/images/logo.png'/>
@@ -26,10 +35,10 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		<td><?php locale("user_management","Domain")?></td>
 		<td>
 			<select name="domain">
-				<option value="PNC"<?php if (@$_COOKIE["domain"]=="PNC") echo " selected"?>>PNC</option>
-				<option value="PNF"<?php if (@$_COOKIE["domain"]=="PNF") echo " selected"?>>PNF</option>
-				<option value="PNP"<?php if (@$_COOKIE["domain"]=="PNP") echo " selected"?>>PNP</option>
-				<option value="PNV"<?php if (@$_COOKIE["domain"]=="PNV") echo " selected"?>>PNV</option>
+				<?php
+				foreach (explode(",",file_get_contents("domains")) as $domain)
+					echo "<option value=\"".$domain."\"".(@$_COOKIE["domain"]==$domain ? " selected" : "").">".$domain."</option>";
+				?>
 			</select>
 		</td>
 	</tr>
@@ -50,7 +59,7 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 		<td colspan=2 align=center>
 			<?php
 			foreach (Locale::$known as $lang)
-				echo "<a href='?set_language=".$lang."en'><img src='/static/common/flags/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
+				echo "<a href='?set_language=".$lang."'><img src='/static/common/flags/".$lang.".png' style='border:0px;vertical-align:middle'/></a> ";
 			?>
 		</td>
 	</tr>
@@ -61,7 +70,7 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	</tr>
 </table>
 <br/>
-<span id='application_loading'><?php locale("application","Loading application")?> <iframe style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=100'></iframe></span>
+<span id='application_loading'><span><?php locale("application","Loading application")?></span> <iframe style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=100' id='frame_loading'></iframe><span id='application_loading_text' style='font-size:8pt'></span></span>
 </td></tr></table>
 </form>
 </body>

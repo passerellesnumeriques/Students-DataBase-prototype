@@ -17,8 +17,8 @@ if (PNApplication::$instance->user_management->has_right("consult_user_rights"))
 	$list->add_item_action("/static/user_management/access_list.png",get_locale("Access Rights"),"user_rights?domain=%Users.domain%&username=%Users.username%");
 $list->build($this);
 
-$this->add_javascript("/static/common/js/component/popup_window.js");
-$this->add_stylesheet("/static/common/js/component/popup_window.css");
+$this->add_javascript("/static/common/js/popup_window/popup_window.js");
+$this->add_stylesheet("/static/common/js/popup_window/popup_window.css");
 if (PNApplication::$instance->user_management->has_right("assign_role")) {
 ?>
 <div style='visibility:hidden;position:absolute;top:-10000px;' id='assign_roles_popup'>
@@ -52,7 +52,7 @@ function um_users_assign_roles() {
 		for (var i = 0; i < form.elements.length; ++i)
 			if (form.elements[i].checked)
 				data["role"+(j++)] = form.elements[i].name.substring(5);
-		pn.ajax_service_json("/dynamic/user_management/service/assign_roles",data,function(result) {
+		ajax.post_parse_result("/dynamic/user_management/service/assign_roles",data,function(result) {
 			popup.close();
 			if (result)
 				location.reload();
@@ -76,7 +76,7 @@ function um_users_unassign_roles() {
 		for (var i = 0; i < form.elements.length; ++i)
 			if (form.elements[i].checked)
 				data["role"+(j++)] = form.elements[i].name.substring(5);
-		pn.ajax_service_json("/dynamic/user_management/service/unassign_roles",data,function(result) {
+		ajax.post_parse_result("/dynamic/user_management/service/unassign_roles",data,function(result) {
 			popup.close();
 			if (result)
 				location.reload();

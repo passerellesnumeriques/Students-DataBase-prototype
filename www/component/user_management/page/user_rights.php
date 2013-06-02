@@ -234,8 +234,8 @@ function um_rights_save() {
 			value = e.value;
 		data += "&"+encodeURIComponent(right)+"="+encodeURIComponent(value);
 	}
-	pn.ajax_service_xml("/dynamic/user_management/service/save_user_rights?lock=<?php echo $lock_id?>", data, function(xml) {
-		if (xml != null)
+	ajax.post_parse_result("/dynamic/user_management/service/save_user_rights?lock=<?php echo $lock_id?>", data, function(result) {
+		if (result != null)
 			location.reload();
 		else {
 			document.body.removeChild(icon);

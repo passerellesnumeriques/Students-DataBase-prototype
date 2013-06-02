@@ -6,5 +6,5 @@ try { $id = DataModel::get()->getTable("Role")->insert(array("name"=>$name)); }
 catch (Exception $e) {
 	PNApplication::error($e->getMessage());
 }
-PNApplication::print_json_result($id <> null ? "{id:".$id."}" : "false");
+echo $id <> null ? "{id:".$id."}" : "false";
 ?>

@@ -49,12 +49,14 @@ class Page {
 	<title>PN Students DataBase</title>
 	<link rel="stylesheet" href="/static/application/style.css"/>
 	<script type="text/javascript" src="/static/common/js/utils.js"></script>
-	<script type="text/javascript" src="/static/common/js/pn.js"></script>
-	<script type="text/javascript" src="/dynamic/common/page/js/common_locale.js"></script>
+	<script type="text/javascript" src="/static/common/js/ajax.js"></script>
+	<script type="text/javascript" src="/static/common/js/locale.js"></script>
+	<script type="text/javascript" src="/static/common/js/configuration.js"></script>
+	<script type="text/javascript" src="/static/common/js/common_dialogs.js"></script>
 	<script type="text/javascript" src="/static/application/databaselock.js"></script>
 	<?php
 	foreach ($this->javascripts as $js) {
-		echo "<script type='text/javascript' src='".$js[0]."' onload='pn._script_loaded(\"".$js[0]."\");".$js[1]."'>";
+		echo "<script type='text/javascript' src='".$js[0]."' onload='javascript_loaded(\"".$js[0]."\");".$js[1]."'>";
 		echo "</script>";
 	}
 	foreach ($this->stylesheets as $css) echo "<link rel='stylesheet' href='".$css."'/>";

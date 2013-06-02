@@ -1,0 +1,42 @@
+.curriculum_branch {
+	border: 1px solid #0000FF;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+.curriculum_branch_title {
+	border-bottom: 1px solid #0000FF;
+	background-color: #D0D0FF;
+	font-size: 12pt;
+}
+
+.curriculum_periods_container {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+.curriculum_periods_container>tbody>tr>td {
+	padding: 0px;
+}
+.curriculum_period {
+	border: 1px solid #40C040;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+.curriculum_period>tbody>tr>th,.curriculum_period>tbody>tr>td {
+	border: 1px solid #40C040;
+	font-size: 11px;
+}
+.curriculum_period>tbody>tr>th.curriculum_period_title {
+	border-bottom: 1px solid #808080;
+	background-color: #D0FFD0;
+	font-size: 10pt;
+}
+.curriculum_subjects_list_header {
+	background-color: #D0D0FF;
+	border-bottom: 1px solid #8080FF;
+	font-size: 12pt;
+	color: #4040A0;
+	padding: 2px;
+}
+.curriculum_subjects_list_header img {
+	vertical-align: bottom;
+}

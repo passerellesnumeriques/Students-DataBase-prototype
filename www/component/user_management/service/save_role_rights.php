@@ -7,13 +7,17 @@ $role_id = $_POST["role_id"];
 // check data were locked before
 if (!isset($_GET["lock"])) die("<error message='lock missing'/>");
 require_once("common/DataBaseLock.inc");
-if (!DataBaseLock::check($_GET["lock"], "RoleRights", array("role_id"=>$role_id)))
-	die("<error message='You do not have the data locked, meaning you cannot modify them. This may be due to a long inactivity. Please refresh the page and try again'/>");
+if (!DataBaseLock::check($_GET["lock"], "RoleRights", array("role_id"=>$role_id))) {
+	PNApplication::error("You do not have the data locked, meaning you cannot modify them. This may be due to a long inactivity. Please refresh the page and try again");
+	return;
+}
 
 require_once("common/SQLQuery.inc");
 $r = SQLQuery::create()->select("Role")->field("name")->where("id",$role_id);
-if ($r == null || count($r) == 0)
-	die("<error message='unknown role'/>");
+if ($r == null || count($r) == 0) {
+	PNApplication::error("unknown role");
+	return;
+}
 
 // retrieve all possible rights
 $all_rights = array();
@@ -25,7 +29,10 @@ foreach ($this->app->components as $c) {
 $rights = array();
 foreach ($_POST as $name=>$value) {
 	if ($name == "role_id") continue;
-	if (!isset($all_rights[$name])) die("<error message=\"unknown right ".$name."\"/>");
+	if (!isset($all_rights[$name])) {
+		PNApplication::error("unknown right ".$name);
+		return;
+	}
 	$rights[$name] = $all_rights[$name]->parse_value($value);
 }
 
@@ -40,6 +47,5 @@ if (count($rights) > 0) {
 	}
 	DataBase::$conn->execute($sql);
 }
-if (!PNApplication::print_xml_errors())
-	echo "<ok/>";
+echo "true";
 ?>

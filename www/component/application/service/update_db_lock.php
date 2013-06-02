@@ -2,7 +2,7 @@
 require_once("common/DataBaseLock.inc"); 
 $error = DataBaseLock::update($_POST["id"]);
 if (!$error)
-	echo "<ok/>";
+	echo "true";
 else
-	echo "<error message=".json_encode($error)."/>";
+	PNApplication::error($error);
 ?>

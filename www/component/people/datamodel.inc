@@ -18,10 +18,9 @@ $model->addTable("People")
 	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->people->user_people_id; })
 	->restrictWriteAccess("edit_people_details",true);
 $model->addTable("UserPeople")
-	->addString("domain", 100, 1, false)
 	->addString("username", 100, 1, false)
 	->addForeignKey("people", "People")
-	->addIndex("domain","username")
-	->addLink("Users",array("domain"=>"domain","username"=>"username"),true)
+	->addIndex("username")
+	->addLink("Users",array("username"=>"username","domain"=>array(PNApplication::$instance->current_domain)),true)
 	->allowReadAccess();
 ?>

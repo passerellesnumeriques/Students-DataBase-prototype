@@ -8,8 +8,8 @@ class MainSectionPage {
 		$this->default_sub_page_url = $default_sub_page_url;
 		$this->id = $this->page->component."__".$this->page->path;
 		$this->id = str_replace("/","_", str_replace(".", "_", $this->id));
-		$page->add_javascript("/static/common/js/component/horizontal_menu.js");
-		$page->add_stylesheet("/static/common/js/component/horizontal_menu.css");
+		$page->add_javascript("/static/common/js/horizontal_menu/horizontal_menu.js");
+		$page->add_stylesheet("/static/common/js/horizontal_menu/horizontal_menu.css");
 		$page->onload("new horizontal_menu('".$this->id."_horizontal_menu');");
 	}
 
@@ -66,7 +66,7 @@ function <?php echo $this->id?>_resize_frame() {
 	frame.style.height = (getWindowHeight()-header.offsetHeight)+"px";
 }
 <?php echo $this->id?>_resize_frame();
-listenEvent(window,'resize',<?php echo $this->id?>_resize_frame);
+addLayoutEvent(document.body,<?php echo $this->id?>_resize_frame);
 </script>
 <?php
 	}
