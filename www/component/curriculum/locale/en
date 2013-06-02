@@ -1,0 +1,34 @@
+~add a ~period=~add a ~period
+~add a ~subject=~add a ~subject
+~add ~new ~category=~add ~new ~category
+~class ~type=~class ~type
+code=code
+create a new curriculum=create a new curriculum
+create branch=create branch
+~create ~period=~create ~period
+create root branch=create root branch
+curricula=curricula
+curriculum=curriculum
+~curriculum ~name=~curriculum ~name
+~edit ~category=~edit ~category
+~edit ~class ~types=~edit ~class ~types
+~edit ~subject=~edit ~subject
+from existing one=from existing one
+from scratch=from scratch
+hide subjects=hide subjects
+hours=hours
+~new ~curriculum=~new ~curriculum
+remove this category=remove this category
+remove this subject=remove this subject
+~rename ~branch=~rename ~branch
+show subjects=show subjects
+subject=subject
+subjects=subjects
+This period already contains this subject=This period already contains this subject
+This subject has no hours left=This subject has no hours left
+
+~consult ~curricula=~consult ~curricula
+~edit ~curricula=~edit ~curricula
+
+are you sur you want to remove the branch=are you sur you want to remove the branch
+are you sur you want to remove the category=are you sur you want to remove the category

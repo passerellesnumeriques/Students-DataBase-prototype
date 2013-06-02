@@ -17,6 +17,7 @@ class SQLQuery {
 		}
 	}
 
+	public $database = null;
 	public $tables = array();
 	public $fields = array();
 	public $count = null;
@@ -35,6 +36,8 @@ class SQLQuery {
 	public function field_id() { return "f".($this->field_id_counter++); }
 	/** Generates a unique table alias name (useful when building a big list) */
 	public function table_id() { return "t".($this->table_id_counter++); }
+
+	public function &database($db_name) { $this->database = $db_name; return $this; }
 
 	/** Prepares a select in the given tables.
 	 * Usage:
@@ -215,12 +218,14 @@ class SQLQuery {
 			}
 			foreach ($this->joins as $join) {
 				$table = DataModel::get()->getTable($join[1]);
+				$alias = $join[3];
+				if ($alias == null) $alias = $join[1];
 				if (count($this->fields) == 0 && $this->count === null) {
 					foreach ($table->getColumns() as $col)
-						array_push($final_fields, array($join[3], $col->name, null));
+						array_push($final_fields, array($alias, $col->name, null));
 				} else foreach ($this->fields as $f) {
-					if ($f[0] == $join[1] || $f[0] == $join[3])
-						array_push($final_fields, array($join[3], $table->getColumn($f[1])->name, $f[2])); // check the field is accessible
+					if ($f[0] == $join[1] || $f[0] == $alias)
+						array_push($final_fields, array($alias, $table->getColumn($f[1])->name, $f[2])); // check the field is accessible
 				}
 				if (!$table->canReadAll())
 					foreach ($table->table_specific_read_access as $specific) {
@@ -251,17 +256,24 @@ class SQLQuery {
 		$first = true;
 		foreach ($this->tables as $name=>$alias) {
 			if ($first) $first = false; else $sql .= ",";
+			if ($this->database) $sql .= "`".$this->database."`.";
 			$sql .= "`".$name."`";
 			if ($alias <> null) $sql .= " AS `".$alias."`";
 		}
 		foreach ($this->joins as $join) {
-			$sql .= " LEFT JOIN `".$join[1]."`";
+			$sql .= " LEFT JOIN ";
+			if ($this->database) $sql .= "`".$this->database."`.";
+			$sql .= "`".$join[1]."`";
 			if ($join[3] <> null) $sql .= " AS `".$join[3]."`";
 			$sql .= " ON ";
 			$first = true;
 			foreach ($join[2] as $field_from=>$field_to) {
 				if ($first) $first = false; else $sql .= " AND ";
-				$sql .= "`".$join[0]."`.`".$field_from."`=`".($join[3] <> null ? $join[3] : $join[1])."`.`".$field_to."`";
+				$sql .= "`".$join[0]."`.`".$field_from."`=";
+				if (is_string($field_to))
+					$sql .= "`".($join[3] <> null ? $join[3] : $join[1])."`.`".$field_to."`";
+				else
+					$sql .= "'".DataBase::escape_string($field_to[0])."'";
 			}
 		}
 		if (count($this->where) > 0) {

@@ -1,0 +1,34 @@
+~add a ~period=~ajouter une ~période
+~add a ~subject=~ajouter un ~sujet
+~add ~new ~category=~ajouter une ~nouvelle ~catégorie
+~class ~type=~type de ~classe
+code=code
+create a new curriculum=créer un nouveau programme
+create branch=créer une branche
+~create ~period=~créer une ~période
+create root branch=créer une branche à la racine
+curricula=programmes de formation
+curriculum=programme de formation
+~curriculum ~name=~nom du ~programme
+~edit ~category=~éditer la ~catégorie
+~edit ~class ~types=~éditer les ~types de ~classe
+~edit ~subject=~éditer le ~sujet
+from existing one=à partir d'un existant
+from scratch=vide
+hide subjects=cacher les sujets
+hours=heures
+~new ~curriculum=~nouveau ~programme
+remove this category=supprimer cette catégorie
+remove this subject=supprimer ce sujet
+~rename ~branch=~renommer la ~branche
+show subjects=montrer les sujets
+subject=sujet
+subjects=sujets
+This period already contains this subject=cette période contient déjà ce sujet
+This subject has no hours left=ce sujet n'a plus d'heures disponibles
+
+~consult ~curricula=~consulter les ~programmes
+~edit ~curricula=~éditer les ~programmes
+
+are you sur you want to remove the branch=êtes-vous sûr de vouloir supprimer la branche
+are you sur you want to remove the category=êtes-vous sûr de vouloir supprimer la catégorie

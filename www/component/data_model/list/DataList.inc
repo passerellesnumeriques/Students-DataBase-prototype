@@ -99,6 +99,10 @@ class DataList {
 			PNApplication::error($e);
 			return null;
 		}
+		if ($col == null) {
+			PNApplication::error("Unaccessible or invalid field: ".$field);
+			return null;
+		}
 		if ($col->get_path() <> $orig_path)
 			echo "DataList: the given field '".$orig_path."' result in a different path '".$col->get_path()."'<br/>";
 		return $col;

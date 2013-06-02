@@ -93,7 +93,7 @@ function datalist_form_data() {
 function datalist_refresh() {
 	datalist_init_grid(); // reset columns
 	var data = datalist_form_data();
-	pn.ajax_service_json("/dynamic/data_model/service/get_data", data, function(result) {
+	ajax.post_parse_result("/dynamic/data_model/service/get_data", data, function(result) {
 		if (result != null) {
 			document.getElementById('datalist_total_entries').innerHTML = result.total;
 			document.getElementById('datalist_start_entry').innerHTML = result.data.length == 0 ? 0 : result.start+1;
@@ -216,7 +216,7 @@ function datalist_save() {
 			data += "&"+encodeURIComponent("mod_"+i+"_change_"+j+"_value")+"="+encodeURIComponent(modifications[i].changes[j].value);
 		}
 	}
-	pn.ajax_service_json("/dynamic/data_model/service/save_data", data, function(result) {
+	ajax.post_parse_result("/dynamic/data_model/service/save_data", data, function(result) {
 		datalist_refresh();
 	});
 }
@@ -303,33 +303,33 @@ function datalist_field_down(icon, field_path) {
 	_datalist_reset_data();
 }
 function datalist_edit_field(icon, field_path) {
-	pn.lock_screen();
+	lock_screen();
 	var data = datalist_form_data();
-	data += "&lock_field="+encodeURIComponent(field_path);
-	pn.ajax_service_xml("/dynamic/data_model/service/lock", data, function(xml) {
-		if (!xml) {
-			pn.unlock_screen();
+	data["lock_field"]=field_path;
+	ajax.post_parse_result("/dynamic/data_model/service/lock", data, function(result) {
+		if (!result) {
+			unlock_screen();
 			return;
 		}
 		icon.src = "/static/common/images/no_edit.png";
 		icon.onclick = function() { datalist_noedit_field(this, field_path); };
 		var field = _datalist_get_field(field_path);
 		field.edited = true;
-		field.lock = xml.getAttribute("lock");
+		field.lock = result.lock;
 		window.pn_database_locks.add_lock(field.lock);
 		datalist_init_grid();
 		_datalist_reset_data();
-		pn.unlock_screen();
+		unlock_screen();
 	});
 }
 function datalist_noedit_field(icon, field_path) {
-	pn.lock_screen();
+	lock_screen();
 	var field = _datalist_get_field(field_path);
 	var data = datalist_form_data();
-	data += "&lock="+field.lock;
-	pn.ajax_service_xml("/dynamic/data_model/service/unlock", data, function(xml) {
-		if (!xml) {
-			pn.unlock_screen();
+	data["lock"]=field.lock;
+	ajax.post_parse_result("/dynamic/data_model/service/unlock", data, function(result) {
+		if (!result) {
+			unlock_screen();
 			return;
 		}
 		window.pn_database_locks.remove_lock(field.lock);
@@ -339,7 +339,7 @@ function datalist_noedit_field(icon, field_path) {
 		field.lock = null;
 		datalist_init_grid();
 		_datalist_reset_data();
-		pn.unlock_screen();
+		unlock_screen();
 	});
 }
 function datalist_add_search(icon, field_path) {

@@ -1,0 +1,273 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+</head>
+<body>
+<h1>utils.js</h1>
+
+<h2>String</h2>
+2 methods are added to the <code>String</code> class:
+<table class="code_doc">
+<tr>
+	<td>
+		startsWith(str)
+	</td>
+	<td>
+		returns true if the string starts with the given string <code>str</code>
+	</td>
+</tr>
+<tr>
+	<td>
+		trim()
+	</td>
+	<td>
+		remove heading and trailing spaces, and return the result string
+	</td>
+</tr>
+</table>
+<br/>
+
+<h2>Array</h2>
+2 methods are added to the <code>Array</code> class:
+<table class="code_doc">
+<tr>
+	<td>
+		contains(element)
+	</td>
+	<td>
+		returns true if the array contains the given <code>element</code>
+	</td>
+</tr>
+<tr>
+	<td>
+		remove(element)
+	</td>
+	<td>
+		remove all occurences of the given <code>element</code>
+	</td>
+</tr>
+</table>
+<br/>
+
+<h2>Browser Compatibility</h2>
+The following methods are implemented, in case it is not supported by the browser (meaning we can use it in the code without taking care of this compatibility issue):
+<table class="code_doc">
+<tr>
+	<td>
+		document.getElementById(element_id)
+	</td>
+</tr>
+<tr>
+	<td>
+		document.getElementsByClassName
+	</td>
+</tr>
+<tr>
+	<td>
+		getComputedStyle(element)
+	</td>
+</tr>
+<tr>
+	<td>
+		XMLHttpRequest()
+	</td>
+</tr>
+</table>
+<br/>
+The following methods are provided, to handle differences between browsers:
+<table class="code_doc">
+<tr>
+	<td>
+		getWindowWidth()<br/>
+		getWindowHeight()
+	</td>
+	<td>
+		returns the width/height of the window, in pixel.
+	</td>
+</tr>
+<tr>
+	<td>
+		setOpacity(element, opacity)
+	</td>
+	<td>
+		Set the opacity of the given <code>element</code>. The <code>opacity</code> paramter is a float from 0 (transparent) to 1 (opaque).<br/>
+		This methods set the style of the element, for all browsers supporting transparency (opacity, -moz-opacity, -khtml-opacity, filter and -ms-filter for Internet Explorer).
+	</td>
+</tr>
+<tr>
+	<td>
+		listenEvent(element, event_name, listener)<br/>
+		unlistenEvent(element, event_name, listener)
+	</td>
+	<td>
+		Attach/Unattach the given <code>listener</code> to the <code>element</code> to catch the given <code>event_name</code>. The event is the name, without 'on': examples are 'resize', 'mousedown', 'click'...
+	</td>
+</tr>
+<tr>
+	<td>
+		triggerEvent(element, event_name, attributes)
+	</td>
+	<td>
+		Create a new event of type <code>event_name</code>, with the given <code>attributes</code>, and fire it on the given <code>element</code>.<br/>
+		This corresponds to the usage of <code>createEvent</code>, <code>initEvent</code>, and <code>fireEvent</code>, but compatible with different browsers.
+	</td>
+</tr>
+</table>
+<br/>
+
+<h2>Useful functionalities</h2>
+Additional useful methods are provided:
+<table class="code_doc">
+<tr><th colspan=2>Events</th></tr>
+<tr>
+	<td>
+		addLayoutEvent(element, handler)
+	</td>
+	<td>
+		For layout purpose, it happens the we want a <code>div</code> or other kind of HTML element to fit in an area, based on the size of this area.<br/>
+		An example can be a page, with a header and a body. We want the body the use all the remaining space.<br/>
+		Using <code>addLayoutEvent</code>, the given <code>handler</code> will be called each time the browser's window is resized, but also when the
+		<code>fireLayoutEventFor</code> is called. The goal of the <code>handler</code> will then be to analyze the size of elements, and resize the needed ones.
+	</td>
+</tr>
+<tr>
+	<td>
+		fireLayoutEventFor(element)
+	</td>
+	<td>
+		This methods can be called to signal an element has been resized, and some children of this element may need to be re-layout.
+	</td>
+</tr>
+<tr><th colspan=2>Positioning</th></tr>
+<tr>
+	<td>
+		absoluteLeft(element, relative_to)<br/>
+		absoluteTop(element, relative_to)
+	</td>
+	<td>
+		returns the left/top position of the given <code>element</code> in pixel, relative to the given element <code>relative_to</code> or to the document body if <code>relative_to</code> is not given.<br/>
+		This methods use the <code>offsetLeft/offsetTop</code> attribute, and go through the <code>offsetParent</code> to determine the real position of the <code>element</code>.
+	</td>
+</tr>
+<tr>
+	<td>
+		getAbsoluteParent(element)
+	</td>
+	<td>
+		returns the first parent of <code>element</code> having the style <code>position: relative</code>. If none are find, document.body is returned.
+	</td>
+</tr>
+<tr><th colspan=2>Dynamic scripts and stylesheets</th></tr>
+<tr>
+	<td>
+		add_javascript(url, onload)
+	</td>
+	<td>
+		Load a new javascript file from <code>url</code>. If <code>onload</code> is specified, it is called as soon as the script is loaded.<br/>
+		If the script was already loaded, <code>onload</code> is immediately called.<br/>
+		This allows to do not load everything with the page, but to load dynamically parts of the javascript, and continue execution as soon as the needed script are loaded.
+	</td>
+</tr>
+<tr>
+	<td>
+		add_stylesheet(url)
+	</td>
+	<td>
+		Load a new stylesheet file from <code>url</code>
+	</td>
+</tr>
+<tr><th colspan=2></th></tr>
+<tr>
+	<td>
+		lock_screen(onclick, content)
+	</td>
+	<td>
+		This method create an element, semi-transparent, which will cover all the current frame.<br/>
+		The purpose of it is to avoid the user to do any action while doing some processing.<br/>
+		The created element is returned by this method, and can be used with method <code>unlock_screen</code>.<br/>
+		If the user clicks on this element, <code>onclick</code> will be called (if specified).<br/>
+		If specified, <code>content</code> will be inserted in the center of the created element (for example to display a message like &quot;Loading&quot;).
+	</td>
+</tr>
+<tr>
+	<td>
+		unlock_screen(div)
+	</td>
+	<td>
+		This method remove the element <code>div</code> previously created by the method <code>lock_screen</code>.
+	</td>
+</tr>
+</table>
+<br/>
+Also, utils.js provides few useful functionalities:
+<ul>
+	<li>Images loaded: because quite often the size of elements may change after all images are loaded, once all images in the pages are loaded the <code>resize</code> event is fired on the window, which will cause also all the layout events to be handled.</li>
+</ul>
+<br/>
+In addition, the following classes are provided:
+<table class="code_doc">
+<tr><th colspan=2>Class URL</th></tr>
+<tr>
+	<td>
+		URL(str)
+	</td>
+	<td>
+		The URL class provides functionalities to analyze and modify an URL.<br/>
+		Its constructor take an URL in a string form as parameter <code>str</code>.
+	</td>
+</tr>
+<tr><th colspan=2>Attributes</th></tr>
+<tr>
+	<td>
+		protocol
+	</td>
+	<td>
+		string containing the protocol of the URL (part before ://). If no protocol is specified, window.location.protocol is used.
+	</td>
+</tr>
+<tr>
+	<td>
+		host
+	</td>
+	<td>
+		hostame, if not specified, window.location.hostname is used
+	</td>
+</tr>
+<tr>
+	<td>
+		port
+	</td>
+	<td>
+		port number, if not specified, window.location.port is used
+	</td>
+</tr>
+<tr>
+	<td>
+		path
+	</td>
+	<td>
+		path of the file pointed by the URL
+	</td>
+</tr>
+<tr>
+	<td>
+		params
+	</td>
+	<td>
+		maps of parameters of the URL. Example: the URL <i>http://pn.org/index.html?id=13&amp;name=toto</i> contains 2 parameters: <i>id</i> with value <i>13</i> and <i>name</i> with value <i>toto</i>.
+	</td>
+</tr>
+<tr><th colspan=2>Methods</th></tr>
+<tr>
+	<td>
+		toString()
+	</td>
+	<td>
+		Build the string of the URL, based on the content of the attributes <code>protocol</code>, <code>host</code>, <code>port</code>, <code>path</code> and <code>params</code>.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

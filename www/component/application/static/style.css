@@ -182,3 +182,32 @@ button img {
 .button img {
 	vertical-align: bottom;
 }
+.button.disabled {
+	color: #808080;
+}
+.button.disabled img {
+	opacity: 0.5;
+	-moz-opacity: 0.5;
+	-khtml-opacity: 0.5;
+	filter: alpha(opacity=50);
+	-ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+}
+.button.disabled:hover,.button.disabled:active {
+	border: 1px solid rgba(0,0,0,0.2);
+	box-shadow: 1px 1px 1px rgba(170,170,170,0);
+	margin: 1px 2px 1px 2px;
+}
+table.table_all_border {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+table.table_all_border>tbody>tr>th {
+	border: 1px solid black;
+}
+table.table_all_border>tbody>tr>td {
+	border: 1px solid black;
+}
+
+#application_right_panel {
+	border-left: 1px solid black;
+}

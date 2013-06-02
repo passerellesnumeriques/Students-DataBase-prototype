@@ -1,0 +1,15 @@
+.calendar_view_week_day_title {
+	text-align: center;
+}
+.calendar_view_week_hour_title {
+	text-align: right;
+}
+.calendar_view_week_timed_event {
+	border: 1px solid black;
+	font-size: 11px;
+}
+.calendar_view_week_timed_event_time {
+	font-weight: bold;
+	font-family: Arial;
+	font-size: 10px;
+}

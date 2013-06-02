@@ -26,5 +26,5 @@ foreach ($users as $user) {
 	$res = DataBase::$conn->execute($sql);
 }
 DataBase::$conn->execute("UNLOCK TABLES");
-PNApplication::print_json_result("true");
+echo "true";
 ?>

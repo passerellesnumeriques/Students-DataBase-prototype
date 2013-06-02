@@ -12,6 +12,7 @@ if (isset($_GET["set_language"])) {
 	$_SESSION["lang"] = $_GET["set_language"];
 	header("Location: ?");
 	setcookie("lang",$_GET["set_language"],time()+2*365*24*60*60,"/dynamic/");
+	setcookie("lang",$_GET["set_language"],time()+2*365*24*60*60,"/locale/");
 	die();
 }
 // check last time the user came, it was the same version, in order to refresh its cache if the version changed
@@ -31,36 +32,47 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
 
 if ($path == "") {
-	header("Location: /dynamic/application/page/enter");
+	$path = "/dynamic/application/page/enter";
+	$first = true;
+	foreach ($_GET as $key=>$value) {
+		if ($first) { $path .= "?"; $first = false; } else $path .= "&";
+		$path .= urlencode($key)."=".urlencode($value);
+	}
+	header("Location: ".$path);
 	die();
 }
 
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__));
 
+function invalid($message) {
+	header("HTTP/1.1 404 ".$message);
+	die($message);
+}
+
 // get type of resource
 $i = strpos($path, "/");
-if ($i === FALSE) die("Invalid request: no type of resource");
+if ($i === FALSE) invalid("Invalid request: no type of resource");
 $type = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 // get the component name
 $i = strpos($path, "/");
-if ($i === FALSE) die("Invalid request: no component name");
+if ($i === FALSE) invalid("Invalid request: no component name");
 $component_name = substr($path, 0, $i);
 $path = substr($path, $i+1);
 
 switch ($type) {
 case "static":
 	//usleep(rand(0,3000000));
+	$i = strrpos($path, ".");
+	if ($i === FALSE) invalid("Invalid resource type");
+	$ext = substr($path, $i+1);
 	header('Cache-Control: public', true);
 	header('Pragma: public', true);
 	$date = date("D, d M Y H:i:s",time());
 	header('Date: '.$date, true);
 	$expires = time()+365*24*60*60;
 	header('Expires: '.date("D, d M Y H:i:s",$expires).' GMT', true);
-	$i = strrpos($path, ".");
-	if ($i === FALSE) die("Invalid resource type");
-	$ext = substr($path, $i+1);
 	switch ($ext) {
 	case "gif": header("Content-Type: image/gif"); break;
 	case "png": header("Content-Type: image/png"); break;
@@ -74,7 +86,7 @@ case "static":
 		else
 			include "component/".$component_name."/static/".$path;
 		die();
-	default: die("Invalid static resource type");
+	default: invalid("Invalid static resource type");
 	}
 	if ($component_name == "common")
 		readfile("common/".$path);
@@ -84,7 +96,7 @@ case "static":
 case "dynamic":
 	// get the type of request
 	$i = strpos($path, "/");
-	if ($i === FALSE) die("Invalid request: no dynamic type");
+	if ($i === FALSE) invalid("Invalid request: no dynamic type");
 	$request_type = substr($path, 0, $i);
 	$path = substr($path, $i+1);
 
@@ -95,7 +107,7 @@ case "dynamic":
 	require_once("common/Locale.inc");
 	require_once("common/DataBase.inc");
 	spl_autoload_unregister('component_auto_loader');
-	
+
 	global $app;
 	if (!isset($_SESSION["app"])) {
 		$app = new PNApplication();
@@ -113,37 +125,43 @@ case "dynamic":
 	if ($component_name == "common") {
 		Locale::$current_component = "common";
 		$i = strrpos($path, ".");
-		if ($i === FALSE) die("Invalid request: common dynamic resource without extension");
+		if ($i === FALSE) invalid("Invalid request: common dynamic resource without extension");
 		$ext = substr($path, $i+1);
 		switch ($ext) {
 			case "js":
 				header("Content-Type: text/javascript;charset=UTF-8");
 				break;
-			default: die("Invalid common dynamic resource type: ".$ext);
+			default: invalid("Invalid common dynamic resource type: ".$ext);
 		}
 		include "common/".$path.".php";
 		die();
 	}
-	
-	if (!isset($app->components[$component_name])) die("Invalid request: unknown component ".$component_name);
-	
+
+	if (!isset($app->components[$component_name])) invalid("Invalid request: unknown component ".$component_name);
+
 	switch ($request_type) {
 	case "page":
 		header("Content-Type: text/html;charset=UTF-8");
 		$app->components[$component_name]->page($path);
 		break;
 	case "service":
-		$format = @$_GET["format"];
-		if ($format == "xml")
-			header("Content-Type: text/xml;charset=UTF-8");
-		else if ($format == "json")
-			header("Content-Type: text/json;charset=UTF-8");
-		else die("Invalid request: unknown service format");
 		$app->components[$component_name]->service($path);
 		break;
-	default: die("Invalid request: unknown request type ".$request_type);
+	default: invalid("Invalid request: unknown request type ".$request_type);
 	}
 	die();
-default: die("Invalid request: unknown resource type ".$type);
+case "locale":
+	require_once("common/Locale.inc");
+	if ($component_name == "common")
+		$path = "common/".$path;
+	else
+		$path = "component/".$component_name."/".$path;
+	$path .= "locale/".Locale::$language;
+	if (!file_exists($path))
+		invalid("Localized strings '".$path."' does not exist");
+	header("Content-Type: text/plain;charset=UTF-8");
+	readfile($path);
+	die();
+default: invalid("Invalid request: unknown resource type ".$type);
 }
 ?>

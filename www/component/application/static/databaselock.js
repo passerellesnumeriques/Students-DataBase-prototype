@@ -28,20 +28,21 @@ window.pn_database_locks = {
 	_check: function() {
 		var now = new Date().getTime();
 		var popup = false;
+		var t = this;
 		for (var i = 0; i < this._locks.length; ++i) {
 			if (now - this._locks[i].time > this._timeout_time) {
-				pn.add_javascript("/static/common/js/component/popup_window.js",function() {
+				add_javascript("/static/common/js/popup_window/popup_window.js",function() {
 					var p = new popup_window("",null);
 					p.setContentFrame("/static/application/databaselock_inactivity.html");
 					p.onclose = function() {
-						setTimeout("window.pn_database_locks._check();", this._check_time);
+						setTimeout("window.pn_database_locks._check();", t._check_time);
 					};
 					p.show();
 				});
 				popup = true;
 				break;
 			} else
-				pn.ajax_service_xml("/dynamic/application/service/update_db_lock","id="+this._locks[i].id,function(xml){});
+				ajax.post_parse_result("/dynamic/application/service/update_db_lock","id="+this._locks[i].id,function(result){});
 		}
 		if (!popup)
 			setTimeout("window.pn_database_locks._check();", this._check_time);		
@@ -61,12 +62,12 @@ window.pn_database_locks = {
 				window.top.document.getElementById('application_content').src = "/dynamic/application/page/home";
 		}
 		for (var i = 0; i < this._locks.length; ++i)
-			pn.ajax_service_xml("/dynamic/application/service/close_db_lock","id="+this._locks[i].id,function(xml){
+			ajax.post_parse_result("/dynamic/application/service/close_db_lock","id="+this._locks[i].id,function(result){
 				setTimeout(closed,1);
 			});
 	},
 	_close_lock: function(id,foreground) {
-		pn.ajax_service_xml("/dynamic/application/service/close_db_lock","id="+id,function(xml){
+		ajax.post_parse_result("/dynamic/application/service/close_db_lock","id="+id,function(result){
 		},foreground);
 		this.remove_lock(id);
 	},
@@ -97,16 +98,16 @@ window.databaselock_update_inactivity = function() {
 	var time = new Date().getTime();
 	time -= window.pn_database_locks._last_activity;
 	var status = document.getElementById('inactivity_status');
+	if (status == null) return;
 	clearInterval(window.databaselock_update_inactivity_interval);
 	if (time < 10000) {
 		status.style.visibility = 'hidden';
 		status.style.position = 'absolute';
 		window.databaselock_update_inactivity_interval = setInterval(window.databaselock_update_inactivity, 2000);
 	} else if (time > 30*60*1000) {
-		window.top.location = "/dynamic/application/page/logout";
+		window.top.location = "/dynamic/application/page/logout?from=inactivity";
 	} else {
 		status.style.visibility = 'visible';
-		status.style.position = 'static';
 		var t = document.getElementById('inactivity_time');
 		var s = "";
 		if (time >= 60*1000) {

@@ -29,5 +29,5 @@ foreach ($users as $user) {
 		DataBase::$conn->execute("INSERT INTO UserRole (`domain`,`username`,`role_id`) VALUE ('".DataBase::$conn->escape_string($user[0])."','".DataBase::$conn->escape_string($user[1])."',".$role_id.")");
 }
 DataBase::$conn->execute("UNLOCK TABLES");
-PNApplication::print_json_result("true");
+echo "true";
 ?>

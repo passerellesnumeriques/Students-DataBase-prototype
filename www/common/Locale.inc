@@ -55,15 +55,12 @@ class Locale {
 
 		$str = $a[0];
 		if (count($a[1]) > 0) {
-			$shift = 0;
 			for ($i = 0; $i < count($a[1]) && $i < count($a[2]); $i++) {
 				$word_pos = $a[1][$i];
 				$letter = substr($key,$word_pos,1);
 				if ($letter == strtolower($letter)) continue; // not a capital letter
 				$word_pos2 = $a[2][$i];
-				$word_pos2 += $shift;
-				$letter = mb_substr($str, $word_pos2, 1, "UTF-8");
-				$shift += strlen($letter)-1;
+				$letter = mb_substr(substr($str, $word_pos2), 0, 1, "UTF-8");
 				$str = substr($str, 0, $word_pos2).mb_strtoupper($letter, "UTF-8").substr($str, $word_pos2+strlen($letter));
 			}
 		} else {
@@ -94,9 +91,28 @@ class Locale {
 	}
 
 	public static function load_file($namespace, $path) {
-		$a = include($path.Locale::$language.".inc");
+		$filename = $path.Locale::$language;
+		if (!file_exists($filename))
+			$filename = $path."en"; // default to english
+		if (!file_exists($filename)) {
+			$filename = $path.Locale::$language;
+			PNApplication::error("File '".$filename."' does not exist");
+			return;
+		}
+		$f = @fopen($filename, "r");
+		if ($f == null) {
+			PNApplication::error("Cannot open file '".$filename."'");
+			return;
+		}
 		Locale::$strings[$namespace] = array();
-		foreach ($a as $key=>$str) {
+		while (($line = fgets($f, 4096)) !== false) {
+			$line = trim($line);
+			if (strlen($line) == 0) continue;
+			$i = strpos($line, "=");
+			if ($i === false) continue;
+			$key = trim(substr($line, 0, $i));
+			$str = trim(substr($line,$i+1));
+			
 			$key = strtolower($key);
 			$words_pos_key = array();
 			while (($i = strpos($key, "~")) !== FALSE) {
@@ -110,6 +126,7 @@ class Locale {
 			}
 			Locale::$strings[$namespace][$key] = array($str, $words_pos_key, $words_pos_str);
 		}
+		fclose($f);
 		array_push(Locale::$loaded, $namespace);
 	}
 
@@ -140,5 +157,6 @@ else {
 		Locale::$language = Locale::$known[0];
 	$_SESSION["lang"] = Locale::$language;
 	setcookie("lang",Locale::$language,time()+2*365*24*60*60,"/dynamic/");
+	setcookie("lang",Locale::$language,time()+2*365*24*60*60,"/locale/");
 }
 ?>

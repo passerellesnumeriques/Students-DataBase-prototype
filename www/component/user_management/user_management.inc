@@ -27,6 +27,10 @@ class user_management extends Component {
 		if ($this->auth_token === null) return false;
 		$this->domain = $domain;
 		$this->username = $username;
+		$r = DataBase::execute("SELECT * FROM Users WHERE `domain`='".DataBase::escape_string($domain)."' AND `username`='".DataBase::escape_string($username)."'");
+		if (!$r || DataBase::next_row($r) == null) {
+			DataBase::execute("INSERT INTO Users (`domain`,`username`) VALUE ('".DataBase::escape_string($domain)."','".DataBase::escape_string($username)."')");
+		}
 		$this->logged_in->fire();
 		return true;
 	}

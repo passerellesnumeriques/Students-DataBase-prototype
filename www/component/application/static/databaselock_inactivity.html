@@ -4,7 +4,6 @@
 	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
 	<link rel="stylesheet" href="/static/application/style.css"/>
 	<script type="text/javascript" src="/static/common/js/utils.js"></script>
-	<script type="text/javascript" src="/static/common/js/pn.js"></script>
 </head>
 <body>
 You are currently on a page where you can edit some data.<br/>
@@ -15,10 +14,11 @@ else the data will be automatically unlocked and you will be redirected to anoth
 <script type='text/javascript'>
 function db_lock_still_here() {
 	window.top.pn_database_locks._user_active();
-	pn.close_this_popup();
+	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 function db_lock_not_there() {
 	window.top.pn_database_locks._user_inactive();
+	window.parent.get_popup_window_from_element(window.frameElement).close();
 }
 var timing = 60;
 function update_timing() {
