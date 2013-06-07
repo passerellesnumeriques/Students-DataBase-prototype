@@ -1,0 +1,32 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+</head>
+<body>
+<h1>locale.js</h1>
+
+<table class="code_doc">
+<tr>
+	<td>
+		locale.load(url)
+	</td>
+	<td>
+		Loads a file of localized strings, at the given <code>url</code>.<br/>
+		To load the common strings, the URL is <i>/locale/common/</i> (this one is automatically loaded in <i>configuration.js</i>).<br/>
+		To load strings from a component XXX, the URL is <i>/locale/XXX/</i>. 
+	</td>
+</tr>
+<tr>
+	<td>
+		locale.get_string(key,namedValues)
+	</td>
+	<td>
+		Returns the localized string corresponding to the given <code>key</code>.<br/>
+		If the string contains parameters (parts to be replaced), the <code>namedValues</code> should contain the value to be used for each.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/dragndrop.js'></script>
+</head>
+<body>
+<h1>dragndrop.js</h1>
+
+This file allows to support drag'n'drop operations, between different parts of a page.<br/>
+To make a drag'n'drop possible, first the <i>origin</i> must be declared, so that the user will be able to drag an element from this origin.<br/>
+Then, one or several <i>targets</i> must be also declared: the areas or elements where the user can drop the dragged element.<br/>
+<br/>
+The origin will be responsible to provide a <i>data</i>, allowing to identify the type of dragged data, and the data itself.<br/>
+A target will need to say if it supports to receive a specific dragged element, according to the <i>data</i> provided by the origin.<br/>
+<br/>
+Here is an example:<br/>
+Put the yellow in the blue to make it green.
+<div style='height:60px;position:relative'>
+<div id='the_yellow' style='width:50px;height:50px;background-color:yellow;border:1px solid black;position:absolute;left:0px'></div>
+<div id='the_red' style='width:50px;height:50px;background-color:red;border:1px solid black;position:absolute;left:100px'></div>
+<div id='the_blue' style='width:50px;height:50px;background-color:blue;border:1px solid black;position:absolute;left:200px'></div>
+</div>
+<script type='text/javascript'>
+dnd.configure_drag_element(document.getElementById('the_yellow'),false,null,function(){return "YELLOW";});
+dnd.configure_drag_element(document.getElementById('the_red'),false,null,function(){return "RED";});
+dnd.configure_drag_element(document.getElementById('the_blue'),false,null,function(){return "BLUE";});
+dnd.configure_drop_element(document.getElementById('the_blue'),function(data){
+	if (data == "YELLOW") return "example_16.png";
+	return null;
+},function(data,x,y,target,origin){
+	if (data == "YELLOW") {
+		origin.parentNode.removeChild(origin);
+		target.style.backgroundColor = 'green';
+	}
+});
+</script>
+
+<table class="code_doc">
+<tr>
+	<td>
+		dnd.configure_drag_element(element,clone_when_start,move_handler,data_getter)
+	</td>
+	<td>
+		This function declares the given <code>element</code> as <i>draggable</i> (the origin of a drag'n'drop operation).<br/>
+		<code>clone_when_start</code>: if <code>false</code>, the <code>element</code> itself will be moved during the drag operation. If <code>false</code>, the element will be first cloned, then its clone will move during the operation and the original element stay at its position in the page.<br/>
+		<code>move_handler</code> is optional, and is a function called while the user is moving the element in the page. It is called with the following parameters: the element, X at the start of the drag operation, Y at the start of the drag operation, X the last time move_handler has been called, Y the last time move_handler has been called, X of the current position, Y of the current position<br/>
+		<code>data_getter</code> is a function which must return the data to be transferred and that will be provided to the <i>target</i>. It is called with the <code>element</code> as parameter.
+	</td>
+</tr>
+<tr>
+	<td>
+		dnd.configure_drag_area(area_element, element_from_area_getter, clone_when_start, move_handler, data_getter)
+	</td>
+	<td>
+		This function is similar to <code>dnd.configure_drag_element</code>, but instead of declaring an element
+		as draggable, it declares an area in the page from which something is draggable.<br/>
+		<br/>
+		<code>area_element</code> is the element in the page representing the area where drag is supported.<br/>
+		<code>element_from_area_getter</code> is a function which is responsible to give which element of the area is going to be dragged when a drag operation is started.
+			It takes 2 parameters (x,y) corresponding to the position where the drag operation starts, and returns the element to be dragged, or <code>null</code> if nothing can be dragged from this position.<br/>
+		<code>clone_when_start</code>, <code>move_handler</code> and <code>data_getter</code> are the same as in function <code>configure_drag_element</code>.
+	</td>
+</tr>
+<tr>
+	<td>
+		dnd.configure_drop_element(element,accept,drop)
+	</td>
+	<td>
+		This function declares the given <code>element</code> as a target for a drag'n'drop operation.<br/>
+		When a drag'n'drop operation is in progress (the user started to drag an element, but still hold the mouse button), 
+		and the dragged element is over this <i>target <code>element</code></i>, the function <code>accept</code> is 
+		called with the data given by <code>data_getter</code> or the origin. The value returned by <code>accept</code>
+		is the path of the icon to display, or <code>null</code> if the data is not accepted (not supported).<br/>
+		<code>drop</code> is a function that will be called when the user release the mouse button over the target <code>element</code>,
+		with the data from the origin (<code>data_getter</code>).
+	</td>
+</tr>
+<tr>
+	<td>
+		dnd.configure_drop_area(element,accept,drop)
+	</td>
+	<td>
+		This function is very similar to <code>dnd.configure_drop_element</code>, but instead of a single element it
+		declares the area delimited by <code>element</code> as the target (meaning in the element itself or in any 
+		element it contains). 
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

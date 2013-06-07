@@ -8,7 +8,7 @@ locale = {
 				break;
 			}
 		if (l == null) return "??"+str+"??";
-		var s = l.traduction;
+		var s = l.translation;
 		if (l.word_pos.length == 0) {
 			if (str.substr(0,1)==str.substr(0,1).toUpperCase()) 
 				s = s.substr(0,1).toUpperCase()+s.substr(1);
@@ -77,7 +77,7 @@ locale = {
 					l.word_pos.push(i);
 					s = s.substr(0, i)+s.substr(i+1);
 				}
-				l.traduction = strings[str].toLowerCase();
+				l.translation = strings[str].toLowerCase();
 				l.key = s.toLowerCase();
 				locale._strings.push(l);
 			}

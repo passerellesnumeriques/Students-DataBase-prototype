@@ -19,19 +19,16 @@ function isLetter(c) {
 Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
-function object_copy(o, recursive, depth) {
+function object_copy(o, recursive_depth) {
 	var c = new Object();
-	if (!depth) depth = 0;
 	for (var attr in o) {
 		var value = o[attr];
-		if (!recursive) { c[attr] = value; continue; }
+		if (!recursive_depth) { c[attr] = value; continue; }
 		if (typeof value == 'object') {
 			if (value instanceof Date)
 				c[attr] = new Date(value.getTime());
 			else {
-				if (depth > 50) c[attr] = value;
-				else
-					c[attr] = object_copy(value, true, depth+1);
+				c[attr] = object_copy(value, recursive_depth-1);
 			}
 		} else
 			c[attr] = value;
@@ -179,15 +176,15 @@ getCompatibleMouseEvent = function(e) {
 	if (lc_browser.IE == 0 || lc_browser.IE >= 9) { ev.x = e.clientX; ev.y = e.clientY; }
 	else { ev.x = window.event.clientX+document.documentElement.scrollLeft; ev.y = window.event.clientY+document.documentElement.scrollTop; }
 	if (lc_browser.IE == 0) ev.button = e.button;
-	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 2; break; case 2: ev.button = 3; break; } 
+	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 1; break; case 2: ev.button = 2; break; } 
 	return ev;
 };
 if (!lc_browser.IE >= 9) {
 	getWindowHeight = function() { return window.innerHeight; };
 	getWindowWidth = function() { return window.innerWidth; };
 } else if (lc_browser.IE >= 7) {
-	getWindowHeight = function() { return document.documentElement.clientHeight; };
-	getWindowWidth = function() { return document.documentElement.clientWidth; };
+	getWindowHeight = function() { return document.documentElement.scrollHeight; };
+	getWindowWidth = function() { return document.documentElement.scrollWidth; };
 } else {
 	getWindowHeight = function() { return document.body.clientHeight; };
 	getWindowWidth = function() { return document.body.clientWidth; };
@@ -292,17 +289,23 @@ function URL(s) {
 		this.path = s;
 	
 	// resolve .. in path
+	if (this.path.substr(0,1) != "/" && window.location.pathname) {
+		s = window.location.pathname;
+		i = s.lastIndexOf('/');
+		s = s.substr(0,i+1);
+		this.path = s + this.path;
+	}
 	while ((i = this.path.indexOf('/../')) > 0) {
 		var j = this.path.substr(0,i).lastIndexOf('/');
 		if (j < 0) break;
 		this.path = this.path.substr(0,j+1)+this.path.substr(i+4);
 	}
-
+	
 	this.toString = function() {
 		var s;
-		if (this.protocol && this.host) {
+		if (this.protocol) {
 			s = this.protocol+"://"+this.host;
-			if (this.port != null) s += ":"+this.port;
+			if (this.port) s += ":"+this.port;
 		} else
 			s = "";
 		s += this.path;
@@ -324,12 +327,14 @@ function CustomEvent() {
 } 
 
 function listenEvent(elem, type, handler) {
+	if (elem == window && !document.createEvent) elem = document;
 	if (elem.addEventListener)
 	     elem.addEventListener(type,handler,false);
 	 else if (elem.attachEvent)
 	     elem.attachEvent('on'+type,handler); 
 }
 function unlistenEvent(elem, type, handler) {
+	if (elem == window && !document.createEvent) elem = document;
 	if (elem.removeEventListener)
 		elem.removeEventListener(type,handler,false);
 	else
@@ -349,6 +354,7 @@ function triggerEvent(elem, type, attributes) {
 	if (document.createEvent) {
 		elem.dispatchEvent(event);
 	} else {
+		if (elem == window) elem = document;
 		elem.fireEvent("on" + type, event);
 	}
 }
@@ -392,9 +398,9 @@ function add_javascript(url, onload) {
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
 	s.onload = function() { _scripts_loaded.push(p); this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { scripts_loaded.push(p); this.data.fire(); this.onreadystatechange = null; } };
-	s.src = new URL(url).toString();
+	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
+	s.src = new URL(url).toString();
 }
 function javascript_loaded(url) {
 	url = new URL(url);

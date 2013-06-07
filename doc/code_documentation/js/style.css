@@ -40,6 +40,42 @@ table.code_doc th{
 	color: #4040A0;
 }
 
+table.parameters_doc {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+table.parameters_doc td {
+	border: 1px solid black;
+	padding: 2px;
+}
+table.parameters_doc td:first-of-type {
+	background-color: #D0D0FF;
+	color: #000080;
+	font-family: Courier New;
+	white-space: nowrap;
+}
+
+table.code_doc ul {
+	margin: 0px;
+}
+
+table.example {
+	border: 1px solid #808080;
+	border-collapse: collapse;
+}
+table.example td {
+	border-left: 1px solid #808080;
+	padding: 5px;
+	vertical-align: top;
+}
+table.example th {
+	background-color: #D0D0D0;
+	border-left: 1px solid #808080;
+}
+#example_code_show {
+	font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+}
+
 code {
 	font-family: Courier New;
 	color: #000080;
@@ -55,3 +91,13 @@ div.toc {
 .table_all_border { border: 1px solid black; border-collapse: collapse; }
 .table_all_border>tbody>tr>th { border: 1px solid black; }
 .table_all_border>tbody>tr>td { border: 1px solid black; }
+
+.xml_code_node {
+	color: #800000;
+}
+.xml_code_attribute_name {
+	color: #FF0000;
+}
+.xml_code_normal {
+	color: #000000;
+}

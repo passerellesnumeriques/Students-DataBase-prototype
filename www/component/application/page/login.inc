@@ -16,7 +16,7 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	<link rel="stylesheet" href="/static/application/style.css"/>
 </head>
 <body>
-<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%" onsubmit="document.getElementById('frame_loading').contentWindow.stop_loading = true; return true;">
+<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%" onsubmit="var f=document.getElementById('frame_loading');if(f)f.contentWindow.stop_loading = true; return true;">
 <table style="width:100%;height:100%"><tr><td valign=middle align=center>
 <?php
 if (isset($_GET["from"])) {
@@ -70,7 +70,7 @@ if (isset($_GET["from"])) {
 	</tr>
 </table>
 <br/>
-<span id='application_loading'><span><?php locale("application","Loading application")?></span> <iframe style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=100' id='frame_loading'></iframe><span id='application_loading_text' style='font-size:8pt'></span></span>
+<span id='application_loading'><span><?php locale("application","Loading application")?></span> <iframe frameBorder=0 style='width:200px;height:15px;border:1px solid black;overflow:hidden;vertical-align:bottom' scrolling='no' src='/static/application/load.php?delay=100' id='frame_loading'></iframe><span id='application_loading_text' style='font-size:8pt'></span></span>
 </td></tr></table>
 </form>
 </body>

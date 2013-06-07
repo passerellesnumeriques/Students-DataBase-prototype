@@ -1,0 +1,66 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+</head>
+<body>
+<h1>ajax.js</h1>
+
+<table class="code_doc">
+<tr>
+	<td>
+		ajax.addInterceptor(interceptor)
+	</td>
+	<td>
+		allows to modify URL of AJAX calls: each time an ajax call is made, the interceptors will be called with the URL of the Ajax call. Each interceptor return an URL (updated or not).
+	</td>
+</tr>
+<tr>
+	<td>
+		ajax.call(method, url, content_type, content_data, error_handler, success_handler, foreground)
+	</td>
+	<td>
+		make an Ajax call:
+		<ul>
+			<li><code>method</code>: HTTP method to use (GET or POST)</li>
+			<li><code>url</code>: URL of the request</li>
+			<li><code>content_type</code>: type of data to be sent, and contained in <code>content_data</code>, or <code>null</code> to do not specify any content type. This will be transmitted in the HTTP header <i>Content-Type</i>.</li>
+			<li><code>content_data</code>: the data to be sent in the HTTP body.</li>
+			<li><code>error_handler</code>: function that will be called in case an error occur during the Ajax call.</li>
+			<li><code>success_handler</code>: function that will be called when the Ajax call succeed.</li>
+			<li><code>foreground</code>: if <code>true</code>, the method will not return before the call is done.</li>
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>
+		ajax.post(url, data, error_handler, success_handler, foreground)
+	</td>
+	<td>
+		shortcut to <code>ajax.call</code> with <i>POST</i> as <code>method</code>, and <i>application/x-www-form-urlencoded</i> as <code>content_type</code>.<br/>
+		In addition, if the given <code>data</code> is an object, it will be converted into <i>application/x-www-form-urlencoded</i> format: <code>{id=3,name='hello'}</code> will be translated into id=3&name=hello 
+	</td>
+</tr>
+<tr>
+	<td>
+		ajax.post_parse_result(url, data, handler, foreground)
+	</td>
+	<td>
+		Make an Ajax call, with:
+		<ul>
+			<li><code>method</code>=POST</li>
+			<li><code>content_type</code>=application/x-www-form-urlencoded</li>
+			<li>if <code>data</code> is a string, it will be sent as is, if this is an object, it will be translated in the same way as <code>ajax.post</code></li>
+			<li>When the response is received, the HTTP header <i>Content-Type</i> sent by the server will be analyzed to know the format of the received data</li>
+			<li>In case of error, the error is displayed to the user, and <code>handler</code> is call with <code>null</code> parameter</li>
+			<li>In case we receive an error, the result is analyzed: XML and JSON format are supported:<br/>
+				If the response contains error messages, they are displayed to the user, and <code>handler</code> is called with <code>null</code>.<br/>
+				Else, <code>handler</code> is called with the response: the XML node <i>&gt;ok&lt;</i> for XML format, or <code>result</code> attribute in case of JSON format.
+				</li>
+		</ul>
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

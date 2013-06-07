@@ -1,0 +1,92 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/common_dialogs.js'></script>
+</head>
+<body>
+<h1>common_dialogs.js</h1>
+
+<table class="code_doc">
+<tr>
+	<td>
+		error_dialog(message)
+	</td>
+	<td>
+		Display a popup with the given error <code>message</code>.<br/>
+		<a href='#' onclick="error_dialog('Example of error');return false">Click to see example</a>
+	</td>
+</tr>
+<tr>
+	<td>
+		confirm_dialog(message, handler)
+	</td>
+	<td>
+		Ask confirmation from the user: display a popup with the given <code>message</code>, and buttons <i>Yes</i> and <i>No</i>.<br/>
+		<code>handler</code> is called with a parameter set to <code>true</code> if the user answers <i>Yes</i>, or set to <code>false</code> if the user answers <i>No</i> or close the popup without answering.
+		<br/>
+		<a href='#' onclick="confirm_dialog('Are you sure ?',function(){});return false">Click to see example</a>
+	</td>
+</tr>
+<tr>
+	<td>
+		input_dialog(<br/>
+		&nbsp; icon,<br/>
+		&nbsp; title,<br/>
+		&nbsp; message,<br/>
+		&nbsp; default_value,<br/>
+		&nbsp; max_length,<br/>
+		&nbsp; validation_handler,<br/>
+		&nbsp; ok_handler<br/>
+		)
+	</td>
+	<td>
+		Display a popup, asking to enter a value.<br/>
+		<table class='parameters_doc'>
+		<tr><td>icon, title</td><td>The popup will have this title and icon in its title bar</td></tr>
+		<tr><td>message</td><td>Text displayed inside the popup, before the area where the user can enter the requested value</td></tr>
+		<tr><td>default_value</td><td>pre-fill the value</td></tr>
+		<tr><td>max_length</td><td>maximum number of characters the value can have</td></tr>
+		<tr><td>validation_handler</td><td>
+			function called each time the user change the value, to verify if the value is correct or not.<br/>
+			It will receive one paramter: the value.<br/>
+			It should return:<ul>
+				<li>a string: in case of error, this is the error message that will be displayed to the user</li>
+				<li><code>null</code> in case the given value is correct</li>
+			</ul>
+		</td></tr>
+		<tr><td>ok_handler</td><td>If the user clicks on the <i>Ok</i> button, <code>ok_handler</code> will be called with the value entered by the user as parameter, and the popup will be closed.</td></tr>
+		</table>
+		<a href='#' onclick="example_input();return false">Click to see example</a>
+		<script type='text/javascript'>
+			function example_input() {
+				input_dialog('example_16.png',"Example","How much is 10+10 ?","0",20,function(s){
+					if (s != "20") return "Wrong answer";
+					return null;
+				},function(){});
+			}
+		</script>
+	</td>
+</tr>
+<tr>
+	<td>
+		multiple_input_dialog(icon,title,inputs,ok_handler)
+	</td>
+	<td>
+		Similar as <code>input_dialog</code> but supports several input fields, given in <code>inputs</code>.<br/>
+		<code>inputs</code> is an array of object having the following attributes:
+		<ul>
+			<li><code>message</code>: text to be displayed in front of the input field</li>
+			<li><code>default_value</code>: the initial value the input field will be pre-filled with</li>
+			<li><code>max_length</code>: maximum number of character that the input field can contain</li>
+			<li><code>validation_handler</code>: function to validate the field: returns <code>null</code> if the field is correct, or a string containing the error message if the field is not correct.</li>
+		</ul>
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

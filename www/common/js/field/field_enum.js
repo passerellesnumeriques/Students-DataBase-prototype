@@ -8,7 +8,7 @@ function field_enum(values,onchanged,onunchanged) {
 		for (var i = 0; i < values.length; ++i) {
 			o = document.createElement("OPTION");
 			o.value = values[i];
-			o.innerHTML = values[i];
+			o.text = values[i];
 			select.add(o);
 			if (data == values[i]) selected = i+1;
 		}

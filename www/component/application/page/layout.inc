@@ -76,7 +76,7 @@ $this->onload("new horizontal_menu('application_menu');application_resize_frame(
 	</tr>
 	</table>
 </div>
-<iframe frameborder=0 id='application_content' name='application_content' src='/dynamic/application/page/home'></iframe>
+<iframe frameBorder=0 id='application_content' name='application_content' src='/dynamic/application/page/home'></iframe>
 <div id='application_right_panel'>
 <div id='right_panel_open' style='visibility:hidden;position:absolute'>
 	<div style='background-color:#D0D0FF;padding:2px;'>

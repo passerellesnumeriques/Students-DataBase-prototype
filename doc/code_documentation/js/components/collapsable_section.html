@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../style.css"/>
+	<script type='text/javascript' src='../../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='../config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/animation.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/ajax.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/collapsable_section/collapsable_section.js'></script>
+	<link rel="stylesheet" type="text/css" href="../../../../www/common/js/collapsable_section/collapsable_section.css"/>
+	<script type='text/javascript' src='../example_js.js'></script>
+	<script type='text/javascript' src='../../doc.js'></script>
+</head>
+<body onload="init_example();">
+
+A collapsable section, is a block having a title and a content. By clicking on the title, the user can hide or show the content.<br/>
+<table class='example'>
+<tr><th>Example</th><th>Code</th></tr>
+<tr><td>
+<script id='example_code' type="text/x-frozen-html">
+<div id='collapsable_section_example' style='border:1px solid black;width:200px'>
+	<div class='collapsable_section_header'>The title of the section</div>
+	<div class='collapsable_section_content'>The content of the section.<br/>This will be hidden by clicking on the title</div>
+</div>
+<x-script type='text/javascript'>
+new collapsable_section('collapsable_section_example');
+</x-script>
+</script>
+</td><td id='example_code_show'>
+</td></tr>
+</table>
+
+<br/>
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		collapsable_section(element)
+	</td>
+	<td>
+		Creates a collapsable section on the given <code>element</code>.<br/>
+		<code>element</code> can be either the element itself, or its ID.<br/>
+		It expects to find two children: one having the class <i>collapsable_section_header</i>, 
+		which contains the title, and one having the class <i>collapsable_section_content</i>, which is the content.<br/>
+	</td>
+</tr>
+<tr><th colspan=2>Methods</th></tr>
+<tr>
+	<td>
+		toggle()
+	</td>
+	<td>
+		Hide/Show the content.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
