@@ -343,9 +343,13 @@ class SQLQuery {
 	}
 
 	public static function update($table, $fields_values, $where) {
+		require_once("component/data_model/DataModel.inc");
+		/* @var $t datamodel\Table */
+		$t = DataModel::get()->getTable($table);
 		$sql = "UPDATE `".$table."` SET ";
 		$first = true;
 		foreach ($fields_values as $field=>$value) {
+			if (!$t->canModifyField($field)) throw new Exception("Access denied for column '".$field."' on table '".$table."'");
 			if ($first) $first = false; else $sql .= ",";
 			$sql .= "`".$field."`=";
 			if ($value === null) $sql .= "NULL";
@@ -371,6 +375,10 @@ class SQLQuery {
 	}
 
 	public static function insert($table, $fields_values) {
+		require_once("component/data_model/DataModel.inc");
+		/* @var $t datamodel\Table */
+		$t = DataModel::get()->getTable($table);
+		if (!$t->canAdd()) throw new Exception("Access denied to add an entry in table '".$table."'");
 		$sql = "INSERT INTO `".$table."` (";
 		$first = true;
 		foreach ($fields_values as $field=>$value) {
@@ -387,6 +395,25 @@ class SQLQuery {
 		$sql .= ")";
 		DataBase::$conn->execute($sql);
 		return DataBase::$conn->get_insert_id();
+	}
+
+	public static function remove_key($table, $key) {
+		require_once("component/data_model/DataModel.inc");
+		/* @var $t datamodel\Table */
+		$t = DataModel::get()->getTable($table);
+		$t->remove_key($key);
+	}
+	public static function remove_keys($table, $keys) {
+		require_once("component/data_model/DataModel.inc");
+		/* @var $t datamodel\Table */
+		$t = DataModel::get()->getTable($table);
+		$t->remove_keys($keys);
+	}
+	public static function remove_rows($table, $rows) {
+		require_once("component/data_model/DataModel.inc");
+		/* @var $t datamodel\Table */
+		$t = DataModel::get()->getTable($table);
+		$t->remove_rows($rows);
 	}
 }
 ?>

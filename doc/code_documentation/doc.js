@@ -9,4 +9,24 @@ function build_doc() {
 	}
 }
 
+function encode_html(code) {
+	return code.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/\n/g, "<br/>");	
+}
+
+var highlighter_loaded = false;
+var wait_for_highlighter = [];
+add_javascript(get_script_path("doc.js")+"highlight.js/highlight.pack.js",function(){
+	highlighter_loaded = true;
+	for (var i = 0; i < wait_for_highlighter.length; ++i)
+		colorize(wait_for_highlighter[i]);
+});
+add_stylesheet(get_script_path("doc.js")+"highlight.js/styles/googlecode.css");
+
+function colorize(container) {
+	if (!highlighter_loaded)
+		wait_for_highlighter.push(container);
+	else
+		hljs.highlightBlock(container, "  ");
+}
+
 window.onload = build_doc;

@@ -58,7 +58,7 @@ class MainSectionPage {
 	</td>
 	</tr></table>
 </div>
-<iframe class='page_content' frameborder=0 src="<?php echo $this->default_sub_page_url?>" style='width:100%;margin:0px;padding:0px;border:0px' id='<?php echo $this->id?>_content' name='<?php echo $this->id?>_content'></iframe>
+<iframe class='page_content' frameBorder=0 src="<?php echo $this->default_sub_page_url?>" style='width:100%;margin:0px;padding:0px;border:0px' id='<?php echo $this->id?>_content' name='<?php echo $this->id?>_content'></iframe>
 <script type='text/javascript'>
 function <?php echo $this->id?>_resize_frame() {
 	var frame = document.getElementById('<?php echo $this->id?>_content');

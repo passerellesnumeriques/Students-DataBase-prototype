@@ -32,6 +32,8 @@ if (strpos($path, "..") !== FALSE) die("Access denied");
 if ($path == "favicon.ico") { header("Content-Type: image/ico"); readfile("favicon.ico"); die(); }
 
 if ($path == "") {
+	include("loading.inc");
+	die();
 	$path = "/dynamic/application/page/enter";
 	$first = true;
 	foreach ($_GET as $key=>$value) {
@@ -117,10 +119,7 @@ case "dynamic":
 	} else
 		$app = &$_SESSION["app"];
 	PNApplication::$instance = &$app;
-	// TODO DataBase connection according to configuration
-	require_once("common/DataBaseSystem_MySQL.inc");
-	DataBase::$conn = new DataBaseSystem_MySQL();
-	DataBase::$conn->connect("localhost", "root", "", "students_".$app->current_domain);
+	DataBase::$conn->select_db("students_".$app->current_domain);
 
 	if ($component_name == "common") {
 		Locale::$current_component = "common";

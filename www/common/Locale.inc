@@ -81,6 +81,7 @@ class Locale {
 	}
 
 	private static $loaded = array();
+	private static $loaded_path = array();
 	private static $strings = array(""=>array());
 
 	private static function load($component) {
@@ -91,6 +92,8 @@ class Locale {
 	}
 
 	public static function load_file($namespace, $path) {
+		if (in_array($namespace, Locale::$loaded)) return;
+		array_push(Locale::$loaded, $namespace);
 		$filename = $path.Locale::$language;
 		if (!file_exists($filename))
 			$filename = $path."en"; // default to english
@@ -99,21 +102,34 @@ class Locale {
 			PNApplication::error("File '".$filename."' does not exist");
 			return;
 		}
+		Locale::load_path($namespace, $filename);
+		if (file_exists($path."generic"))
+			Locale::load_path($namespace, $path."generic");
+	}
+
+	public static function load_path($namespace, $filename, $charset = null) {
+		if (in_array($filename, Locale::$loaded_path)) return;
+		array_push(Locale::$loaded_path, $filename);
+		if (!isset(Locale::$strings[$namespace]))
+			Locale::$strings[$namespace] = array();
+		if (!in_array($namespace, Locale::$loaded))
+			array_push(Locale::$loaded, $namespace);
 		$f = @fopen($filename, "r");
 		if ($f == null) {
 			PNApplication::error("Cannot open file '".$filename."'");
 			return;
 		}
-		Locale::$strings[$namespace] = array();
 		while (($line = fgets($f, 4096)) !== false) {
 			$line = trim($line);
 			if (strlen($line) == 0) continue;
+			if ($charset <> null) $line = iconv($charset, "UTF-8", $line);
 			$i = strpos($line, "=");
 			if ($i === false) continue;
 			$key = trim(substr($line, 0, $i));
 			$str = trim(substr($line,$i+1));
-			
+
 			$key = strtolower($key);
+			if (isset(Locale::$strings[$namespace][$key])) continue;
 			$words_pos_key = array();
 			while (($i = strpos($key, "~")) !== FALSE) {
 				array_push($words_pos_key, $i);
@@ -127,7 +143,6 @@ class Locale {
 			Locale::$strings[$namespace][$key] = array($str, $words_pos_key, $words_pos_str);
 		}
 		fclose($f);
-		array_push(Locale::$loaded, $namespace);
 	}
 
 }

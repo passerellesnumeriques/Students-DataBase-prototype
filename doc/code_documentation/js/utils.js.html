@@ -48,6 +48,19 @@
 	</td>
 </tr>
 </table>
+
+<h2>Object</h2>
+The following methods can be used with <code>Object</code>:
+<table class="code_doc">
+<tr>
+	<td>
+		object_copy(o, recursive_depth)
+	</td>
+	<td>
+		returns a copy of the given object <code>o</code>, by creating a new object and copying its content. If <code>recursive_depth</code> is specified, the content of the object is also duplicated instead of referenced, up to the give recursive_depth.  
+	</td>
+</tr>
+</table>
 <br/>
 
 <h2>Browser Compatibility</h2>
@@ -88,11 +101,50 @@ The following methods are provided, to handle differences between browsers:
 </tr>
 <tr>
 	<td>
+		getCompatibleMouseEvent(ev)
+	</td>
+	<td>
+		returns an object containing mouse position and button pressed, in an uniform way whatever browser is used:
+		<ul>
+			<li><code>x</code>: horizontal position of the mouse</li>
+			<li><code>y</code>: vertical position of the mouse</li>
+			<li><code>button</code>: W3C standard: 0=left button, 1=middle, 2=right</li>
+		</ul>
+	</td>
+</tr>
+<tr>
+	<td>
+		stopEventPropagation(ev)
+	</td>
+	<td>
+		indicates that the given event should not be handled anymore. This is equivalent to the standard methods <code>stopPropagation</code> and <code>preventDefault</code>
+	</td>
+</tr>
+<tr>
+	<td>
 		setOpacity(element, opacity)
 	</td>
 	<td>
 		Set the opacity of the given <code>element</code>. The <code>opacity</code> paramter is a float from 0 (transparent) to 1 (opaque).<br/>
 		This methods set the style of the element, for all browsers supporting transparency (opacity, -moz-opacity, -khtml-opacity, filter and -ms-filter for Internet Explorer).
+	</td>
+</tr>
+<tr>
+	<td>
+		setBoxShadow(element, hShadow, vShadow, blur, spread, color)
+	</td>
+	<td>
+		Set a box shadow to the given <code>element</code>.<br/>
+		This methods set the style of the element, for all browsers supporting shadow.
+	</td>
+</tr>
+<tr>
+	<td>
+		setBorderRadius(element, topleft_width, topleft_height, topright_width, topright_height, bottomleft_width, bottomleft_height, bottomright_width, bottomright_height)
+	</td>
+	<td>
+		Set a border radius to the given <code>element</code>.<br/>
+		This methods set the style of the element, for all browsers supporting it.
 	</td>
 </tr>
 <tr>
@@ -158,6 +210,14 @@ Additional useful methods are provided:
 		returns the first parent of <code>element</code> having the style <code>position: relative</code>. If none are find, document.body is returned.
 	</td>
 </tr>
+<tr>
+	<td>
+		getElementsAt(x, y)
+	</td>
+	<td>
+		returns the list of elements located at the given position.
+	</td>
+</tr>
 <tr><th colspan=2>Dynamic scripts and stylesheets</th></tr>
 <tr>
 	<td>
@@ -175,6 +235,14 @@ Additional useful methods are provided:
 	</td>
 	<td>
 		Load a new stylesheet file from <code>url</code>
+	</td>
+</tr>
+<tr>
+	<td>
+		get_script_path(name)
+	</td>
+	<td>
+		Returns the URL of the javascript ending with the given <code>name</code>. This allows to make scripts not dependent of their location.
 	</td>
 </tr>
 <tr><th colspan=2></th></tr>
@@ -196,6 +264,14 @@ Additional useful methods are provided:
 	</td>
 	<td>
 		This method remove the element <code>div</code> previously created by the method <code>lock_screen</code>.
+	</td>
+</tr>
+<tr>
+	<td>
+		generate_id()
+	</td>
+	<td>
+		Returns a unique Identifier. This may be useful when we need to assign an ID, and need to ensure its unicity in the page.
 	</td>
 </tr>
 </table>
@@ -256,6 +332,14 @@ In addition, the following classes are provided:
 	</td>
 	<td>
 		maps of parameters of the URL. Example: the URL <i>http://pn.org/index.html?id=13&amp;name=toto</i> contains 2 parameters: <i>id</i> with value <i>13</i> and <i>name</i> with value <i>toto</i>.
+	</td>
+</tr>
+<tr>
+	<td>
+		hash
+	</td>
+	<td>
+		The anchor part of the URL (after the #).
 	</td>
 </tr>
 <tr><th colspan=2>Methods</th></tr>

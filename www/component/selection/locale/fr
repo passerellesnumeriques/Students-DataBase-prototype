@@ -1,1 +1,23 @@
+all have a schedule=toutes ont un horaire
+all have a schedule and assigned staff=toutes ont un horaire et un staff assigné
+all schedules sessions have a staff assigned=toutes les sessions plannifiées ont un staff assigné
+applicant=candidat
+applicants=candidats
+applications=applications
+campaign=campagne
+~create ~new ~campaign=~créer une ~nouvelle ~campagne
+dashboard=tableau de bord
+don't have a schedule yet=n'ont pas encore d'horaire prévue
+don't have any staff assigned=n'ont aucun staff assigné
+~information ~sessions=~sessions d'~information
+information sessions planned=sessions d'information plannifiées
+information session planned=session d'information plannifiée
+interviews=entretiens
 selection=sélection
+~social ~investigations=~investigations ~sociales
+~written ~exams=~exams ~écrits
+
+Please select a selection campaign=veuillez sélectionner une campagne 
+
+consult selection data=consulter les données de sélection
+edit selection data=éditer les données de sélection

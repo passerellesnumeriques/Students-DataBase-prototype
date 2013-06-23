@@ -1,0 +1,48 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/validation.js'></script>
+	<link rel="stylesheet" type="text/css" href="../../../www/common/js/validation.css"/>
+</head>
+<body>
+<h1>validation.js</h1>
+
+<table class="code_doc">
+<tr>
+	<td>
+		validation_error(input, message)
+	</td>
+	<td>
+		This will highligh in red the given <code>input</code>, and will display the error <code>message</code> in
+		the element having as ID the ID or the name of the <code>input</code> followed by <code>"_validation"</code> 
+		if it exists.<br/>
+		For example, if we have <code>&gt;input name='username' ... &lt;</code>, it will looks for an element
+		having ID <code>username_validation</code> to put the message.<br/>
+		If the element is found, the <code>message</code> is put inside, and its CSS style <code>visibility</code>
+		is set to <code>visible</code>.
+		<br/>
+		Example:<br/>
+		<input id='example_error' type='text'/><br/>
+		<div id='example_error_validation' style='visibility:hidden'></div>
+		<script type='text/javascript'>
+			validation_error(document.getElementById('example_error'), "Example of error message when validation failed");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td>
+		validation_ok(input)
+	</td>
+	<td>
+		Similar to <code>validation_error</code> but in case the validation is correct:
+		remove the red, and hide the element containing the error message.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -15,4 +15,9 @@ class DataBase {
 	public static function escape_string($str) { return DataBase::$conn->escape_string($str); }
 
 }
+
+// TODO from configuration
+require_once("common/DataBaseSystem_MySQL.inc");
+DataBase::$conn = new DataBaseSystem_MySQL();
+DataBase::$conn->connect("localhost", "root", "");
 ?>

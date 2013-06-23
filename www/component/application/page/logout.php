@@ -1,5 +1,7 @@
 <?php 
 global $app;
 $app->user_management->logout();
-header("Location: /".(isset($_GET["from"]) ? "?from=".$_GET["from"] : ""));
 ?>
+<script type='text/javascript'>
+window.top.location.href = "<?php echo "/".(isset($_GET["from"]) ? "?from=".$_GET["from"] : "");?>";
+</script>

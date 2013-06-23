@@ -13,3 +13,7 @@
 	font-family: Arial;
 	font-size: 10px;
 }
+.calendar_view_week_range_event {
+	border: 1px solid black;
+	font-size: 11px;
+}

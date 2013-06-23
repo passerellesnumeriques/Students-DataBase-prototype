@@ -32,7 +32,8 @@ dnd = {
 	configure_drop_element: function(element, accept, drop) {
 		element.drop = {
 			accept: accept,
-			drop: drop
+			drop: drop,
+			element: element
 		};
 	},
 	configure_drop_area: function(area, accept, drop) {
@@ -89,6 +90,8 @@ dnd = {
 					dnd._drag[i] = e;
 					e.style.position = "fixed";
 					document.body.appendChild(e);
+				} else {
+					e.style.position = "fixed";
 				}
 				e.dnd.mousemove = true;
 				if (e.dnd.data_getter) {
@@ -146,7 +149,7 @@ dnd = {
 			if (e.dnd.icon) {
 				var target = dnd._get_target(evt.x, evt.y);
 				if (target != null && target.accept(e.dnd.data, evt.x, evt.y) != null) {
-					target.drop(e.dnd.data, evt.x, evt.y, target.element);
+					target.drop(e.dnd.data, evt.x, evt.y, target.element, e);
 				}
 				document.body.removeChild(e.dnd.icon);
 			}

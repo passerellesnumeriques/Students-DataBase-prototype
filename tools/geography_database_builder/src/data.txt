@@ -1,0 +1,6 @@
+admin1CodesASCII.txt
+ = region/province/state
+ 
+ admin2Codes.txt
+  if XX.YY.ZZ: admin1 = region or state, admin2 = province
+  

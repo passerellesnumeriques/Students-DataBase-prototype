@@ -3,8 +3,8 @@ require_once("component/data_model/DataModel.inc");
 require_once("common/DataBaseModel.inc");
 $model = DataModel::get();
 
-$domains = preg_split("/,/", file_get_contents("domains",true));
-foreach ($domains as $domain) {
+$domains = include("domains");
+foreach ($domains as $domain=>$descr) {
 	echo "Initialize DataBase for domain ".$domain."<br/>";
 	$res = DataBase::$conn->execute("CREATE DATABASE IF NOT EXISTS students_".$domain);
 	$res = DataBase::$conn->execute("USE students_".$domain);
@@ -24,6 +24,8 @@ foreach ($domains as $domain) {
 $local_domain = file_get_contents("local_domain", true);
 $res = DataBase::$conn->execute("USE students_".$local_domain);
 echo "Insert test data for local domain ".$local_domain."<br/>";
+
+set_time_limit(120);
 
 $roles = array(
 	"Staff"=>array("consult_user_list"=>true),
@@ -142,7 +144,14 @@ function SplitSQL($file, $delimiter = ';')
 echo "Add curriculum test data</br>";
 SplitSQL("component/development/test_data/curriculum.sql");
 
-echo "<a href='/'>Back to application</a>";
+echo "Initialize DataBase for geography<br/>";
+set_time_limit(10*60);
+DataBase::$conn->execute("DROP DATABASE `geography`");
+DataBase::$conn->execute("CREATE DATABASE `geography` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+DataBase::$conn->execute("USE `geography`");
+SplitSQL("component/development/test_data/geography.sql");
+
+echo "<a href='/' target='_top'>Back to application</a>";
 
 PNApplication::print_errors();
 ?>

@@ -19,31 +19,31 @@ function date_picker(max_year) {
 		var o = document.createElement("OPTION");
 		o.value = (i+1);
 		switch (i) {
-		case 0: o.innerHTML = locale.get_string("January"); break;
-		case 1: o.innerHTML = locale.get_string("February"); break;
-		case 2: o.innerHTML = locale.get_string("March"); break;
-		case 3: o.innerHTML = locale.get_string("April"); break;
-		case 4: o.innerHTML = locale.get_string("May"); break;
-		case 5: o.innerHTML = locale.get_string("June"); break;
-		case 6: o.innerHTML = locale.get_string("July"); break;
-		case 7: o.innerHTML = locale.get_string("August"); break;
-		case 8: o.innerHTML = locale.get_string("September"); break;
-		case 9: o.innerHTML = locale.get_string("October"); break;
-		case 10: o.innerHTML = locale.get_string("November"); break;
-		case 11: o.innerHTML = locale.get_string("December"); break;
+		case 0: o.text = locale.get_string("January"); break;
+		case 1: o.text = locale.get_string("February"); break;
+		case 2: o.text = locale.get_string("March"); break;
+		case 3: o.text = locale.get_string("April"); break;
+		case 4: o.text = locale.get_string("May"); break;
+		case 5: o.text = locale.get_string("June"); break;
+		case 6: o.text = locale.get_string("July"); break;
+		case 7: o.text = locale.get_string("August"); break;
+		case 8: o.text = locale.get_string("September"); break;
+		case 9: o.text = locale.get_string("October"); break;
+		case 10: o.text = locale.get_string("November"); break;
+		case 11: o.text = locale.get_string("December"); break;
 		}
 		t.monthSelect.add(o);
 	}
 	for (var year = 1900; year <= max_year; ++year) {
 		var o = document.createElement("OPTION");
 		o.value = year;
-		o.innerHTML = year;
+		o.text = year;
 		t.yearSelect.add(o);
 	}
 	for (var day = 1; day <= 28; ++day) {
 		var o = document.createElement("OPTION");
 		o.value = day;
-		o.innerHTML = day;
+		o.text = day;
 		t.daySelect.add(o);
 	}
 	
@@ -88,7 +88,7 @@ function date_picker(max_year) {
 			while (t.daySelect.options.length < max_day) {
 				var o = document.createElement("OPTION");
 				o.value = (t.daySelect.options.length+1);
-				o.innerHTML = (t.daySelect.options.length+1);
+				o.test = (t.daySelect.options.length+1);
 				t.daySelect.add(o);
 			}
 			t.daySelect.selectedIndex = date.getDate()-1;

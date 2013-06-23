@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="../style.css"/>
+	<script type='text/javascript' src='../../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='../config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/animation.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/ajax.js'></script>
+	<script type='text/javascript' src='../../../../www/common/js/context_menu/context_menu.js'></script>
+	<link rel="stylesheet" type="text/css" href="../../../../www/common/js/context_menu/context_menu.css"/>
+</head>
+<body>
+
+A collapsable section, is a block having a title and a content. By clicking on the title, the user can hide or show the content.<br/>
+Example:<br/>
+<div id='collapsable_section_example' style='border:1px solid black;width:200px'>
+	<div class='collapsable_section_header'>The title of the section</div>
+	<div class='collapsable_section_content'>The content of the section.<br/>This will be hidden by clicking on the title</div>
+</div>
+<script type='text/javascript'>
+new collapsable_section('collapsable_section_example');
+</script>
+
+<br/>
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		collapsable_section(element)
+	</td>
+	<td>
+		Creates a collapsable section on the given <code>element</code>.<br/>
+		<code>element</code> can be either the element itself, or its ID.<br/>
+		It expects to find two children: one having the class <i>collapsable_section_header</i>, 
+		which contains the title, and one having the class <i>collapsable_section_content</i>, which is the content.<br/>
+	</td>
+</tr>
+<tr><th colspan=2>Methods</th></tr>
+<tr>
+	<td>
+		toggle()
+	</td>
+	<td>
+		Hide/Show the content.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/Status.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/StatusUI_Top.js'></script>
+</head>
+<body>
+<h1>Status.js and StatusUI_Top.js</h1>
+
+Status.js provides a class to manage status messages, and transmit the informations and updates to a <i>UI</i> class.<br/>
+StatusUI_Top.js provides an implementation of such a <i>UI</i> class, that will display the status at the top of the page.<br/>
+<br/>
+It means Status.js can be used independently of StatusUI_Top, so that another <i>UI</i> can be used.
+<br/><br/>
+Examples:<br/>
+<a href='#' onclick="example_info();return false;">Click here to show an information status</a><br/>
+<a href='#' onclick="example_error();return false;">Click here to show an error status</a><br/>
+<a href='#' onclick="example_warning();return false;">Click here to show a warning status</a><br/>
+<a href='#' onclick="example_processing();return false;">Click here to show a processing status</a><br/>
+<script type='text/javascript'>
+var sm = new StatusManager();
+sm.status_ui = new StatusUI_Top(sm,0);
+function example_error() {
+	sm.add_status(new StatusMessageError(null, "This is an error", 5000));
+}
+function example_info() {
+	sm.add_status(new StatusMessage(Status_TYPE_INFO, "There is an information", null, 5000));
+}
+function example_warning() {
+	sm.add_status(new StatusMessage(Status_TYPE_WARNING, "This is a warning", null, 5000));
+}
+function example_processing() {
+	sm.add_status(new StatusMessage(Status_TYPE_PROCESSING, "Operation in progress...", null, 5000));
+}
+</script>
+
+<table class="code_doc">
+<tr><th colspan=2>Constants</th></tr>
+<tr>
+	<td>
+		Status_TYPE_INFO
+	</td>
+	<td>
+		Type of status to display an information.<br/>
+		This will be typically displayed in a neutral color, with an icon like <img src='../../../www/common/images/info.png'/>
+	</td>
+</tr>
+<tr>
+	<td>
+		Status_TYPE_ERROR
+	</td>
+	<td>
+		Type of status to display an error.<br/>
+		This will be typically displayed in a red color, with an icon like <img src='../../../www/common/images/error.png'/>
+	</td>
+</tr>
+<tr>
+	<td>
+		Status_TYPE_WARNING
+	</td>
+	<td>
+		Type of status to display a warning.<br/>
+		This will be typically displayed in a yellow color, with an icon like <img src='../../../www/common/images/warning.png'/>
+	</td>
+</tr>
+<tr>
+	<td>
+		Status_TYPE_PROCESSING
+	</td>
+	<td>
+		Type of status to inform the user some operations are in progress.<br/>
+		This will be typically displayed in a neutral color, with an icon like <img src='../../../www/common/images/loading.gif'/>
+	</td>
+</tr>
+</table>
+
+<h2>StatusMessage</h2>
+Class representing a status.
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		StatusMessage(type,message,actions,timeout)
+	</td>
+	<td>
+		<code>type</code> is one of the constants mentionned above.<br/>
+		<code>message</code> is the text or HTML to be displayed.<br/>
+		<code>actions</code> is optional, and may contain a list of possible actions for the user on this status:
+			<ul>
+				<li><code>action</code>:
+					<ul>
+						<li>The string <code>"close"</code>: the user can close this status. Typically this can be a small icon like that: <img src='../../../www/common/images/close_10.png'/></li>
+						<li>A javascript method to be executed when the user request to execute this action</li>
+					</ul>
+				</li>
+				<li><code>text</code>: text to be displayed for this action</li>
+			</ul>
+		<code>timeout</code> is optional. If specified, the status will be removed after this timeout, in milliseconds.
+	</td>
+</tr>
+<tr>
+	<td>
+		StatusMessageError(err,message,timeout)
+	</td>
+	<td>
+		Creates an error status:<br/>
+		<code>message</code> is the text or HTML to be displayed.<br/>
+		<code>err</code> can be null, or can be an exception. In this case, an action will allow the user to 
+			display the stack trace of the exception.<br/>
+		<code>timeout</code> is optional. If specified, the status will be removed after this timeout, in milliseconds.
+	</td>
+</tr>
+<tr><th colspan=2>Attributes</th></tr>
+<tr>
+	<td>
+		id
+	</td>
+	<td>
+		A unique identifier used to identify this status.
+	</td>
+</tr>
+<tr>
+	<td>
+		type<br/>
+		message<br/>
+		actions<br/>
+		timeout<br/>
+	</td>
+	<td>
+		Same as for the constructor <code>StatusMessage</code>.
+	</td>
+</tr>
+</table>
+
+
+<h2>StatusManager</h2>
+Class managing a list of status, and coordinates with the provided UI.
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		StatusManager()
+	</td>
+	<td>
+	</td>
+</tr>
+<tr><th colspan=2>Attributes</th></tr>
+<tr>
+	<td>
+		status_ui
+	</td>
+	<td>
+		The implementation of UI to be used.
+	</td>
+</tr>
+<tr><th colspan=2>Methods</th></tr>
+<tr>
+	<td>
+		add_status(status)
+	</td>
+	<td>
+		Add the given <code>status</code>, and update the UI to display it.<br/>
+		<code>status</code> is a <code>StatusMessage</code> object.
+	</td>
+</tr>
+<tr>
+	<td>
+		remove_status(status)
+	</td>
+	<td>
+		Remove the given <code>status</code>, and update the UI to remove it.<br/>
+		<code>status</code> may be either a <code>StatusMessage</code> object, or just the id of the status.
+	</td>
+</tr>
+<tr>
+	<td>
+		update_status(status)
+	</td>
+	<td>
+		Informs that the given <code>status</code> object has been updated, so the UI needs also to be updated.
+	</td>
+</tr>
+<tr>
+	<td>
+		get_status(id)
+	</td>
+	<td>
+		Returns the <code>StatusMessage</code> object for the given <code>id</code>, or <code>null</code> if this status cannot be found.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

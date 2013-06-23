@@ -19,6 +19,7 @@ function calendar_view_week(container, cal) {
 	// zoom corresponds to the size of an hour
 	t.zoom = 40; // 2 units, meaning we will see every 30 minutes
 	t._timed_events = [];
+	t._range_events = [];
 	
 	t.setNbDays = function(nb) {
 		t.nb_days = nb;
@@ -47,6 +48,7 @@ function calendar_view_week(container, cal) {
 	t._createView = function() {
 		while (t.container.childNodes.length > 0) t.container.removeChild(t.container.childNodes[0]);
 		t._days_titles = [];
+		t._days_events = [];
 		t._time_titles = [];
 		t._delimiters = [];
 		t._content = document.createElement("DIV");
@@ -72,6 +74,13 @@ function calendar_view_week(container, cal) {
 			var date = new Date(t.week_start.getTime()+i*24*60*60*1000);
 			div.innerHTML = day+"<br/>"+t._2digits(date.getDate())+"/"+t._2digits(date.getMonth()+1)+"/"+date.getFullYear();
 			t._days_titles.push(div);
+			t.container.appendChild(div);
+			div = document.createElement("DIV");
+			div.style.position = 'absolute';
+			div.style.border = "1px solid black";
+			div.style.borderTop = "0px";
+			if (i != 0) div.style.borderLeft = "0px";
+			t._days_events.push(div);
 			t.container.appendChild(div);
 			t._delimiters.push([]);
 		}
@@ -126,13 +135,18 @@ function calendar_view_week(container, cal) {
 		for (var i = 0; i < t.nb_days; ++i) {
 			t._days_titles[i].style.top = "0px";
 			t._days_titles[i].style.left = (x+i*day_w)+"px";
+			t._days_events[i].style.left = (x+i*day_w)+"px";
 			t._days_titles[i].style.width = (day_w-(i==0?1:0))+"px";
+			t._days_events[i].style.width = (day_w-(i==0?1:0))+"px";
 			t._days_titles[i].style.height = "";
 			if (t._days_titles[i].offsetHeight > y) y = t._days_titles[i].offsetHeight; 
 		}
-		for (var i = 0; i < t.nb_days; ++i)
+		for (var i = 0; i < t.nb_days; ++i) {
 			t._days_titles[i].style.height = y+"px";
-		y += 1; // border
+			t._days_events[i].style.top = y+"px";
+			t._days_events[i].style.height = "10px";
+		}
+		y += 10; // default height for days events
 		t._content.style.top = y+"px";
 		t._content.style.height = (h-y)+"px";
 		t._day_width = day_w;
@@ -152,6 +166,11 @@ function calendar_view_week(container, cal) {
 			t._timed_events[i].div.style.visibility = 'hidden';
 		for (var i = 0; i < t._timed_events.length; ++i)
 			t._timed_events[i].layout();
+		// layout range events
+		for (var i = 0; i < t._range_events.length; ++i)
+			t._range_events[i].div.style.visibility = 'hidden';
+		for (var i = 0; i < t._range_events.length; ++i)
+			t._range_events[i].layout();
 	};
 	t._init_cal = function() {
 		cal.on_new_timed_event = function(ev) {
@@ -163,6 +182,24 @@ function calendar_view_week(container, cal) {
 		};
 		cal.on_timed_event_removed = function(ev) {
 			// TODO
+		};
+		cal.on_new_range_event = function(ev) {
+			ev.color = ev.calendar.color;
+			t.add_range_event(ev);
+		};
+		cal.on_range_event_changed = function(ev) {
+			// TODO
+		};
+		cal.on_range_event_removed = function(ev) {
+			// TODO
+		};
+		cal.on_new_recurring_timed_event = function(ev) {
+			ev.color = ev.calendar.color;
+			t.add_recurring_timed_event(ev);
+		};
+		cal.on_new_recurring_range_event = function(ev) {
+			ev.color = ev.calendar.color;
+			t.add_recurring_range_event(ev);
 		};
 		var ev = {
 			uid: 1,
@@ -184,6 +221,24 @@ function calendar_view_week(container, cal) {
 		ev.start.setHours(8);
 		ev.end.setHours(12);
 		t.add_timed_event(ev);
+	};
+	t.add_recurring_timed_event = function(event) {
+		if (event.start.getTime() > t.week_end) return; // start later
+		var events = event.getEventsBetween(new Date(t.week_start), new Date(t.week_end));
+		for (var i = 0; i < events.length; ++i) {
+			events[i].recurring = true;
+			events[i].color = event.calendar.color;
+			t.add_timed_event(events[i]);
+		}
+	};
+	t.add_recurring_range_event = function(event) {
+		if (event.start.getTime() > t.week_end) return; // start later
+		var events = event.getEventsBetween(new Date(t.week_start), new Date(t.week_end));
+		for (var i = 0; i < events.length; ++i) {
+			events[i].recurring = true;
+			events[i].color = event.calendar.color;
+			t.add_range_event(events[i]);
+		}
 	};
 	t.add_timed_event = function(event) {
 		if (event.start.getDate() != event.end.getDate()) {
@@ -211,6 +266,14 @@ function calendar_view_week(container, cal) {
 		event.div.style.visibility = 'hidden';
 		event.div.style.overflow = 'hidden';
 		event.div.innerHTML = "<div class='calendar_view_week_timed_event_time'>"+t._2digits(event.start.getHours())+":"+t._2digits(event.start.getMinutes())+"-"+t._2digits(event.end.getHours())+":"+t._2digits(event.end.getMinutes())+"</div>"+event.title;
+		event.div.style.cursor = "pointer";
+		event.div.onclick = function() {
+			this.data.show();
+		};
+		var title = event.title;
+		if (event.summary) title += "\r\n"+event.summary;
+		if (event.location) title += "\r\n@ "+event.location;
+		event.div.title = title;
 		event.div.data = event;
 		event.layout = function(tentative) {
 			if (this.end.getTime() < t.week_start) { this.div.style.visibility = 'hidden'; return; }
@@ -327,6 +390,71 @@ function calendar_view_week(container, cal) {
 			}
 		};
 		t._timed_events.push(event);
+		event.layout();
+	};
+	t.add_range_event = function(event) {
+		event.div = document.createElement("DIV");
+		event.div.style.backgroundColor = event.color;
+		event.div.className = "calendar_view_week_range_event";
+		event.div.style.position = 'absolute';
+		event.div.style.visibility = 'hidden';
+		event.div.style.overflow = 'hidden';
+		event.div.innerHTML = "<span style='padding: 2px;'>"+event.title+"</span>";
+		event.div.data = event;
+		event.div.style.cursor = "pointer";
+		event.div.onclick = function() {
+			this.data.show();
+		};
+		var title = event.title;
+		if (event.summary) title += "\r\n"+event.summary;
+		if (event.location) title += "\r\n@ "+event.location;
+		event.div.title = title;
+		event.layout = function() {
+			if (this.end.getTime() < t.week_start) { this.div.style.visibility = 'hidden'; return; }
+			if (this.start.getTime() > t.week_end) { this.div.style.visibility = 'hidden'; return; }
+			if (this.div.parentNode != t.container)
+				t.container.appendChild(this.div);
+			this.div.style.visibility = 'visible';
+			var day_start = this.start.getDate()-t.week_start.getDate();
+			var day_end = this.end.getDate()-1-t.week_start.getDate(); // -1 because end is non-inclusive
+			if (day_start < 0) day_start = 0;
+			if (day_end >= t.nb_days) day_end = t.nb_days-1;
+			var y = t._days_events[0].offsetTop+1;
+			var x1 = t._days_events[day_start].offsetLeft;
+			var x2 = t._days_events[day_end].offsetLeft+t._days_events[day_end].offsetWidth-1;
+			// find the y position so it will not overlap another event
+			var overlap = false;
+			do {
+				overlap = false;
+				for (var i = 0; i < t._range_events.length; ++i) {
+					var e = t._range_events[i];
+					if (e == this) continue;
+					if (e.div.style.visibility != 'visible') continue;
+					var ey = e.div.offsetTop;
+					if (ey != y) continue; // not at the same level
+					var ex1 = e.div.offsetLeft;
+					var ex2 = e.div.offsetLeft+e.div.offsetWidth-1;
+					if (ex2 < x1) continue; // before
+					if (ex1 > x2) continue; // after
+					// overlap ! move to next level
+					y += 18;
+					overlap = true;
+					break;
+				}
+			} while (overlap);
+			this.div.style.top = y+"px";
+			this.div.style.left = x1+"px";
+			this.div.style.width = (x2-x1+1-2)+"px";
+			this.div.style.height = "17px";
+			// check there is enough space for this one
+			if (t._content.offsetTop < y+18) {
+				t._content.style.height = (t.container.offsetHeight-y-18)+"px"; 
+				t._content.style.top = (y+18)+"px";
+				for (var i = 0; i < t._days_events.length; ++i)
+					t._days_events[i].style.height = (y+18-t._days_events[i].offsetTop)+"px";
+			}
+		};
+		t._range_events.push(event);
 		event.layout();
 	};
 	t.reset = function() {
