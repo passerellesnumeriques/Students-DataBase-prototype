@@ -1,1 +1,23 @@
-selection=selection 
+all have a schedule=all have a schedule
+all have a schedule and assigned staff=all have a schedule and assigned staff
+all schedules sessions have a staff assigned=all schedules sessions have a staff assigned
+applicant=applicant
+applicants=applicants
+applications=applications
+campaign=campaign
+~create ~new ~campaign=~create ~new ~campaign
+dashboard=dashboard
+don't have a schedule yet=don't have a schedule yet
+don't have any staff assigned=don't have any staff assigned
+~information ~sessions=~information ~sessions
+information sessions planned=information sessions planned
+information session planned=information session planned
+interviews=interviews
+selection=selection
+~social ~investigations=~social ~investigations
+~written ~exams=~written ~exams
+
+Please select a selection campaign=Please select a selection campaign
+
+consult selection data=consult selection data
+edit selection data=edit selection data

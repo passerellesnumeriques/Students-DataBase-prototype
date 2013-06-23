@@ -1,4 +1,4 @@
 <?php 
 PNApplication::$instance->current_domain = $_GET["domain"];
-header("Location: /");
+header("Location: /dynamic/application/page/enter");
 ?>

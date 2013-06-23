@@ -41,7 +41,8 @@ function browse_components($path) {
 	}
 	closedir($dir);
 }
-browse($_SERVER["DOCUMENT_ROOT"]."/common", "/static/common/");
+browse($_SERVER["DOCUMENT_ROOT"]."/common/js", "/static/common/js/");
+browse($_SERVER["DOCUMENT_ROOT"]."/common/images", "/static/common/images/");
 browse_components($_SERVER["DOCUMENT_ROOT"]."/component");
 ?>
 

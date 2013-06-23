@@ -3,3 +3,17 @@
 ~from ~internet=~from ~internet
 ~loading ~calendars=~loading ~calendars
 ~type of ~calendar to ~import=~type of ~calendar to ~import
+updating calendar from internet=updating calendar %name% from internet
+
+where=where
+when=when
+description=description
+organizer=organizer
+attendees=attendees
+tentative=tentative
+delegated=delegated
+wait answer=wait answer
+chairman=chairman
+requested=requested
+optional=optional
+for information=for information

@@ -19,19 +19,16 @@ function isLetter(c) {
 Array.prototype.contains=function(e){for(var i=0;i<this.length;++i)if(this[i]==e)return true;return false;};
 Array.prototype.remove=function(e){for(var i=0;i<this.length;++i)if(this[i]==e){this.splice(i,1);i--;};};
 
-function object_copy(o, recursive, depth) {
+function object_copy(o, recursive_depth) {
 	var c = new Object();
-	if (!depth) depth = 0;
 	for (var attr in o) {
 		var value = o[attr];
-		if (!recursive) { c[attr] = value; continue; }
+		if (!recursive_depth) { c[attr] = value; continue; }
 		if (typeof value == 'object') {
 			if (value instanceof Date)
 				c[attr] = new Date(value.getTime());
 			else {
-				if (depth > 50) c[attr] = value;
-				else
-					c[attr] = object_copy(value, true, depth+1);
+				c[attr] = object_copy(value, recursive_depth-1);
 			}
 		} else
 			c[attr] = value;
@@ -161,7 +158,11 @@ function setOpacity(element, opacity) {
 	element.style.filter = "alpha(opacity="+opacity+");"
 	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
 }
-function setBoxShadow(elem,a,b,c,d,color) { elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color; }
+function setBoxShadow(elem,a,b,c,d,color) { 
+	elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+	elem.style.MozBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+	elem.style.WebkitBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+}
 function setBorderRadius(elem, 
 		topleft_width, topleft_height, 
 		topright_width, topright_height, 
@@ -172,6 +173,84 @@ function setBorderRadius(elem,
 	elem.style.borderTopRightRadius = topright_width+"px "+topright_height+"px"; 
 	elem.style.borderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
 	elem.style.borderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
+	elem.style.MozBorderRadiusTopleft = topleft_width+"px "+topleft_height+"px"; 
+	elem.style.MozBorderRadiusTopright = topright_width+"px "+topright_height+"px"; 
+	elem.style.MozBorderRadiusBottomleft = bottomleft_width+"px "+bottomleft_height+"px"; 
+	elem.style.MozBorderRadiusBottomright = bottomright_width+"px "+bottomright_height+"px"; 
+	elem.style.WebkitBorderTopLeftRadius = topleft_width+"px "+topleft_height+"px"; 
+	elem.style.WebkitBorderTopRightRadius = topright_width+"px "+topright_height+"px"; 
+	elem.style.WebkitBorderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
+	elem.style.WebkitBorderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
+}
+function setBackgroundGradient(element, orientation, stops) {
+	var start_pos;
+	switch (orientation) {
+	case "horizontal": start_pos = "left"; break;
+	case "vertical": start_pos = "top"; break;
+	case "diagonal-topleft": start_pos = "-45deg"; break;
+	case "diagonal-bottomleft": start_pos = "45deg"; break;
+	case "radial": start_pos = "center"; break;
+	}
+	if (lc_browser.IE >= 6 && lc_browser.IE <= 9) {
+		var gt = orientation == "vertical" ? 0 : 1; // fallback to horizontal if diagonal or radial
+		element.style.filter = "progid:DXImageTransform.Microsoft.gradient(startColorstr='"+stops[0].color+"',endColorstr='"+stops[stops.length-1].color+"',GradientType="+gt+")";
+	} else if (lc_browser.IE >= 10) {
+		var b = "-ms-"+(orientation == "radial" ? "radial" : "linear")+"-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Chrome >= 10 || lc_browser.SafariBrowser >= 5.1) {
+		var b = "-webkit-"+(orientation == "radial" ? "radial" : "linear")+"-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Chrome > 0 || lc_browser.SafariBrowser >= 4) {
+		if (orientation == "radial") {
+			var b = "-webkit-gradient(radial, center center, 0px, center center, 100%";
+			for (var i = 0; i < stops.length; ++i)
+				b += ",color-stop("+stops[i].pos+"%,"+stops[i].color+")";
+			b += ")";
+			element.style.background = b;
+		} else {
+			var b = "-webkit-gradient(linear,";
+			switch (orientation) {
+			case "horizontal": b += "left top, right top"; break;
+			case "vertical": b += "left top, left bottom"; break;
+			case "diagonal-topleft": b += "left top, right bottom"; break;
+			case "diagonal-bottomleft": b += "left bottom, right top"; break;
+			}
+			for (var i = 0; i < stops.length; ++i)
+				b += ",color-stop("+stops[i].pos+"%,"+stops[i].color+")";
+			b += ")";
+			element.style.background = b;
+		}
+	} else if (lc_browser.FireFox >= 3.6) {
+		var b;
+		if (orientation == "radial")
+			b = "-moz-radial-gradient(center, ellipse cover";
+		else
+			b = "-moz-linear-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Opera >= 10) {
+		var b;
+		if (orientation == "radial")
+			b = "-o-radial-gradient(center, ellipse cover";
+		else
+			b = "-o-linear-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else {
+		// default
+		element.style.background = stops[0].color;
+	}
+	// TODO W3C ???
 }
 	
 getCompatibleMouseEvent = function(e) {
@@ -179,15 +258,19 @@ getCompatibleMouseEvent = function(e) {
 	if (lc_browser.IE == 0 || lc_browser.IE >= 9) { ev.x = e.clientX; ev.y = e.clientY; }
 	else { ev.x = window.event.clientX+document.documentElement.scrollLeft; ev.y = window.event.clientY+document.documentElement.scrollTop; }
 	if (lc_browser.IE == 0) ev.button = e.button;
-	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 2; break; case 2: ev.button = 3; break; } 
+	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 1; break; case 2: ev.button = 2; break; } 
 	return ev;
+};
+getCompatibleKeyEvent = function(e) {
+	if (lc_browser.IE == 0 || lc_browser.IE >= 9) return e;
+	return window.event;
 };
 if (!lc_browser.IE >= 9) {
 	getWindowHeight = function() { return window.innerHeight; };
 	getWindowWidth = function() { return window.innerWidth; };
 } else if (lc_browser.IE >= 7) {
-	getWindowHeight = function() { return document.documentElement.clientHeight; };
-	getWindowWidth = function() { return document.documentElement.clientWidth; };
+	getWindowHeight = function() { return document.documentElement.scrollHeight; };
+	getWindowWidth = function() { return document.documentElement.scrollWidth; };
 } else {
 	getWindowHeight = function() { return document.body.clientHeight; };
 	getWindowWidth = function() { return document.body.clientWidth; };
@@ -292,17 +375,23 @@ function URL(s) {
 		this.path = s;
 	
 	// resolve .. in path
+	if (this.path.substr(0,1) != "/" && window.location.pathname) {
+		s = window.location.pathname;
+		i = s.lastIndexOf('/');
+		s = s.substr(0,i+1);
+		this.path = s + this.path;
+	}
 	while ((i = this.path.indexOf('/../')) > 0) {
 		var j = this.path.substr(0,i).lastIndexOf('/');
 		if (j < 0) break;
 		this.path = this.path.substr(0,j+1)+this.path.substr(i+4);
 	}
-
+	
 	this.toString = function() {
 		var s;
-		if (this.protocol && this.host) {
+		if (this.protocol) {
 			s = this.protocol+"://"+this.host;
-			if (this.port != null) s += ":"+this.port;
+			if (this.port) s += ":"+this.port;
 		} else
 			s = "";
 		s += this.path;
@@ -324,12 +413,14 @@ function CustomEvent() {
 } 
 
 function listenEvent(elem, type, handler) {
+	if (elem == window && !document.createEvent) elem = document;
 	if (elem.addEventListener)
 	     elem.addEventListener(type,handler,false);
 	 else if (elem.attachEvent)
 	     elem.attachEvent('on'+type,handler); 
 }
 function unlistenEvent(elem, type, handler) {
+	if (elem == window && !document.createEvent) elem = document;
 	if (elem.removeEventListener)
 		elem.removeEventListener(type,handler,false);
 	else
@@ -349,6 +440,7 @@ function triggerEvent(elem, type, attributes) {
 	if (document.createEvent) {
 		elem.dispatchEvent(event);
 	} else {
+		if (elem == window) elem = document;
 		elem.fireEvent("on" + type, event);
 	}
 }
@@ -379,6 +471,12 @@ function add_javascript(url, onload) {
 				return;
 			}
 			// didn't use this way...
+			if (e._loaded) {
+				// but marked as already loaded
+				_scripts_loaded.push(p);
+				if (onload) onload();
+				return;
+			}
 			e.data = new CustomEvent();
 			if (onload) e.data.add_listener(onload);
 			if (e.onload) e.data.add_listener(e.onload);
@@ -391,10 +489,10 @@ function add_javascript(url, onload) {
 	s.data = new CustomEvent();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { _scripts_loaded.push(p); this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { scripts_loaded.push(p); this.data.fire(); this.onreadystatechange = null; } };
-	s.src = new URL(url).toString();
+	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
+	s.src = new URL(url).toString();
 }
 function javascript_loaded(url) {
 	url = new URL(url);

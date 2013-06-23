@@ -89,5 +89,10 @@ class PNApplication {
 		$c->init();
 	}
 
+	public function get_domain_descriptor($domain = null) {
+		if ($domain == null) $domain = $this->current_domain;
+		$domains = include("domains");
+		return $domains[$domain];
+	}
 }
 ?>

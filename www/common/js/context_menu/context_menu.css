@@ -3,17 +3,19 @@
 	visibility: hidden;
 	top: -10000px;
 	border: 1px solid black;
-	background-color: #C0C0F0;
+	background-color: #F0F0F0;
 	box-shadow: 3px 3px 3px #C0C0D0;
 }
 .context_menu_item {
-	background-color: #C0C0F0;
+	background-color: #F0F0F0;
 	text-align: left;
 	cursor: pointer;
-	padding: 2px;
+	padding: 1px;
+	border: 1px solid #F0F0F0;
 }
 .context_menu_item:hover {
 	background-color: #FFF0D0;
+	border: 1px solid #F0E0C0;
 }
 .context_menu_item img {
 	vertical-align: bottom;
@@ -22,8 +24,8 @@
 	text-decoration: none;
 }
 .context_menu_title {
-	background-color: #E0E0E0;
-	border-bottom: 1px solid black;
+	background-color: #D0D0FF;
+	border-bottom: 1px solid #8080C0;
 	text-align: center;
 	padding: 2px;
 }

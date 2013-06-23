@@ -1,0 +1,110 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/animation.js'></script>
+</head>
+<body>
+<h1>animation.js</h1>
+
+An animation is an action that will make an element of the page evolve during a given amount of time.<br/>
+For example, when we want to fade out an element during 2 seconds, that means that during 2 seconds we will regularly update the opacity/transparency of the element from 100%(opaque) to 0%(transparent).<br/>
+<br/>
+animation.js implements the algorithm to call a function regularly to make the animation: see function <code>animation.create</code> below for more details.
+
+<table class="code_doc">
+<tr>
+	<td>
+		animation.create(element, from, to, duration, handler)
+	</td>
+	<td>
+		<ul>
+			<li><code>element</code> is the HTML element of the page that will be updated to make the animation.</li>
+			<li><code>duration</code> is the duration that the animation should take, in milliseconds.</li>
+			<li><code>from</code> is the initial value (at the beginning of the animation), while <code>to</code> is the final value (after <code>duration</code> milliseconds).</li>
+			<li><code>handler</code> is the function that will update the element regularly: it is automatically called regularly, with 2 parameters: the current value, and the element.<br/>
+				The current value is the formula: <code>from</code> + (current time - starting time) * (<code>to</code> - <code>from</code>) / <code>duration</code> <br/>
+				For instance, if <code>from</code> is 1000, <code>to</code> is 2000, and <code>duration</code> is 10000 (10 seconds), after 2 seconds (2000 milliseconds) the current value will be 1200: 1000+(current time - start time)*(2000-1000)/10000  
+		</ul>
+		This function returns an object, refering to the animation, and that can be used in other functions.
+		<br/>
+		Example: <a href='#' onclick="example_anim();return false">Click me to see an example</a>
+		<script type='text/javascript'>
+			function example_anim() {
+				var d = document.createElement("DIV");
+				d.style.position = "fixed";
+				d.style.top = "20px";
+				d.style.left = "0px";
+				d.style.width = "20px";
+				d.style.height = "20px";
+				d.style.border = "1px solid black";
+				d.style.backgroundColor = "green";
+				document.body.appendChild(d);
+				animation.create(d, 0, getWindowWidth(), 5000, function(value, element) {
+					element.style.left = value+"px"; 
+				});
+			}
+		</script>
+	</td>
+</tr>
+<tr>
+	<td>
+		animation.stop(anim)
+	</td>
+	<td>
+		Stop the animation given as parameter. <code>anim</code> is an object previously returned by the function <code>animation.create</code>
+	</td>
+</tr>
+<tr>
+	<td>
+		animation.fadeIn(element, duration, end_handler, start, end)
+	</td>
+	<td>
+		Make an <code>element</code> fade in during <code>duration</code> milliseconds, starting from opacity <code>start</code> to opacity <code>end</code>.<br/>
+		If <code>start</code> is not specified, it will start from opacity 0% (transparent).<br/>
+		If <code>end</code> is not specified, it will end to opacity 100% (opaque).<br/>
+		<code>end_handler</code> is optional. If specified, it will be called at the end of the animation, with <code>element</code> as parameter.
+		<br/>
+		Example: <a href='#' onclick="animation.fadeIn(document.getElementById('example_fade_in'),1000);return false;">Click me to make a new element appear</a> <span id='example_fade_in'>I'm appearing!!</span>
+		<script type='text/javascript'>
+			setOpacity(document.getElementById('example_fade_in'), 0);
+		</script>
+	</td>
+</tr>
+<tr>
+	<td>
+		animation.fadeOut(element, duration, end_handler, start, end)
+	</td>
+	<td>
+		Make an <code>element</code> fade in during <code>duration</code> milliseconds, starting from opacity <code>start</code> to opacity <code>end</code>.<br/>
+		If <code>start</code> is not specified, it will end to opacity 100% (opaque).<br/>
+		If <code>end</code> is not specified, it will start from opacity 0% (transparent).<br/>
+		<code>end_handler</code> is optional. If specified, it will be called at the end of the animation, with <code>element</code> as parameter.
+		<br/>
+		Example: <a href='#' onclick="animation.fadeOut(this,1000);return false;">Click me to make me disappear</a>
+	</td>
+</tr>
+<tr>
+	<td>
+		animation.fadeColor(element, from, to, duration)
+	</td>
+	<td>
+		Change the CSS attribute <i>color</i> of <code>element</code> step by step, from color <code>from</code> to color <code>to</code>, during <code>duration</code> milliseconds.<br/>
+		<code>from</code> and <code>to</code> are arrays of 3 integers representing the color as [R,G,B].
+	</td>
+</tr>
+<tr>
+	<td>
+		animation.fadeBackgroundColor(element, from, to, duration)
+	</td>
+	<td>
+		Same as <code>animation.fadeColor</code>, but change the CSS attribute <i>background-color</i>.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>

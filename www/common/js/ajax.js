@@ -73,20 +73,21 @@ ajax = {
 		        handler(null);
 			} else if (ct == "text/json") {
 				// JSON
+				var output;
 		        try {
-		        	var output = eval("("+xhr.responseText+")");
-		        	if (output.errors) {
-		        		error_dialog("Errors:<br/>"+output.errors);
-		        		handler(null);
-		        		return;
-		        	}
-		        	if (typeof output.result == 'undefined')
-		        		error_dialog("Error: No result from JSON service");
-		        	handler(output.result);
+		        	output = eval("("+xhr.responseText+")");
 		        } catch (e) {
 		        	error_dialog("Invalid json output:<br/>Error: "+e+"<br/>Output:<br/>"+xhr.responseText);
 			        handler(null);
 		        }
+	        	if (output.errors) {
+	        		error_dialog("Errors:<br/>"+output.errors);
+	        		handler(null);
+	        		return;
+	        	}
+	        	if (typeof output.result == 'undefined')
+	        		error_dialog("Error: No result from JSON service");
+	        	handler(output.result);
 			} else {
 				// considered as free text...
 				handler(xhr.responseText);

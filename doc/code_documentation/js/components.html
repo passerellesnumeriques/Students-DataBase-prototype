@@ -1,11 +1,12 @@
+<!DOCTYPE html>
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="style.css"/>
-	<script type='text/javascript'>common_images_url = "../../../www/common/images/";</script>
 	<script type='text/javascript' src='../../../www/common/js/utils.js'></script>
+	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
+	<script type='text/javascript' src='config_for_examples.js'></script>
 	<script type='text/javascript' src='../../../www/common/js/animation.js'></script>
 	<script type='text/javascript' src='../../../www/common/js/ajax.js'></script>
-	<script type='text/javascript' src='../../../www/common/js/locale.js'></script>
 <style type='text/css'>
 .horiz_menu_item {
 	padding: 1px 3px 1px 3px;
@@ -24,7 +25,7 @@ Here are the available components, with examples:
 </colgroup>
 <tr><th>Component</th><th>Description</th><th>Example</th></tr>
 <tr>
-	<td><a href="collapsable_section.html">Collapsable section</a></td>
+	<td><a href="components/collapsable_section.html">Collapsable section</a></td>
 	<td>
 		A collapsable section, is a block having a title and a content. By clicking on the title, the user can hide or show the content.
 	</td>
@@ -42,7 +43,7 @@ Here are the available components, with examples:
 	</td>
 </tr>
 <tr>
-	<td><a href="context_menu.html">Context Menu</a></td>
+	<td><a href="components/context_menu.html">Context Menu</a></td>
 	<td>
 		A context menu is a popup menu, which is typically displayed at the mouse pointer location, or behind a button clicked by the user.
 	</td>
@@ -73,6 +74,37 @@ Here are the available components, with examples:
 				document.getElementById('date_picker_example').appendChild(new date_picker(2050).getElement());
 			});
 			add_stylesheet("../../../www/common/js/date_picker/date_picker.css");
+		</script>
+	</td>
+</tr>
+<tr>
+	<td><a href="grid.html">Grid</a></td>
+	<td>
+		Grid is a convenient way to build a table, with different types of cells according to the columns (integer, drop-down, text...).
+	</td>
+	<td>
+		<div id='grid_example'></div>
+		<script type='text/javascript'>
+			add_javascript("../../../www/common/js/field/field_date.js",function() {
+			add_javascript("../../../www/common/js/field/field_editable_text.js",function(){
+			add_javascript("../../../www/common/js/field/field_enum.js",function(){
+			add_javascript("../../../www/common/js/field/field_text.js",function(){
+			add_javascript("../../../www/common/js/grid/grid.js",function() {
+				var g = new grid(document.getElementById('grid_example'));
+				g.addColumn("Editable Text",50,new field_editable_text());
+				g.addColumn("Text",50,new field_text());
+				g.addColumn("Date",50,new field_date());
+				g.addColumn("Enumeration",50,new field_enum(["A","B","C"]));
+				g.setData([
+				 ["hi","hello","2013-06-15","B"],
+				 ["good","bye","2013-04-16","A"]
+				]);
+			});
+			});
+			});
+			});
+			});
+			add_stylesheet("../../../www/common/js/grid/grid.css");
 		</script>
 	</td>
 </tr>

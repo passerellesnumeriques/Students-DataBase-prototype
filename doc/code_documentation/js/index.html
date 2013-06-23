@@ -5,9 +5,18 @@
 <body>
 The JavaScript part is composed of:
 <ul>
-	<li><a href="utils.js.html">utils.js</a>: useful functions and cross-browser compatibility</li>
-	<li><a href="components.html">UI components</a> like grid, popup window, menu, ...</li>
-	<li><a href="field/index.html">field</a> directory, defining editors/displayers for different kind of data: example, if the data is an enumeration of possible values, it will be displayed as a <code>select</code></li>
+	<li>The most important is <a href="utils.js.html">utils.js</a>: it contains functions making the application cross-browser compatible, and provides some useful functions often needed.</li>
+	<li><a href="ajax.js.html">ajax.js</a> is the recommended way to make AJAX calls, and especially <code>ajax.post_parse_result</code> is recommended to call services on PHP components.</li>
+	<li><a href="common_dialogs.js.html">common_dialogs.js</a> provides popup windows for errors, questions, information...</li>
+	<li><a href="locale.js.html">locale.js</a> is the javascript implementation to provide localized strings</li>
+	<li>Also some <a href="components.html">UI components</a> like grid, popup window, menu, ... are provided in order to make the application more user-friendly, and uniform among the different pages.</li>
+	<li><a href="field/index.html">field</a> directory, defines editors/displayers for different kind of data: example, if the data is an enumeration of possible values, it will be displayed as a <code>select</code>. This may be useful to create UI components that will automatically adapt to different kind of data to be displayed/edited.</li>
+	<li><a href="animation.js.html">animation.js</a> contains useful functions to create animations in the page (like fading out an element).</li>
+	
+	<li><a href="dragndrop.js.html">dragndrop.js</a> allows support of drag'n'drop operations</li>
+	<li><a href="drawing.js.html">drawing.js</a> provides functions to draw on the page, and objects to handle 2D geometry</li>
+	<li><a href="validation.js.html">validation.js</a> contains functions to provide visual feedbacks to the user when validating fields of a form</li>
+	<li><a href="Status.js.html">Status.js and StatusUI_Top.js</a> provides a way to display status messages (loading, errors, ...)</li>
 </ul>
 
 </body>

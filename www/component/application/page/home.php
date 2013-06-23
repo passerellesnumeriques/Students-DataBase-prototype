@@ -4,3 +4,6 @@ TODO: home page
 <a href="/dynamic/people/page/home">People</a><br/>
 <a href="/dynamic/storage/page/multiple_upload">Multiple upload</a><br/>
 <a href="/dynamic/calendar/page/home">Calendar</a><br/>
+<a href="/dynamic/geography/page/address">Geography: address</a><br/>
+<br/>
+<br/>

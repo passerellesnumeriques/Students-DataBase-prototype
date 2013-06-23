@@ -1,0 +1,98 @@
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script type='text/javascript' src='../doc.js'></script>
+</head>
+<body>
+<h1>drawing.js</h1>
+
+<h2>Point2D</h2>
+Class representing a 2D point (x,y).
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		Point2D(x,y)
+	</td>
+	<td>
+		initialize the object with the given coordinates (<code>x</code>, <code>y</code>).
+	</td>
+</tr>
+<tr><th colspan=2>Attributes</th></tr>
+<tr>
+	<td>
+		x<br/>
+		y
+	</td>
+	<td>
+		Horizontal (<code>x</code>) and vertical (<code>y</code>) coordinate of the point.
+	</td>
+</tr>
+</table>
+
+<h2>Line2D</h2>
+Class representing a line between two 2D points.
+<table class="code_doc">
+<tr><th colspan=2>Constructor</th></tr>
+<tr>
+	<td>
+		Line2D(point1, point2)
+	</td>
+	<td>
+		<code>point1</code> and <code>point2</code> are <code>Point2D</code> objects.
+	</td>
+</tr>
+<tr><th colspan=2>Attributes</th></tr>
+<tr>
+	<td>
+		pt1<br/>
+		pt2
+	</td>
+	<td>
+		The 2 points defining the line.
+	</td>
+</tr>
+<tr><th colspan=2>Methods</th></tr>
+<tr>
+	<td>
+		getEquation()
+	</td>
+	<td>
+		Returns an array of 3 floating points [A,B,C] corresponding to the 2D linear equation.
+	</td>
+</tr>
+<tr>
+	<td>
+		getDistanceSquared(pt)
+	</td>
+	<td>
+		Returns the distance squared between this line and the given point <code>pt</code>.
+	</td>
+</tr>
+<tr>
+	<td>
+		getDistance(pt)
+	</td>
+	<td>
+		Returns the distance between this line and the given point <code>pt</code>.<br/>
+		Equivalent to <code>Math.sqrt(getDistanceSquared(pt))</code>.
+	</td>
+</tr>
+</table>
+
+<h2>drawing</h2>
+The object drawing provides the following functions:
+<table class="code_doc">
+<tr>
+	<td>
+		horizontal_connector(e1,e2)
+	</td>
+	<td>
+		Draws a line that will connect the 2 given elements <code>e1</code> and <code>e2</code> horizontally.<br/>
+		That means the line will be between the right edge of <code>e1</code> and the left edge of <code>e2</code>.
+	</td>
+</tr>
+</table>
+
+</body>
+</html>
