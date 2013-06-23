@@ -1,3 +1,5 @@
+if (typeof add_javascript != 'undefined')
+	add_javascript(get_script_path('context_menu.js')+"../animation.js");
 function context_menu(menu) {
 	if (typeof menu == "string") menu = document.getElementById(menu);
 	if (menu != null && menu.parentNode != null && menu.parentNode.nodeType == 1)
@@ -7,6 +9,8 @@ function context_menu(menu) {
 		menu = document.createElement("DIV");
 		menu.className = 'context_menu';
 	}
+	t.removeOnClose = false;
+	t.onclose = null;
 	for (var i = 0; i < menu.childNodes.length; ++i)
 		if (menu.childNodes[i].nodeType == 1 && menu.childNodes[i].className == "context_menu_item") {
 			if (typeof menu.childNodes[i].onclickset == 'undefined' && menu.childNodes[i].onclick && !menu.childNodes[i].data)
@@ -20,6 +24,7 @@ function context_menu(menu) {
 		}
 	
 	t.addItem = function(element) {
+		element.style.position = 'static';
 		menu.appendChild(element);
 		if (typeof element.onclickset == 'undefined' && element.onclick && !element.data)
 			element.data = element.onclick;
@@ -29,6 +34,11 @@ function context_menu(menu) {
 			return false;
 		};
 		element.onclickset = true;
+	};
+	t.getItems = function() { return menu.childNodes; };
+	t.clearItems = function() {
+		while (menu.childNodes.length > 0)
+			menu.childNodes[0].parentNode.removeChild(menu.childNodes[0]);
 	};
 	
 	t.showBelowElement = function(from) {
@@ -40,9 +50,23 @@ function context_menu(menu) {
 		var w = menu.offsetWidth;
 		var h = menu.offsetHeight;
 		if (y+from.offsetHeight+h > getWindowHeight()) {
-			// no space below: show it on the top
-			y = y-h;
-			if (y < 0) y = 0;
+			// not enough space below
+			var space_below = getWindowHeight()-(y+from.offsetHeight);
+			var space_above = y;
+			if (space_above > space_below) {
+				y = y-h;
+				if (y < 0) {
+					// not enough space: scroll bar
+					y = 0;
+					menu.style.overflowY = 'scroll';
+					menu.style.height = space_above+"px";
+				}
+			} else {
+				// not enough space: scroll bar
+				y = y+from.offsetHeight;
+				menu.style.overflowY = 'scroll';
+				menu.style.height = space_below+"px";
+			}
 		} else {
 			// by default, show it below
 			y = y+from.offsetHeight;
@@ -71,23 +95,42 @@ function context_menu(menu) {
 		}
 	};
 	t.hide = function() {
+		if (t.onclose) t.onclose();
 		if (typeof animation != 'undefined') {
 			if (menu.anim) animation.stop(menu.anim);
-			menu.anim = animation.fadeOut(menu,300);
+			menu.anim = animation.fadeOut(menu,300,function() {
+				if (t.removeOnClose)
+					document.body.removeChild(menu);
+			});
 		} else {
-			menu.style.visibility = "hidden";
-			menu.style.top = "-10000px";
+			if (t.removeOnClose)
+				document.body.removeChild(menu);
+			else {
+				menu.style.visibility = "hidden";
+				menu.style.top = "-10000px";
+			}
 		}
 		for (var i = 0; i < document.body.childNodes.length; ++i)
 			if (document.body.childNodes[i].style) document.body.childNodes[i].style.zIndex = 1;
 		unlistenEvent(window, 'click', t._listener);
 	};
 	t._listener = function(ev) {
-		if (!ev) ev = window.event;
+		// check if the target is inside
+		var elem = ev.target;
+		if (elem) {
+			do {
+				if (elem == menu) return;
+				if (elem.parentNode == elem) break;
+				elem = elem.parentNode;
+				if (elem == null || elem == document.body || elem == window) break;
+			} while (true);
+		}
+		// check if this is inside
+		ev = getCompatibleMouseEvent(ev);
 		var x = absoluteLeft(menu);
 		var y = absoluteTop(menu);
-		if (ev.clientX >= x && ev.clientX < x+menu.offsetWidth &&
-			ev.clientY >= y && ev.clientY < y+menu.offsetHeight) return;
+		if (ev.x >= x && ev.x < x+menu.offsetWidth &&
+			ev.y >= y && ev.y < y+menu.offsetHeight) return;
 		t.hide();
 	};
 }

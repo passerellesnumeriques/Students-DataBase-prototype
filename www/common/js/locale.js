@@ -1,10 +1,11 @@
+if (window == window.top) {
 locale = {
 	get_string: function(str,namedValues) {
 		key = str.toLowerCase();
 		var l = null;
-		for (var i = 0; i < locale._strings.length; ++i)
-			if (locale._strings[i].key == key) {
-				l = locale._strings[i];
+		for (var i = 0; i < this._strings.length; ++i)
+			if (this._strings[i].key == key) {
+				l = this._strings[i];
 				break;
 			}
 		if (l == null) return "??"+str+"??";
@@ -41,7 +42,13 @@ locale = {
 		return s;
 	},
 	_strings: [],
-	load: function(url) {
+	_loaded: [],
+	load: function(url, namespace) {
+		for (var i = 0; i < this._loaded.length; ++i)
+			if (this._loaded[i][0] == url && this._loaded[i][1] == namespace)
+				return;
+		this._loaded.push([url,namespace]);
+		var th=this;
 		ajax.call("GET", url, null, null, function(error) {
 			if (typeof error_dialog != 'undefined')
 				error_dialog("Error loading localized strings '"+url+"': "+error);
@@ -79,8 +86,15 @@ locale = {
 				}
 				l.translation = strings[str].toLowerCase();
 				l.key = s.toLowerCase();
-				locale._strings.push(l);
+				if (namespace) l.key = namespace+":"+l.key;
+				th._strings.push(l);
 			}
 		}, true);
 	}
 };
+} else {
+locale = {
+	get_string: function(str,namedValues) { return window.top.locale.get_string(str,namedValues); },
+	load: function(url, namespace) { window.top.locale.load(url,namespace); }
+};
+}

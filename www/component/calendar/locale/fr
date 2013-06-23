@@ -3,3 +3,17 @@
 ~from ~internet=~depuis ~internet
 ~loading ~calendars=~chargement des ~calendriers
 ~type of ~calendar to ~import=~type de ~calendrier à ~importer
+updating calendar from internet=mise à jour du calendrier %name% depuis internet
+
+where=où
+when=quand
+description=description
+organizer=organisateur
+attendees=participants
+tentative=tentative
+delegated=délégé
+wait answer=attente d'une réponse
+chairman=préside la réunion
+requested=obligatoire
+optional=optionel
+for information=pour information

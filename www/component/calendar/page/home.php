@@ -41,21 +41,33 @@ var loading_status = new StatusMessage(Status_TYPE_PROCESSING, "<?php locale("Lo
 loading_status.counter = 0;
 
 var cal = new Calendar();
-cal.onloading = function(cal, cal_url) {
+cal.onloading = function(calendars, calendar) {
 	loading_status.counter++;
 	if (loading_status.counter == 1)
 		status_mgr.add_status(loading_status);
 };
-cal.onloaded = function(cal, cal_url) {
+cal.onloaded = function(calendars, calendar) {
 	loading_status.counter--;
 	if (loading_status.counter == 0)
 		status_mgr.remove_status(loading_status);
 };
-cal.onerror = function(cal, cal_url, error) {
+cal.onerror = function(calendars, calendar, error) {
 	loading_status.counter--;
 	if (loading_status.counter == 0)
 		status_mgr.remove_status(loading_status);
-	status_mgr.add_status(new StatusMessageError(null, cal.name+": "+error, 5000));
+	status_mgr.add_status(new StatusMessageError(null, calendar.name+": "+error, 5000));
+};
+cal.onaction = function(id, message) {
+	var s = new StatusMessage(Status_TYPE_PROCESSING, message);
+	s.calid = id;
+	status_mgr.add_status(s);
+};
+cal.onactiondone = function(id) {
+	for (var i = 0; i < status_mgr.status.length; ++i)
+		if (status_mgr.status[i].calid && status_mgr.status[i].calid == id) {
+			status_mgr.remove_status(status_mgr.status[i]);
+			return;
+		}
 };
 var view = new calendar_view_week('calendar_content',cal);
 <?php
@@ -138,9 +150,12 @@ function import_calendar() {
 				type = "internet";
 				data = internet_url.value;
 			}
+			var s = new StatusMessage(Status_TYPE_PROCESSING, "<?php locale("Import calendar")?>");
+			status_mgr.add_status(s);
 			ajax.post_parse_result("/dynamic/calendar/service/import_calendar",{name:name,type:type,data:data},function(result){
+				status_mgr.remove_status(s);
 				if (result && result.id)
-					cal.add_calendar("/dynamic/calendar/service/get?id="+result.id);
+					cal.add_calendar(name, "/dynamic/calendar/service/get?id="+result.id, "#A0FFA0");
 			});
 		};
 

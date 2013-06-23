@@ -5,3 +5,4 @@
 # OS junk files
 [Tt]humbs.db
 *.DS_Store
+/tools/geography_database_builder/bin

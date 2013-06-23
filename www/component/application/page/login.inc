@@ -1,12 +1,14 @@
 <?php
+$message = null;
 if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["password"])) {
 	global $app;
+	setcookie("domain",$_POST["domain"],time()+30*24*60*60,"/dynamic/application/page/enter");
+	setcookie("username",$_POST["username"],time()+30*24*60*60,"/dynamic/application/page/enter");
 	if ($app->user_management->login($_POST["domain"], $_POST["username"], $_POST["password"])) {
 		header("Location: enter");
-		setcookie("domain",$app->user_management->domain,time()+30*24*60*60,"/dynamic/application/page/enter");
-		setcookie("username",$app->user_management->username,time()+30*24*60*60,"/dynamic/application/page/enter");
 		die();
-	}
+	} else
+		$message = get_locale("application","Invalid username or password");
 }
 ?>
 <!DOCTYPE html>
@@ -15,8 +17,8 @@ if (isset($_POST["domain"]) && isset($_POST["username"]) && isset($_POST["passwo
 	<title>PN Students DataBase</title>
 	<link rel="stylesheet" href="/static/application/style.css"/>
 </head>
-<body>
-<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%" onsubmit="var f=document.getElementById('frame_loading');if(f)f.contentWindow.stop_loading = true; return true;">
+<body onload="window.top.pn_loading_end();">
+<form method="post" action="<?php if (isset($_GET["page"])) echo "?page=".$_GET["page"]; ?>" style="width:100%;height:100%" onsubmit="var f=document.getElementById('frame_loading');if(f)f.contentWindow.stop_loading = true; window.top.pn_loading_start(); return true;">
 <table style="width:100%;height:100%"><tr><td valign=middle align=center>
 <?php
 if (isset($_GET["from"])) {
@@ -25,6 +27,9 @@ if (isset($_GET["from"])) {
 		locale("application","Logout_because_inactivity");
 		break;
 	}
+}
+if ($message <> null) {
+	echo "<img src='/static/common/images/error.png' style='vertical-align:bottom'/> <span style='color:red'>".$message."</span>";
 }
 ?>
 <table style='border:1px solid #22bbea'>
@@ -36,7 +41,8 @@ if (isset($_GET["from"])) {
 		<td>
 			<select name="domain">
 				<?php
-				foreach (explode(",",file_get_contents("domains")) as $domain)
+				$domains = include("domains");
+				foreach ($domains as $domain=>$descr)
 					echo "<option value=\"".$domain."\"".(@$_COOKIE["domain"]==$domain ? " selected" : "").">".$domain."</option>";
 				?>
 			</select>

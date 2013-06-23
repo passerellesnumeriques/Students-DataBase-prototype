@@ -4,15 +4,8 @@ $this->add_stylesheet("/static/common/js/horizontal_menu/horizontal_menu.css");
 $this->add_javascript("/static/common/js/context_menu/context_menu.js");
 $this->add_stylesheet("/static/common/js/context_menu/context_menu.css");
 $this->add_javascript("/static/common/js/animation.js");
-$this->onload("new horizontal_menu('application_menu');application_resize_frame();var e = document.getElementById('application_hide');animation.fadeOut(e,500,function(){e.parentNode.removeChild(e);});");
+$this->onload("new horizontal_menu('application_menu');application_resize_frame();window.top.pn_loading_end();");
 ?>
-<div id='application_hide' style='position:fixed;width:100%;height:100%;top:0px;left:0px;z-index:100;background-color:white'>
-<table width=100% height=100%>
-<tr><td align=center valign=middle>
-<img src='/static/common/images/wait_32.png'/>
-</td></tr>
-</table>
-</div>
 <div id='application_header'>
 	<table cellspacing=0 cellpadding=0 width=100%>
 	<tr>
@@ -22,8 +15,8 @@ $this->onload("new horizontal_menu('application_menu');application_resize_frame(
 				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/students_life/page/home';"><img src='/static/students_life/students_life_16.png'/><?php locale("students_life","Students' Life")?></div>
 				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/academic/page/home';"><img src='/static/academic/academic_16.png'/><?php locale("academic","Academic")?></div>
 				<div class='application_menu_item' onclick="document.getElementById('application_content').src='/dynamic/in_company/page/home';"><img src='/static/in_company/in_company_16.png'/><?php locale("in_company","In Company")?></div>
-				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/user_management/page/home';"><img src='/static/user_management/user_management_16.png'/><?php locale("user_management","User Management")?></div>
-				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/home';"><img src='/static/people/people_16.png'/><?php locale("people","People")?></div>
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/user_management/page/home';"><img src='/static/user_management/user_management_16.png'/> <?php locale("user_management","User Management")?></div>
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/home';"><img src='/static/people/people_16.png'/> <?php locale("people","People")?></div>
 				<div class='application_menu_item'><img src='/static/application/more.png'/><?php locale("application","More")?></div>
 			</div>
 			<!--
@@ -68,7 +61,8 @@ $this->onload("new horizontal_menu('application_menu');application_resize_frame(
 			<img src='/static/application/database.png' style='vertical-align:bottom'/>
 			<select style='padding:0px;margin:0px' onchange="location.href='/dynamic/application/service/set_domain?format=xml&domain='+this.value;">
 			<?php
-			foreach (preg_split("/,/", file_get_contents("domains",true)) as $domain)
+			$domains = include("domains");
+			foreach ($domains as $domain=>$descr)
 				echo "<option value='".$domain."'".($domain == PNApplication::$instance->current_domain ? " selected" : "").">".$domain."</option>";
 			?>
 			</select>

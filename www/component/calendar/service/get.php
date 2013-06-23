@@ -6,50 +6,59 @@ require_once("common/SQLQuery.inc");
 $calendar = SQLQuery::create()->select("Calendar")->where("id",$id)->execute_single_row();
 if ($calendar == null) { PNApplication::error("Invalid calendar"); return; }
 
-// check this calendar is owned by the current user
-$owned = SQLQuery::create()->select("UserCalendar")->where("calendar",$id)->where("username",PNApplication::$instance->user_management->username)->execute_single_row();
-if ($owned == null) { PNApplication::error("Access denied"); return; }
-
-if ($calendar["type"] == "internet") {
-	$c = curl_init($calendar["data"]);
-	curl_setopt($c, CURLOPT_HEADER, FALSE);
-	curl_setopt($c, CURLOPT_RETURNTRANSFER, TRUE);
-	curl_setopt($c, CURLOPT_SSL_VERIFYPEER, FALSE);
-	curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
-	curl_setopt($c, CURLOPT_TIMEOUT, 20);
-	$result = curl_exec($c);
-	if ($result === FALSE)
-		PNApplication::error(curl_error($c));
-	curl_close($c);
-	if ($result) {
-		if (substr($result, 0, 15) == "BEGIN:VCALENDAR") {
-			// VCalendar format
-			include "vcalendar.inc";
-			$cal = parseVCal($result);
-			echo "[";
-			$first = true;
-			foreach ($cal->events as $ev) {
-				if ($ev->start == null) continue;
-				if ($ev->end == null) continue;
-				if ($ev->uid == null) continue;
-
-				if ($first) $first = false; else echo ",";
-				echo "{";
-				echo "uid:".json_encode($ev->uid);
-				echo ",start:".json_encode($ev->start);
-				echo ",end:".json_encode($ev->end);
-				echo ",modified:".json_encode($ev->last_modified);
-				echo ",title:".json_encode($ev->summary);
-				echo ",description:".json_encode($ev->description);
-				echo ",status:".json_encode($ev->status);
-				echo "}";
-			}
-			echo "]";
-		}
-	}
+// check this calendar is accessible by the current user
+if (!PNApplication::$instance->calendar->can_read($id, $calendar)) {
+	PNApplication::error("Access Denied");
 	return;
 }
 
-PNApplication::error("Invalid calendar: unknown type ".$calendar["type"]);
+echo "{";
+if ($calendar["type"] == "internet") {
+	if (time()-intval($calendar["last_modification"]) > 5*60) {
+		// need to update from internet
+		echo "action:{url:".json_encode("/dynamic/calendar/service/update?id=".$id).",message:".json_encode(get_locale("calendar","Updating calendar from internet",array("name"=>$calendar["name"])))."},";
+	}
+}
 
+function encode_date_time($date, $time) {
+	$d = array();
+	$i = strpos($date, "-");
+	$d["year"] = substr($date, 0, $i);
+	$date = substr($date, $i+1);
+	$i = strpos($date, "-");
+	$d["month"] = substr($date, 0, $i);
+	$d["day"] = substr($date, $i+1);
+	if ($time !== null) {
+		$i = strpos($time, ":");
+		$d["hour"] = substr($time, 0, $i);
+		$time = substr($time, $i+1);
+		$i = strpos($time, ":");
+		$d["minute"] = substr($time, 0, $i);
+		$d["second"] = substr($time, $i+1);
+	}
+	return json_encode($d);
+}
+
+// get events
+$events = SQLQuery::create()->select("CalendarEvent")->where("calendar", $id)->execute();
+echo "events:[";
+$first = true;
+foreach ($events as $ev) {
+	if ($first) $first = false; else echo ",";
+	echo "{";
+	echo "id:".json_encode($ev["id"]);
+	echo ",uid:".json_encode($ev["uid"]);
+	echo ",start:".encode_date_time($ev["start_date"],$ev["start_time"]);
+	echo ",end:".encode_date_time($ev["end_date"],$ev["end_time"]);
+	echo ",modified:".json_encode($ev["last_modified"]);
+	echo ",title:".json_encode($ev["title"]);
+	echo ",description:".json_encode($ev["description"]);
+	echo ",location:".json_encode($ev["location"]);
+	echo ",organizer:".json_encode($ev["organizer"]);
+	echo ",attendees:".$ev["attendees"];
+	if ($ev["freq"] <> null)
+		echo ",freq:[".$ev["freq"]."]";
+	echo "}";
+}
+echo "]}";
 ?>

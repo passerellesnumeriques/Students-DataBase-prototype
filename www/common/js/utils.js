@@ -158,7 +158,11 @@ function setOpacity(element, opacity) {
 	element.style.filter = "alpha(opacity="+opacity+");"
 	element.style.MsFilter = "progid:DXImageTransform.Microsoft.Alpha(Opacity="+opacity+")";	
 }
-function setBoxShadow(elem,a,b,c,d,color) { elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color; }
+function setBoxShadow(elem,a,b,c,d,color) { 
+	elem.style.boxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+	elem.style.MozBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+	elem.style.WebkitBoxShadow = a+"px "+b+"px "+c+"px "+d+"px "+color;
+}
 function setBorderRadius(elem, 
 		topleft_width, topleft_height, 
 		topright_width, topright_height, 
@@ -169,6 +173,84 @@ function setBorderRadius(elem,
 	elem.style.borderTopRightRadius = topright_width+"px "+topright_height+"px"; 
 	elem.style.borderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
 	elem.style.borderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
+	elem.style.MozBorderRadiusTopleft = topleft_width+"px "+topleft_height+"px"; 
+	elem.style.MozBorderRadiusTopright = topright_width+"px "+topright_height+"px"; 
+	elem.style.MozBorderRadiusBottomleft = bottomleft_width+"px "+bottomleft_height+"px"; 
+	elem.style.MozBorderRadiusBottomright = bottomright_width+"px "+bottomright_height+"px"; 
+	elem.style.WebkitBorderTopLeftRadius = topleft_width+"px "+topleft_height+"px"; 
+	elem.style.WebkitBorderTopRightRadius = topright_width+"px "+topright_height+"px"; 
+	elem.style.WebkitBorderBottomLeftRadius = bottomleft_width+"px "+bottomleft_height+"px"; 
+	elem.style.WebkitBorderBottomRightRadius = bottomright_width+"px "+bottomright_height+"px"; 
+}
+function setBackgroundGradient(element, orientation, stops) {
+	var start_pos;
+	switch (orientation) {
+	case "horizontal": start_pos = "left"; break;
+	case "vertical": start_pos = "top"; break;
+	case "diagonal-topleft": start_pos = "-45deg"; break;
+	case "diagonal-bottomleft": start_pos = "45deg"; break;
+	case "radial": start_pos = "center"; break;
+	}
+	if (lc_browser.IE >= 6 && lc_browser.IE <= 9) {
+		var gt = orientation == "vertical" ? 0 : 1; // fallback to horizontal if diagonal or radial
+		element.style.filter = "progid:DXImageTransform.Microsoft.gradient(startColorstr='"+stops[0].color+"',endColorstr='"+stops[stops.length-1].color+"',GradientType="+gt+")";
+	} else if (lc_browser.IE >= 10) {
+		var b = "-ms-"+(orientation == "radial" ? "radial" : "linear")+"-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Chrome >= 10 || lc_browser.SafariBrowser >= 5.1) {
+		var b = "-webkit-"+(orientation == "radial" ? "radial" : "linear")+"-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Chrome > 0 || lc_browser.SafariBrowser >= 4) {
+		if (orientation == "radial") {
+			var b = "-webkit-gradient(radial, center center, 0px, center center, 100%";
+			for (var i = 0; i < stops.length; ++i)
+				b += ",color-stop("+stops[i].pos+"%,"+stops[i].color+")";
+			b += ")";
+			element.style.background = b;
+		} else {
+			var b = "-webkit-gradient(linear,";
+			switch (orientation) {
+			case "horizontal": b += "left top, right top"; break;
+			case "vertical": b += "left top, left bottom"; break;
+			case "diagonal-topleft": b += "left top, right bottom"; break;
+			case "diagonal-bottomleft": b += "left bottom, right top"; break;
+			}
+			for (var i = 0; i < stops.length; ++i)
+				b += ",color-stop("+stops[i].pos+"%,"+stops[i].color+")";
+			b += ")";
+			element.style.background = b;
+		}
+	} else if (lc_browser.FireFox >= 3.6) {
+		var b;
+		if (orientation == "radial")
+			b = "-moz-radial-gradient(center, ellipse cover";
+		else
+			b = "-moz-linear-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else if (lc_browser.Opera >= 10) {
+		var b;
+		if (orientation == "radial")
+			b = "-o-radial-gradient(center, ellipse cover";
+		else
+			b = "-o-linear-gradient("+start_pos;
+		for (var i = 0; i < stops.length; ++i)
+			b += ","+stops[i].color+" "+stops[i].pos+"%";
+		b += ")";
+		element.style.background = b;
+	} else {
+		// default
+		element.style.background = stops[0].color;
+	}
+	// TODO W3C ???
 }
 	
 getCompatibleMouseEvent = function(e) {
@@ -178,6 +260,10 @@ getCompatibleMouseEvent = function(e) {
 	if (lc_browser.IE == 0) ev.button = e.button;
 	else switch (window.event.button) { case 1: ev.button = 0; break; case 4: ev.button = 1; break; case 2: ev.button = 2; break; } 
 	return ev;
+};
+getCompatibleKeyEvent = function(e) {
+	if (lc_browser.IE == 0 || lc_browser.IE >= 9) return e;
+	return window.event;
 };
 if (!lc_browser.IE >= 9) {
 	getWindowHeight = function() { return window.innerHeight; };
@@ -385,6 +471,12 @@ function add_javascript(url, onload) {
 				return;
 			}
 			// didn't use this way...
+			if (e._loaded) {
+				// but marked as already loaded
+				_scripts_loaded.push(p);
+				if (onload) onload();
+				return;
+			}
 			e.data = new CustomEvent();
 			if (onload) e.data.add_listener(onload);
 			if (e.onload) e.data.add_listener(e.onload);
@@ -397,8 +489,8 @@ function add_javascript(url, onload) {
 	s.data = new CustomEvent();
 	if (onload) s.data.add_listener(onload);
 	s.type = "text/javascript";
-	s.onload = function() { _scripts_loaded.push(p); this.data.fire(); };
-	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this.data.fire(); this.onreadystatechange = null; } };
+	s.onload = function() { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); };
+	s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { _scripts_loaded.push(p); this._loaded = true; this.data.fire(); this.onreadystatechange = null; } };
 	head.appendChild(s);
 	s.src = new URL(url).toString();
 }

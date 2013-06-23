@@ -16,8 +16,42 @@ class VCalendar_Event {
 	public $last_modified = null;
 	public $description = "";
 	public $summary = "";
+	public $location = null;
 	public $status = null;
+	public $organizer = null;
+	public $attendees = null;
+	/**
+	 * @var VCalendar_Recurrence
+	 */
+	public $recur = null;
 }
+class VCalendar_Recurrence {
+	public function __construct($freq, $interval, $valid_months, $valid_hours, $valid_week_days, $valid_month_days, $valid_year_days, $valid_weeks, $until, $count, $wkst) {
+		$this->freq = $freq;
+		$this->interval = $interval;
+		$this->valid_months = $valid_months;
+		$this->valid_hours = $valid_hours;
+		$this->valid_week_days = $valid_week_days;
+		$this->valid_month_days = $valid_month_days;
+		$this->valid_year_days = $valid_year_days;
+		$this->valid_weeks = $valid_weeks;
+		$this->until = $until;
+		$this->count = $count;
+		$this->wkst = $wkst;
+	}
+	public $freq;
+	public $interval;
+	public $valid_months;
+	public $valid_hours;
+	public $valid_week_days;
+	public $valid_month_days;
+	public $valid_year_days;
+	public $valid_weeks;
+	public $until;
+	public $count;
+	public $wkst;
+}
+
 
 function parse_VCal_Date($s) {
 	$d = array();
@@ -89,7 +123,7 @@ function VCalendar_Date($l, $cal) {
 		$d = parse_VCal_Date($date);
 		foreach ($cal->timezones as $tz) {
 			if ($tz->id == $l[1]["TZID"]) {
-				$d["minute"] += $tz->offset;
+				$d["minute"] -= $tz->offset;
 				_check_date($d);
 				break;
 			}
@@ -98,6 +132,12 @@ function VCalendar_Date($l, $cal) {
 		$d = parse_VCal_Date($date);
 	}
 	return $d;
+}
+
+function VCal_get_people($s) {
+	if (startWith($s, "mailto:"))
+		return substr($s, 7);
+	return $s;
 }
 
 function startWith($line, $start) {
@@ -194,9 +234,22 @@ function _VTIMEZONE($lines, $i, &$cal) {
 }
 function _VEVENT($lines, $i, &$cal) {
 	$ev = new VCalendar_Event();
+	$inside = array();
+	$i++;
 	while ($i < count($lines)) {
-		if ($lines[$i][0] == "END" && $lines[$i][2] == "VEVENT")
-			break;
+		if ($lines[$i][0] == "BEGIN") {
+			array_push($inside, $lines[$i][2]);
+		}
+		if ($lines[$i][0] == "END") {
+			if ($lines[$i][2] == "VEVENT")
+				break;
+			if ($lines[$i][2] == $inside[count($inside)-1]) {
+				array_splice($inside, count($inside)-1, 1);
+				$i++;
+				continue;
+			}
+		}
+		if (count($inside) > 0) { $i++; continue; }
 		if ($lines[$i][0] == "DTSTART")
 			$ev->start = VCalendar_Date($lines[$i], $cal);
 		if ($lines[$i][0] == "DTEND")
@@ -209,8 +262,85 @@ function _VEVENT($lines, $i, &$cal) {
 			$ev->description = $lines[$i][2];
 		if ($lines[$i][0] == "SUMMARY")
 			$ev->summary = $lines[$i][2];
+		if ($lines[$i][0] == "LOCATION")
+			$ev->location = $lines[$i][2];
 		if ($lines[$i][0] == "STATUS")
 			$ev->status = $lines[$i][2];
+		if ($lines[$i][0] == "ORGANIZER")
+			$ev->organizer = VCal_get_people($lines[$i][2]);
+		if ($lines[$i][0] == "ATTENDEE") {
+			$people = VCal_get_people($lines[$i][2]);
+			$role = null;
+			$participation = null;
+			if (isset($lines[$i][1]["ROLE"])) {
+				switch ($lines[$i][1]["ROLE"]) {
+					case "CHAIR": $role = "CHAIR"; break;
+					case "REQ-PARTICIPANT": $role = "REQUESTED"; break;
+					case "OPT-PARTICIPANT": $role = "OPTIONAL"; break;
+					case "NON-PARTICIPANT": $role = "FOR_INFO"; break;
+				}
+			}
+			if (isset($lines[$i][1]["PARTSTAT"])) {
+				switch ($lines[$i][1]["PARTSTAT"]) {
+					case "NEEDS-ACTION": $participation = "UNKNOWN"; break;
+					case "ACCEPTED": $participation = "YES"; break;
+					case "DECLINED": $participation = "NO"; break;
+					case "TENTATIVE": $participation = "TENTATIVE"; break;
+					case "DELEGATED": $participation = "DELEGATE"; break;
+				}
+			}
+			if ($ev->attendees == null) $ev->attendees = array();
+			array_push($ev->attendees, array($people, $role, $participation));
+		}
+		if ($lines[$i][0] == "RRULE") {
+			$values = array();
+			foreach (explode(";", $lines[$i][2]) as $s) {
+				$j = strpos($s, "=");
+				$values[substr($s, 0, $j)] = substr($s, $j+1);
+			}
+			$freq = $values["FREQ"];
+			$interval = isset($values["INTERVAL"]) ? intval($values["INTERVAL"]) : 1;
+			$valid_months = null;
+			$valid_hours = null;
+			$valid_week_days = null; // ex: -2SU = second-to-last sunday of the month
+			$valid_month_days = null; // ex: -5 = fifth-to-last day of the month
+			$valid_year_days = null; // ex: -5 = fifth-to-last day of the year
+			$valid_weeks = null; // ex: -15 = fifteenth-to-last week of the year
+			if (isset($values["BYMONTH"])) {
+				$valid_months = explode(",", $values["BYMONTH"]);
+			}
+			if (isset($values["BYDAY"])) {
+				$valid_week_days = explode(",", $values["BYDAY"]);
+			}
+			if (isset($values["BYMONTHDAY"])) {
+				$valid_month_days = explode(",", $values["BYMONTHDAY"]);
+			}
+			if (isset($values["BYYEARDAY"])) {
+				$valid_year_days = explode(",", $values["BYYEARDAY"]);
+			}
+			if (isset($values["BYWEEKNO"])) {
+				$valid_weeks = explode(",", $values["BYWEEKNO"]);
+			}
+			if (isset($values["BYHOUR"])) {
+				$valid_hours = explode(",", $values["BYHOUR"]);
+			}
+			if (isset($values["BYSETPOS"])) {
+				$list = explode(",", $values["BYSETPOS"]);
+				if ($valid_year_days == null) $valid_year_days = array();
+				foreach ($list as $d) array_push($valid_year_days, $d);
+			}
+			$until = null; $count = null;
+			if (isset($values["UNTIL"])) {
+				$until = parse_VCal_Date($values["UNTIL"]);
+			} else if (isset($values["COUNT"])) {
+				$count = intval($values["COUNT"]);
+			}
+			$wkst = "SU";
+			if (isset($values["WKST"]))
+				$wkst = $values["WKST"];
+			$ev->recur = new VCalendar_Recurrence($freq, $interval, $valid_months, $valid_hours,
+					$valid_week_days, $valid_month_days, $valid_year_days, $valid_weeks, $until, $count, $wkst);
+		}
 		$i++;
 	}
 	array_push($cal->events, $ev);

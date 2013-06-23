@@ -26,8 +26,8 @@
 			<li><code>url</code>: URL of the request</li>
 			<li><code>content_type</code>: type of data to be sent, and contained in <code>content_data</code>, or <code>null</code> to do not specify any content type. This will be transmitted in the HTTP header <i>Content-Type</i>.</li>
 			<li><code>content_data</code>: the data to be sent in the HTTP body.</li>
-			<li><code>error_handler</code>: function that will be called in case an error occur during the Ajax call.</li>
-			<li><code>success_handler</code>: function that will be called when the Ajax call succeed.</li>
+			<li><code>error_handler</code>: function that will be called in case an error occur during the Ajax call, with the error as parameter.</li>
+			<li><code>success_handler</code>: function that will be called when the Ajax call succeed, with the XmlHTTPRequest object as parameter.</li>
 			<li><code>foreground</code>: if <code>true</code>, the method will not return before the call is done.</li>
 		</ul>
 	</td>

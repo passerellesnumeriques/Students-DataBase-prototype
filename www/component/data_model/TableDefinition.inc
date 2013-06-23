@@ -70,6 +70,13 @@ class Table {
 		return $this;
 	}
 
+	/** Add a time column */
+	public function addTime($name, $can_be_null = true, $unique = false) {
+		$c = new ColumnTime($this, $name, $can_be_null, $unique);
+		array_push($this->columns, $c);
+		return $this;
+	}
+
 	/** Indicate one or several columns should be indexed for faster access.
 	 * As parameters, this method expects the list of columns to be indexed together.
 	 * @return \datamodel\Table
@@ -644,6 +651,26 @@ class ColumnDate extends Column {
 		if ($value === "") $value = null;
 		if ($value === null) {
 			if (!$this->can_be_null) throw new \Exception("You must enter a valid date"); // TODO locale
+			return null;
+		}
+		// TODO check if valid format
+		return $value;
+	}
+}
+
+class ColumnTime extends Column {
+
+	public function __construct(&$table, $name, $can_be_null = true, $unique = false) {
+		parent::__construct($table, $name, $can_be_null, $unique);
+	}
+
+
+	public function get_sql_type() { return "TIME"; }
+
+	public function validate($value) {
+		if ($value === "") $value = null;
+		if ($value === null) {
+			if (!$this->can_be_null) throw new \Exception("You must enter a valid time"); // TODO locale
 			return null;
 		}
 		// TODO check if valid format
