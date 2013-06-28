@@ -3,6 +3,11 @@ require_once("component/data_model/DataModel.inc");
 require_once("common/DataBaseModel.inc");
 $model = DataModel::get();
 
+if (PNApplication::has_errors()) {
+	PNApplication::print_errors();
+	die();
+}
+
 $domains = include("domains");
 foreach ($domains as $domain=>$descr) {
 	echo "Initialize DataBase for domain ".$domain."<br/>";

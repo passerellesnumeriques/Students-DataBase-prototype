@@ -1,8 +1,10 @@
 <?php
 $people = $_GET["people"];
-if ($people <> PNApplication::$instance->people->user_people_id) {
-	if (!PNApplication::$instance->user_management->has_right("see_other_people_details"))
-		die(get_locale("common","Access Denied"));
+if ($people <> PNApplication::$instance->user_people->user_people_id) {
+	if (!PNApplication::$instance->user_management->has_right("see_other_people_details")) {
+		PNApplication::error(get_locale("common","Access Denied"));
+		return;
+	}
 }
 $can_edit = PNApplication::$instance->user_management->has_right("edit_people_details");
 require_once("common/SQLQuery.inc");

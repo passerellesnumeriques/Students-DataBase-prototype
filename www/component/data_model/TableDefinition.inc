@@ -693,7 +693,12 @@ class ForeignKey extends ColumnInteger {
 
 	public function __construct(&$table, $name, $foreign_table) {
 		$this->foreign_table = $foreign_table;
-		$size = $table->getModel()->internalGetTable($foreign_table)->getPrimaryKey()->size;
+		$ft = $table->getModel()->internalGetTable($foreign_table);
+		if ($ft == null) { 
+			\PNApplication::error("Invalid foreign key '".$name."' in table '".$table->getName()."': foreign table '".$foreign_table."' does not exist");
+			$size = 32;
+		} else
+			$size = $ft->getPrimaryKey()->size;
 		parent::__construct($table, $name, $size, true, false);
 	}
 

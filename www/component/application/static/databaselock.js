@@ -31,13 +31,15 @@ window.pn_database_locks = {
 		var t = this;
 		for (var i = 0; i < this._locks.length; ++i) {
 			if (now - this._locks[i].time > this._timeout_time) {
-				add_javascript("/static/common/js/popup_window/popup_window.js",function() {
-					var p = new popup_window("",null);
-					p.setContentFrame("/static/application/databaselock_inactivity.html");
-					p.onclose = function() {
-						setTimeout("window.pn_database_locks._check();", t._check_time);
-					};
-					p.show();
+				add_javascript("/static/common/js/configuration.js",function() {
+					add_javascript("/static/common/js/popup_window/popup_window.js",function() {
+						var p = new popup_window("",null);
+						p.setContentFrame("/static/application/databaselock_inactivity.html");
+						p.onclose = function() {
+							setTimeout("window.pn_database_locks._check();", t._check_time);
+						};
+						p.show();
+					});
 				});
 				popup = true;
 				break;
@@ -59,7 +61,7 @@ window.pn_database_locks = {
 		if (remaining == 0) return;
 		var closed = function() {
 			if (--remaining == 0)
-				window.top.document.getElementById('application_content').src = "/dynamic/application/page/home";
+				window.top.frames[0].location.href = "/dynamic/application/page/enter";
 		}
 		for (var i = 0; i < this._locks.length; ++i)
 			ajax.post_parse_result("/dynamic/application/service/close_db_lock","id="+this._locks[i].id,function(result){
@@ -105,7 +107,7 @@ window.databaselock_update_inactivity = function() {
 		status.style.position = 'absolute';
 		window.databaselock_update_inactivity_interval = setInterval(window.databaselock_update_inactivity, 2000);
 	} else if (time > 30*60*1000) {
-		window.top.location = "/dynamic/application/page/logout?from=inactivity";
+		window.top.frames[0].location = "/dynamic/application/page/logout?from=inactivity";
 	} else {
 		status.style.visibility = 'visible';
 		var t = document.getElementById('inactivity_time');

@@ -15,12 +15,6 @@ $model->addTable("People")
 	->addDisplayableData("sex", "Personal Information", "Sex")
 	->addDisplayableData("birth", "Personal Information", "Birth Date")
 	->restrictReadAccess("see_other_people_details",true)
-	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->people->user_people_id; })
+	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->user_people->user_people_id; })
 	->restrictWriteAccess("edit_people_details",true);
-$model->addTable("UserPeople")
-	->addString("username", 100, 1, false)
-	->addForeignKey("people", "People")
-	->addIndex("username")
-	->addLink("Users",array("username"=>"username","domain"=>array(PNApplication::$instance->current_domain)),true)
-	->allowReadAccess();
 ?>

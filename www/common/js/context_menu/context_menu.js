@@ -35,6 +35,14 @@ function context_menu(menu) {
 		};
 		element.onclickset = true;
 	};
+	t.addIconItem = function(icon, text, onclick) {
+		var div = document.createElement("DIV");
+		div.innerHTML = "<img src='"+icon+"' style='vertical-align:bottom'/> "+text;
+		div.onclick = onclick;
+		div.className = "context_menu_item";
+		t.addItem(div);
+		return div;
+	};
 	t.getItems = function() { return menu.childNodes; };
 	t.clearItems = function() {
 		while (menu.childNodes.length > 0)

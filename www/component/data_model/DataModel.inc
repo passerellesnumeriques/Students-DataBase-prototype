@@ -10,28 +10,35 @@ class DataModel {
 		if (DataModel::$model == null) {
 			$model = new DataModel();
 			$prev_locale = Locale::$current_component;
+			$done = array("data_model");
 			foreach (PNApplication::$instance->components as $c) {
-				if ($c->name == "data_model") continue;
-				Locale::$current_component = $c->name;
-				$file = "component/".$c->name."/datamodel.inc";
-				if (file_exists($file))
-					include $file;
-				$file = "component/".$c->name."/datamodel_hidden.inc";
-				if (file_exists($file)) {
-					$hidden = include $file;
-					$hidden = $hidden[PNApplication::$instance->current_domain];
-					foreach ($hidden as $field) {
-						$i = strpos($field, ".");
-						$table = substr($field, 0, $i);
-						$field = substr($field, $i+1);
-						$model->hide($table,$field);
-					}
-				}
+				DataModel::_get_component($c, $done, $model);
 			}
 			Locale::$current_component = $prev_locale;
 			DataModel::$model = &$model;
 		}
 		return DataModel::$model;
+	}
+	private static function _get_component($c, $done, &$model) {
+		if (in_array($c->name, $done)) return;
+		array_push($done, $c->name);
+		foreach ($c->dependencies() as $dep)
+			DataModel::_get_component(PNApplication::$instance->components[$dep], $done, $model);
+		Locale::$current_component = $c->name;
+		$file = "component/".$c->name."/datamodel.inc";
+		if (file_exists($file))
+			include $file;
+		$file = "component/".$c->name."/datamodel_hidden.inc";
+		if (file_exists($file)) {
+			$hidden = include $file;
+			$hidden = $hidden[PNApplication::$instance->current_domain];
+			foreach ($hidden as $field) {
+				$i = strpos($field, ".");
+				$table = substr($field, 0, $i);
+				$field = substr($field, $i+1);
+				$model->hide($table,$field);
+			}
+		}
 	}
 
 	private $tables = array();
