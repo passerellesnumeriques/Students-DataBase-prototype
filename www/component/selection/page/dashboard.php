@@ -1,5 +1,8 @@
 <?php
-if ($component->campaign_id == null) die(get_locale("Please select a selection campaign"));
+if ($component->campaign_id == null) {
+	echo(get_locale("Please select a selection campaign"));
+	return;
+}
 
 require_once("common/SQLQuery.inc");
 $campaign = SQLQuery::create()->select("SelectionCampaign")->where("id", $component->campaign_id)->execute_single_row();

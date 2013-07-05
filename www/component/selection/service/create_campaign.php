@@ -9,5 +9,8 @@ $cal_id = PNApplication::$instance->calendar->create_calendar("Selection Process
 // create the campaign
 $id = SQLQuery::insert("SelectionCampaign", array("name"=>$name, "calendar"=>$cal_id));
 
+// TODO hard-code
+SQLQuery::insert("SelectionCampaign", array("name"=>"SNA/SD", "campaign"=>$id));
+
 echo "{id:".$id."}";
 ?>

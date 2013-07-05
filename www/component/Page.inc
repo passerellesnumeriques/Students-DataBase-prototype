@@ -1,4 +1,16 @@
 <?php
+function page_shutdown_catch($page) {
+	if ($page->done) return;
+	$msg = "The page '".$page->path."' on component '".$page->component."' didn't finish correctly.";
+	$error = error_get_last();
+	if ($error <> null)
+		$msg.= " Last error was in ".$error["file"]." line ".$error["line"].": ".$error["message"];
+	PNApplication::error($msg);
+	PNApplication::print_errors();
+	$content = ob_get_clean();
+	echo $content;
+}
+
 class Page {
 
 	private $javascripts = array();
@@ -6,6 +18,8 @@ class Page {
 	private $onload = "";
 	public $component;
 	public $path;
+	public $done = false;
+	private $generate_id = 0;
 
 	public function add_javascript($path, $onload = "") {
 		if (!in_array($path, $this->javascripts))
@@ -16,6 +30,10 @@ class Page {
 			array_push($this->stylesheets, $path);
 	}
 	public function onload($script) { $this->onload .= $script; }
+	
+	public function generate_id() {
+		return str_replace("/", "_", str_replace(".", "_", $this->path))."_".($this->generate_id++);
+	}
 
 	private $flushed = false;
 	public function generate($component, $path) {
@@ -23,12 +41,18 @@ class Page {
 		$this->path = $path;
 		$file = "component/".$component->name."/page/".$path.".php";
 		ob_start();
-		include $file;
+		register_shutdown_function("page_shutdown_catch", $this);
+		try {
+			include $file;
+		} catch (Exception $e) {
+			PNApplication::error($e->getMessage());
+		}
 		$content = ob_get_clean();
 		if (!$this->flushed)
 			$this->start_page();
 		echo $content;
 		$this->end_page();
+		$this->done = true;
 	}
 
 	public function flush() {

@@ -180,12 +180,12 @@ class user_management extends Component {
 		$domain = @$_GET["domain"];
 		$username = @$_GET["username"];
 		if ($domain <> null && $people == null) {
-			$people = $this->app->people->get_people_from_user($domain, $username);
+			$people = $this->app->user_people->get_people_from_user($domain, $username);
 		} else if ($domain == null && $people <> null) {
-			$this->app->people->get_user_from_people($people, $domain, $username);
+			$this->app->user_people->get_user_from_people($people, $domain, $username);
 		}
 		return array(
-			"user_rights"=>array("/static/user_management/access_list.png", get_locale("user_management","User Rights"),"/dynamic/user_management/page/user_rights?domain=".$domain."&username=".$username),
+			"user_rights"=>array("/static/user_management/access_list.png", get_locale("user_management","User Rights"),"/dynamic/user_management/page/user_rights?domain=".$domain."&username=".$username, 1000),
 		);
 	}
 

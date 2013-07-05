@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>PN Students Database</title>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
 	<style type='text/css'>body,html{width:100%;height:100%;margin:0px;padding:0px;}</style>
 </head>
 <body>
@@ -41,12 +42,12 @@ function __load_enter_page() {
 }
 
 // at least those 3 scripts must be loaded
-_add_javascript("/static/common/js/utils.js",function() { if (++_loading_ready == 3) __load_enter_page(); });
-_add_javascript("/static/common/js/ajax.js",function() { if (++_loading_ready == 3) __load_enter_page(); });
-_add_javascript("/static/common/js/locale.js",function() { if (++_loading_ready == 3) __load_enter_page(); });
+_add_javascript("/static/common/js/utils.js",function() { if (++_loading_ready == 4) __load_enter_page(); });
+_add_javascript("/static/common/js/ajax.js",function() { if (++_loading_ready == 4) __load_enter_page(); });
+_add_javascript("/static/common/js/locale.js",function() { if (++_loading_ready == 4) __load_enter_page(); });
+_add_javascript("/static/application/databaselock.js",function() { if (++_loading_ready == 4) __load_enter_page(); });
 // optional scripts
 _add_javascript("/static/common/js/animation.js");
-_add_javascript("/static/application/databaselock.js");
 
 function pn_loading_start() {
 	window.pn_loading.style.visibility = 'visible';
