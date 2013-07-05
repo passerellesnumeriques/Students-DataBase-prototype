@@ -109,7 +109,7 @@ function application_resize_frame() {
 	var right_close = document.getElementById('right_panel_close');
 	frame.style.height = right.style.height = (getWindowHeight()-header.scrollHeight-footer.scrollHeight-1)+"px";
 	if (right.data) {
-		frame.style.width = (getWindowWidth()-10)+"px";
+		frame.style.width = getWindowWidth()+"px";
 		right.style.position = "fixed";
 		right.style.right = "0px";
 		right.style.top = (header.scrollHeight)+"px";

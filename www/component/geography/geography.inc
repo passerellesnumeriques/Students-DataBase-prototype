@@ -16,10 +16,19 @@ class geography extends Component {
 	}
 
 	public function is_page_allowed($path) {
-		return true;
+		return true; // TODO
 	}
 	public function is_service_allowed($path) {
-		return true;
+		return true; // TODO
+	}
+
+	public function service($path) {
+		if ($path == "get_geonames") {
+			// TODO security
+			include "component/geography/service/get_geonames.php";
+			return;
+		}
+		parent::service($path);
 	}
 
 }

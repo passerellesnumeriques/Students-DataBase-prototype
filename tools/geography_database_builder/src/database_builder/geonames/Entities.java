@@ -50,7 +50,7 @@ public class Entities {
 			return ""+id+"\t"+latitude+"\t"+longitude+"\t"+default_name+"\t"+feature_class+"\t"+feature_code+"\t"+country_code+"\t"+adm1;
 		}
 	}
-	private static final int MAX_ENTITIES = 200000;
+	private static final int MAX_ENTITIES = 100000;
 	static Entity[] entities = new Entity[MAX_ENTITIES];
 	static int nb_entities = 0;
 	static long waited_for_entities = 0;
@@ -136,6 +136,7 @@ public class Entities {
 	
 	static class EntityProcessor extends Thread {
 		public EntityProcessor(int num) {
+			super("Entity Processor "+num);
 			this.num = num;
 		}
 		int num;

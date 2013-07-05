@@ -20,8 +20,8 @@ class DataBaseModel {
 		if ($res === FALSE) { DataBaseModel::create_table($table); return; }
 		// TODO update if necessary
 	}
-	private static function create_table(&$table) {
-		$sql = "CREATE TABLE `".$table->getName()."` (";
+	public static function create_table(&$table, $suffix = null) {
+		$sql = "CREATE TABLE `".$table->getName().($suffix <> null ? $suffix : "")."` (";
 		
 		$ref = new ReflectionClass("\datamodel\Table");
 		$p = $ref->getProperty("columns");

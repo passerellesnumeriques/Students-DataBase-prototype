@@ -41,8 +41,9 @@ class DataModel {
 		}
 	}
 
-	private $tables = array();
+	protected $tables = array();
 	private $data_category_link = array();
+	private $sub_models = array();
 
 	/** Add a table to the model, and returns it
 	 *
@@ -99,6 +100,35 @@ class DataModel {
 	private function hide($table, $field) {
 		$this->tables[$table]->hide($field);
 	}
+	
+	public function &addSubModel($key_table) {
+		$sm = new SubDataModel($this, $key_table);
+		$this->table[$key_table]->_key_for_submodel($sm);
+		array_push($this->sub_models, $sm);
+		return $sm;
+	}
 
+}
+
+class SubDataModel extends DataModel {
+	private $parent_model;
+	private $parent_table;
+	private $sub_model_selected = null;
+	private $existing_submodels = null;
+	
+	public function __construct(&$parent, $parent_table) {
+		$this->parent = &$parent;
+		$this->parent_table = $parent_table;
+	}
+	
+	public function create_tables($key) {
+		foreach ($this->tables as $t)
+			DataBaseModel::create_table($t, "_".$key);
+	}
+	
+	public function remove_tables($key) {
+		foreach ($this->tables as $t)
+			DataBase::execute("DROP TABLE `".$t->getName()."_".$key."`");
+	}
 }
 ?>

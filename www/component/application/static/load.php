@@ -50,6 +50,8 @@ window.total_size = 0;
 window.size_done = 0;
 window.stop_loading = false;
 window.loading_start = 0;
+window.nb_loading = 0;
+window.max_loading = 25;
 for (var i = 0; i < scripts.length; ++i) window.total_size += scripts[i].size;
 for (var i = 0; i < css.length; ++i) window.total_size += css[i].size;
 for (var i = 0; i < images.length; ++i) window.total_size += images[i].size;
@@ -82,37 +84,51 @@ window.continue_loading = function() {
 		now -= window.loading_start;
 		text.innerHTML = window.size_str(window.size_done)+" / "+window.size_str(window.total_size) + (now > 300 ? " ("+window.size_str(window.size_done*1000/now)+"/s.)" : "");
 	}
-
+	window.nb_loading--;
+	if (window.nb_loading > window.max_loading-5) return;
+	
 	if (!window.stop_loading && scripts.length > 0) {
-		var script = scripts[0];
-		scripts.splice(0,1);
-		var s = document.createElement("SCRIPT");
-		s.type = "text/javascript";
-		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; };
-		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
-		s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { window.size_done += script.size; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; } };
-		s.src = script.url;
-		document.getElementsByTagName("HEAD")[0].appendChild(s);
+		for (var i = 0; i < window.max_loading && scripts.length > 0; ++i) {
+			window.nb_loading++;
+			var script = scripts[0];
+			scripts.splice(0,1);
+			var s = document.createElement("SCRIPT");
+			s.data = script.size;
+			s.type = "text/javascript";
+			s.onload = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; };
+			s.onerror = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); };
+			s.onreadystatechange = function() { if (this.readyState == 'loaded' || this.readyState == 'complete') { window.size_done += this.data; setTimeout(window.continue_loading,1); this.onload = this.onreadystatechange = null; } };
+			s.src = script.url;
+			document.getElementsByTagName("HEAD")[0].appendChild(s);
+		}
 	} else if (!window.stop_loading && css.length > 0) {
-		var script = css[0];
-		css.splice(0,1);
-		var s = document.createElement("LINK");
-		s.rel = "stylesheet";
-		s.type = "text/css";
-		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
-		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
-		s.href = script.url;
-		document.getElementsByTagName("HEAD")[0].appendChild(s);
+		for (var i = 0; i < window.max_loading && css.length > 0; ++i) {
+			window.nb_loading++;
+			var script = css[0];
+			css.splice(0,1);
+			var s = document.createElement("LINK");
+			s.data = script.size;
+			s.rel = "stylesheet";
+			s.type = "text/css";
+			s.onload = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); };
+			s.onerror = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); };
+			s.href = script.url;
+			document.getElementsByTagName("HEAD")[0].appendChild(s);
+		}
 	} else if (!window.stop_loading && images.length > 0) {
-		var script = images[0];
-		images.splice(0,1);
-		var s = document.createElement("IMG");
-		s.onload = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
-		s.onerror = function() { window.size_done += script.size; setTimeout(window.continue_loading,1); };
-		s.src = script.url;
-		s.style.position = "fixed";
-		s.style.top = (container.offsetHeight+10)+"px";
-		document.body.appendChild(s);
+		for (var i = 0; i < window.max_loading && images.length > 0; ++i) {
+			window.nb_loading++;
+			var script = images[0];
+			images.splice(0,1);
+			var s = document.createElement("IMG");
+			s.data = script.size;
+			s.onload = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); };
+			s.onerror = function() { window.size_done += this.data; setTimeout(window.continue_loading,1); };
+			s.src = script.url;
+			s.style.position = "fixed";
+			s.style.top = (container.offsetHeight+10)+"px";
+			document.body.appendChild(s);
+		}
 	} else if (window.stop_loading) {
 		var e = document.all ? window.parent.document.all['application_loading'] : window.parent.document.getElementById('application_loading');
 		e.parentNode.removeChild(e);

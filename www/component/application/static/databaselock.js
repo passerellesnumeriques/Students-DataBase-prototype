@@ -86,8 +86,12 @@ function init_databaselock() {
 	if (typeof listenEvent == 'undefined')
 		setTimeout(init_databaselock, 10);
 	else {
-		listenEvent(window,'click',function() { window.top.pn_database_locks._user_active(); });
-		listenEvent(window,'mousemove',function() { window.top.pn_database_locks._user_active(); });
+		var listener = function() {
+			if (!window || !window.top || !window.top.pn_database_locks) return;
+			window.top.pn_database_locks._user_active();
+		};
+		listenEvent(window,'click',listener);
+		listenEvent(window,'mousemove',listener);
 		window.onbeforeunload = function() {
 			window.pn_database_locks._close_window();
 		}
@@ -99,7 +103,7 @@ if (window == window.top)
 window.databaselock_update_inactivity = function() {
 	var time = new Date().getTime();
 	time -= window.pn_database_locks._last_activity;
-	var status = document.getElementById('inactivity_status');
+	var status = window.top.frames[0].document.getElementById('inactivity_status');
 	if (status == null) return;
 	clearInterval(window.databaselock_update_inactivity_interval);
 	if (time < 10000) {
@@ -110,7 +114,7 @@ window.databaselock_update_inactivity = function() {
 		window.top.frames[0].location = "/dynamic/application/page/logout?from=inactivity";
 	} else {
 		status.style.visibility = 'visible';
-		var t = document.getElementById('inactivity_time');
+		var t = window.top.frames[0].document.getElementById('inactivity_time');
 		var s = "";
 		if (time >= 60*1000) {
 			s += Math.floor(time/(60*1000))+"m";

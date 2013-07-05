@@ -14,10 +14,16 @@ class Table {
 	private $fields_read_access = array();
 	private $fields_write_access = array();
 	private $displayable_data = array();
+	
+	private $_key_submodels = array();
 
 	public function __construct(&$model, $name) {
 		$this->model = &$model;
 		$this->name = $name;
+	}
+	
+	public function _key_for_submodel(&$sm) {
+		array_push($this->_key_submodels, $sm);
 	}
 
 	/** Add a primary key (integer ID) */
@@ -330,6 +336,10 @@ class Table {
 			}
 			// insert
 			$id = \SQLQuery::insert($this->name, $fields);
+			// sub models
+			foreach ($this->_key_submodels as $sm) {
+				$sm->create_tables($id);
+			}
 		} catch (\Exception $e) {
 			$error = $e;
 		}
@@ -363,6 +373,10 @@ class Table {
 		}
 		// remove data
 		$this->perform_remove($key);
+		// sub models
+		foreach ($this->_key_submodels as $sm) {
+			$sm->remove_tables($key);
+		}
 		// unlock tables
 		foreach ($locks as $l)
 			\DataBaseLock::unlock($l);
@@ -392,6 +406,11 @@ class Table {
 		// remove data
 		foreach ($keys as $key)
 			$this->perform_remove($key);
+		// sub models
+		foreach ($keys as $key)
+			foreach ($this->_key_submodels as $sm) {
+				$sm->remove_tables($key);
+			}
 		// unlock tables
 		foreach ($locks as $l)
 			\DataBaseLock::unlock($l);

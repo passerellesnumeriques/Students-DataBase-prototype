@@ -9,9 +9,9 @@ function contacts_page($page, $table_list, $table_list_fields, $table_list_field
 		$q->where($name, $value);
 	$q->join($table_list, "Contact", array($table_list_field_contact_id=>"id"));
 	$contacts = $q->execute();
-	
+
 	echo "<table>";
-	
+
 	echo "<tr>";
 	echo "<td valign=top><img src='/static/contact/email_16.png' style='vertical-align:bottom'/> E-Mail</td>";
 	echo "<td>";
@@ -32,7 +32,7 @@ function contacts_page($page, $table_list, $table_list_fields, $table_list_field
 	echo "</table>";
 	echo "</td>";
 	echo "</tr>";
-	
+
 	echo "<tr>";
 	echo "<td valign=top><img src='/static/contact/phone_16.png' style='vertical-align:bottom'/> ".get_locale("contact","Phone")."</td>";
 	echo "<td>";
@@ -53,7 +53,7 @@ function contacts_page($page, $table_list, $table_list_fields, $table_list_field
 	echo "</table>";
 	echo "</td>";
 	echo "</tr>";
-	
+
 	echo "<tr>";
 	echo "<td valign=top><img src='/static/contact/im_16.png' style='vertical-align:bottom'/> ".get_locale("contact","Instant Messaging")."</td>";
 	echo "<td>";
@@ -74,7 +74,7 @@ function contacts_page($page, $table_list, $table_list_fields, $table_list_field
 	echo "</table>";
 	echo "</td>";
 	echo "</tr>";
-	
+
 	echo "</table>";
 	if ($edit) {
 ?>
@@ -144,7 +144,7 @@ function contacts_type_click(td, contact_type) {
 			contacts_set_type(td, this._name, true, contact_type);
 			item._onclick();
 		};
-	} 
+	}
 	var div = document.createElement("DIV");
 	div.innerHTML = "<?php locale("contact","Other")?>: ";
 	var input = document.createElement("INPUT");
@@ -205,7 +205,7 @@ function contacts_save(tr, contact_type) {
 	var type = tr.childNodes[0].getAttribute("contact_type");
 	if (type == null || type.length == 0) // not saved
 	var contact = tr.childNodes[1].innerHTML;
-	if (contact.length == 0) return; // not saved
+	if (!contact || contact.length == 0) return; // not saved
 	if (tr.getAttribute("saving") == "yes") return; // in progress
 	if (tr.getAttribute("saving_type") == type && tr.getAttribute("saving_contact") == contact) return; // already saved
 	tr.setAttribute("saving_type", type);
@@ -216,7 +216,7 @@ function contacts_save(tr, contact_type) {
 			tr.setAttribute("saving", "no");
 			return;
 		}
-		
+
 	});
 }
 </script>

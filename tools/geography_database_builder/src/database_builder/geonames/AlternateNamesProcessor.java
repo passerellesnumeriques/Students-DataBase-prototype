@@ -75,6 +75,9 @@ public class AlternateNamesProcessor extends Thread {
 	}
 	private static SelfMapUniqueLongDoubleLinked<EntityNames> names = new SelfMapUniqueLongDoubleLinked<>(100000);
 	
+	public AlternateNamesProcessor() {
+		super("Alternate Names");
+	}
 	@Override
 	public void run() {
 		try {
@@ -224,6 +227,20 @@ public class AlternateNamesProcessor extends Thread {
 				if ((lines % 1000000) == 0) {
 					long now = System.currentTimeMillis();
 					System.out.println("Alternate names: "+lines+" lines processed in "+((now-start)/1000)+"s.");
+				}
+				if ((lines % 100000) == 0) {
+					long max = Runtime.getRuntime().maxMemory();
+					long free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+					if (free < max/4) {
+						System.out.println(Thread.currentThread().getName()+": Critical memory: less than 25% remaining ("+free+"/"+max+"="+(free*100/max)+"%): wait...");
+						do {
+							try { Thread.sleep(10000); } catch (InterruptedException e) {}
+							max = Runtime.getRuntime().maxMemory();
+							free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+							if (free > max/5) break;
+						} while (true);
+						System.out.println(Thread.currentThread().getName()+": Resume as we have now more than 20%");
+					}
 				}
 			} while (!eof);
 //			if (en != null) en.done = true;
