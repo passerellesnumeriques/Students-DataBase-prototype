@@ -36,10 +36,10 @@ $this->onload("new horizontal_menu('application_menu');application_resize_frame(
 			<img src='/static/common/images/search.png' style='vertical-align:bottom'/><form action="/dynamic/application/page/search" method="get" target="application_content" style='display:inline;'><input name="q" type='text' size=15 style='margin:0px;padding:0px;border:1px solid #8080FF;font-size:11px' autocomplete="off"/></form>
 		</td>
 		<td nowrap="nowrap" class='application_header_section' style='cursor:pointer' onclick="new context_menu('user_settings_menu').showBelowElement(this);">
-			<?php echo PNApplication::$instance->people->first_name." ".PNApplication::$instance->people->last_name;?>
+			<?php echo PNApplication::$instance->user_people->first_name." ".PNApplication::$instance->user_people->last_name;?>
 			<img src='/static/common/images/settings.png' style='vertical-align:bottom'/>
 			<div id='user_settings_menu' class='context_menu'>
-				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->people->user_people_id?>';">
+				<div class='context_menu_item' onclick="document.getElementById('application_content').src='/dynamic/people/page/profile?people=<?php echo PNApplication::$instance->user_people->user_people_id?>';">
 					<img src='/static/people/profile_16.png'/>
 					<?php locale("people","Profile")?>
 				</div>
@@ -109,7 +109,7 @@ function application_resize_frame() {
 	var right_close = document.getElementById('right_panel_close');
 	frame.style.height = right.style.height = (getWindowHeight()-header.scrollHeight-footer.scrollHeight-1)+"px";
 	if (right.data) {
-		frame.style.width = (getWindowWidth()-10)+"px";
+		frame.style.width = getWindowWidth()+"px";
 		right.style.position = "fixed";
 		right.style.right = "0px";
 		right.style.top = (header.scrollHeight)+"px";

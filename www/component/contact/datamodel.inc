@@ -10,11 +10,7 @@ $model->addTable("Contact")
 $model->addTable("PostalAddress")
 	->addPrimaryKey("id")
 	->addString("country",2,2,false,false)
-	->addInteger("adm1", 32, null, null, true, false)
-	->addInteger("adm2", 32, null, null, true, false)
-	->addInteger("adm3", 32, null, null, true, false)
-	->addInteger("adm4", 32, null, null, true, false)
-	->addInteger("adm5", 32, null, null, true, false)
+	->addInteger("adm", 32, null, null, true, false)
 	->addString("street", 1000, 0, true, false)
 	->addString("street_number", 50, 0, true, false)
 	->addString("building", 100, 0, true, false)
@@ -48,5 +44,39 @@ $model->addTable("EntityContacts")
 	->addForeignKey("entity", "ContactEntity")
 	->addForeignKey("contact", "Contact")
 	->allowReadAccess()
+	;
+$model->addTable("ContactNote")
+	->addForeignKey("entity", "ContactEntity")
+	->addDate("date")
+	->addString("note", 5000)
+	;
+$model->addTable("ContactGroup")
+	->addPrimaryKey("id")
+	->addString("name", 200, 1)
+	;
+$model->addTable("ContactGroupEntities")
+	->addForeignKey("group", "ContactGroup")
+	->addForeignKey("entity", "ContactEntity")
+	;
+$model->addTable("ContactGroupPeople")
+	->addForeignKey("group", "ContactGroup")
+	->addForeignKey("people", "People")
+	;
+$model->addDataCategoryLink("Contact", "/dynamic/people/page/profile?plugin=contact&people=%People.id%");
+$model->addTable("PeopleContact")
+	->addForeignKey("people", "People")
+	->addForeignKey("contact", "Contact")
+	->restrictReadAccess("consult_people_contacts",true)
+	->allowSpecificReadAccess("id",function() { return PNApplication::$instance->uer_people->user_people_id; })
+	->restrictWriteAccess("edit_people_contacts",true);
+	;
+$model->addTable("PeopleAddress")
+	->addForeignKey("people", "People")
+	->addForeignKey("address", "PostalAddress")
+	;
+$model->addTable("ContactPoint")
+	->addForeignKey("entity", "ContactEntity")
+	->addForeignKey("people", "People")
+	->addString("designation", 200)
 	;
 ?>

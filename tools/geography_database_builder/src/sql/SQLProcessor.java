@@ -110,19 +110,31 @@ public class SQLProcessor {
 		}
 		long max = Runtime.getRuntime().maxMemory();
 		long free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
-		if (free < max/5) {
-			System.out.println("Critical memory: less than 20% remaining ("+free+"/"+max+"="+(free*100/max)+"%): process SQL requests and wait 10 seconds... ["+sql_to_process.size()+" batches waiting]");
-			clear_queries();
-			int nb = 0;
-			do {
-				try { Thread.sleep(10000); } catch (InterruptedException e) {}
-				if (++nb == 10) { Runtime.getRuntime().gc(); nb = 0; }
-				max = Runtime.getRuntime().maxMemory();
-				free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
-				System.out.println("  - new status: "+free+"/"+max+"="+(free*100/max)+"%["+sql_to_process.size()+" batches waiting]");
-				if (free > max/3 || sql_to_process.isEmpty()) break;
-			} while (true);
+		if (free < max/4) {
+			Runtime.getRuntime().gc();
+			max = Runtime.getRuntime().maxMemory();
+			free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+			if (free < max/4) {
+				System.out.println(Thread.currentThread().getName()+": Critical memory: less than 25% remaining ("+free+"/"+max+"="+(free*100/max)+"%): process SQL requests and wait 10 seconds... ["+sql_to_process.size()+" batches waiting]");
+				clear_queries();
+				int nb = 0;
+				do {
+					try { Thread.sleep(10000); } catch (InterruptedException e) {}
+					if (++nb == 10) { Runtime.getRuntime().gc(); nb = 0; }
+					max = Runtime.getRuntime().maxMemory();
+					free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+					System.out.println("  - new status: "+free+"/"+max+"="+(free*100/max)+"%["+sql_to_process.size()+" batches waiting]");
+					if (free > max/3 || sql_to_process.isEmpty()) break;
+				} while (true);
+			}
 		} else if (list.size() >= BATCH_NB_QUERIES) {
+			if (sql_to_process.size() > 100000) {
+				do {
+					System.out.println(Thread.currentThread().getName()+": Too much SQL to process ("+sql_to_process.size()+" batches): wait... (Memory free: "+free+"/"+max+"="+(free*100/max)+"%)");
+					try { Thread.sleep(10000); } catch (InterruptedException e) {}
+				} while (sql_to_process.size() > 80000);
+				System.out.println(Thread.currentThread().getName()+": Resume ("+sql_to_process.size()+" batches, Memory free: "+free+"/"+max+"="+(free*100/max)+"%)");
+			}
 			synchronized (queries_by_table) {
 				process_sql(table, list);
 				queries_by_table.remove(table);
@@ -158,6 +170,18 @@ public class SQLProcessor {
 		insert_delay(table, fields, values, null);
 	}
 	public static void insert_delay(String table, String[] fields, String[] values, Runnable call) {
+		long max = Runtime.getRuntime().maxMemory();
+		long free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+		if (free < max/4) {
+			System.out.println(Thread.currentThread().getName()+": Critical memory: less than 25% remaining ("+free+"/"+max+"="+(free*100/max)+"%): wait...");
+			do {
+				try { Thread.sleep(10000); } catch (InterruptedException e) {}
+				max = Runtime.getRuntime().maxMemory();
+				free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+				if (free > max/5) break;
+			} while (true);
+			System.out.println(Thread.currentThread().getName()+": Resume as we have now more than 20%");
+		}
 		LinkedList<InsertDelay> l;
 		synchronized (inserts) {
 			l = inserts.get(table);
@@ -300,12 +324,13 @@ public class SQLProcessor {
 				return;
 			}
 			System.out.println("   SQL Thread "+num+": connected.");
-			SQLToProcess t;
+			SQLToProcess t = null;
 			int tried_requests = 0;
 			int total_requests;
 			boolean busy;
 			status = 1;
 			do {
+				t = null;
 				synchronized (sql_to_process) {
 					if (sql_to_process.isEmpty()) {
 						if (stop) break;
@@ -314,12 +339,16 @@ public class SQLProcessor {
 						synchronized (queries_by_table) {
 							for (Map.Entry<String, ArrayList<Query>> e : queries_by_table.entrySet())
 								if (e.getValue().size() > 10) {
-									// let's take this one !
-									t = new SQLToProcess();
-									t.table = e.getKey();
-									t.queries = e.getValue();
-									queries_by_table.remove(e.getKey());
-									break;
+									boolean tbusy;
+									synchronized (busy_tables) { tbusy = busy_tables.contains(e.getKey()); }
+									if (!tbusy) {
+										// let's take this one !
+										t = new SQLToProcess();
+										t.table = e.getKey();
+										t.queries = e.getValue();
+										queries_by_table.remove(e.getKey());
+										break;
+									}
 								}
 						}
 						if (t == null) {
@@ -331,7 +360,10 @@ public class SQLProcessor {
 						}
 					}
 					total_requests = sql_to_process.size();
-					t = sql_to_process.removeFirst();
+					if (t == null)
+						t = sql_to_process.removeFirst();
+					else
+						tried_requests = total_requests;
 				}
 				busy = false;
 				synchronized (busy_tables) {
@@ -346,11 +378,14 @@ public class SQLProcessor {
 				if (busy) {
 					synchronized (sql_to_process) {
 						sql_to_process.add(t);
-						sql_to_process.notify();
+						//sql_to_process.notify();
 					}
-					if (tried_requests == total_requests) {
+					if (tried_requests >= total_requests) {
 						status = 2;
-						try { Thread.sleep(1000); } catch (InterruptedException e) { break; }
+						if (total_requests > 1000)
+							try { Thread.sleep(5000); } catch (InterruptedException e) { break; }
+						else
+							try { Thread.sleep(1000); } catch (InterruptedException e) { break; }
 						status = 1;
 						tried_requests = 0;
 					}
@@ -494,6 +529,18 @@ public class SQLProcessor {
 						continue;
 					}
 					r = to_call.removeFirst();
+				}
+				long max = Runtime.getRuntime().maxMemory();
+				long free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+				if (free < max/4) {
+					System.out.println(Thread.currentThread().getName()+": Critical memory: less than 25% remaining ("+free+"/"+max+"="+(free*100/max)+"%): wait...");
+					do {
+						try { Thread.sleep(10000); } catch (InterruptedException e) {}
+						max = Runtime.getRuntime().maxMemory();
+						free = Runtime.getRuntime().freeMemory() + (max-Runtime.getRuntime().totalMemory());
+						if (free > max/5) break;
+					} while (true);
+					System.out.println(Thread.currentThread().getName()+": Resume as we have now more than 20%");
 				}
 				r.run();
 			} while (true);

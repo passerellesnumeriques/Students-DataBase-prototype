@@ -11,7 +11,7 @@ function splitter_vertical(element, position) {
 		if (!t.part1) t.part1 = e; else t.part2 = e;
 	}
 	
-	t._position = function() {
+	t._position = function(prev_h,call) {
 		var w = t.element.offsetWidth;
 		var h = t.element.offsetHeight;
 		var sw = t.separator.offsetWidth;
@@ -23,7 +23,9 @@ function splitter_vertical(element, position) {
 		t.part2.style.left = (x+sw)+"px";
 		t.part2.style.width = (w-x-sw-1)+"px";
 		t.part2.style.height = h+"px";
-		if (t.element.offsetHeight != h) t._position();
+		if (t.element.offsetHeight != h) {
+			if (!prev_h || (t.element.offsetHeight != prev_h && call < 3)) t._position(t.element.offsetHeight, call ? 1 : call+1);
+		}
 		fireLayoutEventFor(t.part1);
 		fireLayoutEventFor(t.part2);
 	};
